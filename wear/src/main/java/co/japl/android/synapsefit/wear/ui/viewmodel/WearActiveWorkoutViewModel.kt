@@ -10,9 +10,8 @@ import kotlinx.coroutines.flow.update
 
 class WearActiveWorkoutViewModel(
     private val sensorPort: WearSensorPort? = null,
-    private val syncPort: WearSyncPort? = null
+    private val syncPort: WearSyncPort? = null,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(WearActiveWorkoutUiState())
     val uiState: StateFlow<WearActiveWorkoutUiState> = _uiState.asStateFlow()
 

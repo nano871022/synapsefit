@@ -35,133 +35,159 @@ import co.japl.android.synapsefit.ui.theme.SurfaceContainerHigh
 import co.japl.android.synapsefit.wear.R
 import co.japl.android.synapsefit.wear.ui.viewmodel.WearActiveWorkoutUiState
 
+@Suppress("LongMethod")
 @Composable
 fun WearActiveWorkoutScreen(
     uiState: WearActiveWorkoutUiState,
     onIncrementReps: () -> Unit,
     onDecrementReps: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(BackgroundDark),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(BackgroundDark),
+        contentAlignment = Alignment.Center,
     ) {
-        // CurvedExerciseTitle: Curved text along top perimeter
-        val exerciseTitle = uiState.exerciseName.ifEmpty {
-            stringResource(R.string.wear_default_exercise)
-        }
+        val exerciseTitle =
+            uiState.exerciseName.ifEmpty {
+                stringResource(R.string.wear_default_exercise)
+            }
         CurvedLayout(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             curvedRow {
                 curvedText(
                     text = exerciseTitle,
-                    style = androidx.wear.compose.foundation.CurvedTextStyle(
-                        color = PrimaryCyan,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    style =
+                        androidx.wear.compose.foundation.CurvedTextStyle(
+                            color = PrimaryCyan,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                        ),
                 )
             }
         }
 
-        // Central Content
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(16.dp)
+        CentralWorkoutContent(
+            uiState = uiState,
+            onIncrementReps = onIncrementReps,
+            onDecrementReps = onDecrementReps,
+        )
+    }
+}
+
+@Composable
+private fun CentralWorkoutContent(
+    uiState: WearActiveWorkoutUiState,
+    onIncrementReps: () -> Unit,
+    onDecrementReps: () -> Unit,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.padding(16.dp),
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // HeartRateMetric: Live BPM reading
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "${uiState.currentHeartRateBpm}",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ErrorContainerDark
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = stringResource(R.string.wear_bpm_unit),
-                    fontSize = 12.sp,
-                    color = OnSurfaceDark
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // RepCounterWidget: Rep counter with touch controls
             Text(
-                text = stringResource(R.string.wear_reps_label),
+                text = "${uiState.currentHeartRateBpm}",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = ErrorContainerDark,
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = stringResource(R.string.wear_bpm_unit),
                 fontSize = 12.sp,
-                color = OnSurfaceDark
+                color = OnSurfaceDark,
             )
-            Text(
-                text = "${uiState.currentReps}",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = PrimaryCyan
-            )
+        }
 
-            Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(
-                    onClick = onDecrementReps,
-                    modifier = Modifier.size(36.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = SurfaceContainerHigh,
-                        contentColor = OnSurfaceDark
-                    ),
-                    shape = CircleShape
-                ) {
-                    Text(
-                        text = stringResource(R.string.wear_dec_reps),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+        Text(
+            text = stringResource(R.string.wear_reps_label),
+            fontSize = 12.sp,
+            color = OnSurfaceDark,
+        )
+        Text(
+            text = "${uiState.currentReps}",
+            fontSize = 32.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = PrimaryCyan,
+        )
 
-                Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
-                Button(
-                    onClick = onIncrementReps,
-                    modifier = Modifier.size(36.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = PrimaryCyan,
-                        contentColor = OnPrimaryDark
-                    ),
-                    shape = CircleShape
-                ) {
-                    Text(
-                        text = stringResource(R.string.wear_inc_reps),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+        RepControlButtons(
+            onIncrementReps = onIncrementReps,
+            onDecrementReps = onDecrementReps,
+        )
 
-            Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-            // Sync Badge
-            Text(
-                text = if (uiState.isSyncedWithPhone) {
+        Text(
+            text =
+                if (uiState.isSyncedWithPhone) {
                     stringResource(R.string.wear_synced)
                 } else {
                     stringResource(R.string.wear_not_synced)
                 },
-                fontSize = 10.sp,
-                color = if (uiState.isSyncedWithPhone) PrimaryCyan else OnSurfaceDark,
-                textAlign = TextAlign.Center
+            fontSize = 10.sp,
+            color = if (uiState.isSyncedWithPhone) PrimaryCyan else OnSurfaceDark,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun RepControlButtons(
+    onIncrementReps: () -> Unit,
+    onDecrementReps: () -> Unit,
+) {
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Button(
+            onClick = onDecrementReps,
+            modifier = Modifier.size(36.dp),
+            colors =
+                ButtonDefaults.buttonColors(
+                    backgroundColor = SurfaceContainerHigh,
+                    contentColor = OnSurfaceDark,
+                ),
+            shape = CircleShape,
+        ) {
+            Text(
+                text = stringResource(R.string.wear_dec_reps),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Button(
+            onClick = onIncrementReps,
+            modifier = Modifier.size(36.dp),
+            colors =
+                ButtonDefaults.buttonColors(
+                    backgroundColor = PrimaryCyan,
+                    contentColor = OnPrimaryDark,
+                ),
+            shape = CircleShape,
+        ) {
+            Text(
+                text = stringResource(R.string.wear_inc_reps),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
             )
         }
     }

@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI & QA Pipeline
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   static-analysis:
-    name: Code Formatting & Static Analysis
+    name: Code Formatting & Static Analysis Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -23,10 +23,10 @@ jobs:
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Code Formatting & Static Analysis Check
-        run: ./gradlew ktlintCheck detekt --continue || echo "Static analysis completed with warnings."
+      - name: Run Ktlint & Detekt
+        run: ./gradlew ktlintCheck detekt
 
-  unit-test:
+  unit-tests:
     name: Run Unit Tests
     runs-on: ubuntu-latest
     steps:
@@ -43,12 +43,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew :core:test :util:testDebugUnitTest :services:testDebugUnitTest :ui:testDebugUnitTest :wear:testDebugUnitTest :app:testDebugUnitTest
 
-  build-debug:
-    name: Build Debug Artifacts
+  build-apks:
+    name: Build Debug APK Artifacts
     runs-on: ubuntu-latest
-    needs: [static-analysis, unit-test]
+    needs: [static-analysis, unit-tests]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -62,5 +62,19 @@ jobs:
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build Debug Artifacts
+      - name: Build Debug APKs
         run: ./gradlew assembleDebug
+
+      - name: Upload Mobile Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: synapsefit-app-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: warn
+
+      - name: Upload Wear OS Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: synapsefit-wear-debug
+          path: wear/build/outputs/apk/debug/wear-debug.apk
+          if-no-files-found: warn

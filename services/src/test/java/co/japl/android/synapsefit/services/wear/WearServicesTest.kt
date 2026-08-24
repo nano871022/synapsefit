@@ -6,7 +6,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WearServicesTest {
-
     @Test
     fun testWearHeartRateSensorAdapter() {
         val adapter = WearHeartRateSensorAdapter()

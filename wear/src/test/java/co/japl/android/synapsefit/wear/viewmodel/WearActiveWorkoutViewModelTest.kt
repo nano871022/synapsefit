@@ -10,7 +10,6 @@ import org.junit.Before
 import org.junit.Test
 
 class WearActiveWorkoutViewModelTest {
-
     private lateinit var sensorAdapter: WearHeartRateSensorAdapter
     private lateinit var syncAdapter: WearableSyncAdapter
     private lateinit var viewModel: WearActiveWorkoutViewModel
@@ -19,10 +18,11 @@ class WearActiveWorkoutViewModelTest {
     fun setUp() {
         sensorAdapter = WearHeartRateSensorAdapter()
         syncAdapter = WearableSyncAdapter()
-        viewModel = WearActiveWorkoutViewModel(
-            sensorPort = sensorAdapter,
-            syncPort = syncAdapter
-        )
+        viewModel =
+            WearActiveWorkoutViewModel(
+                sensorPort = sensorAdapter,
+                syncPort = syncAdapter,
+            )
     }
 
     @Test

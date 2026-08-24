@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class WearableSyncAdapter : WearSyncPort {
-
     private val _isPhoneConnected = MutableStateFlow(true)
     override val isPhoneConnected: StateFlow<Boolean> = _isPhoneConnected.asStateFlow()
 
@@ -17,7 +16,11 @@ class WearableSyncAdapter : WearSyncPort {
         _isPhoneConnected.value = isConnected
     }
 
-    override fun queueDataForDeferredSync(exerciseId: String, reps: Int, heartRateBpm: Int) {
+    override fun queueDataForDeferredSync(
+        exerciseId: String,
+        reps: Int,
+        heartRateBpm: Int,
+    ) {
         _pendingSyncDataCount.value += 1
     }
 
