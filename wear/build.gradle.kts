@@ -44,10 +44,13 @@ android {
 
 dependencies {
     implementation(project(":core"))
+    implementation(project(":services"))
     implementation(project(":ui"))
     implementation(project(":util"))
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.wear.compose.material)
     implementation(libs.wear.compose.foundation)
     implementation(libs.wear.compose.navigation)
