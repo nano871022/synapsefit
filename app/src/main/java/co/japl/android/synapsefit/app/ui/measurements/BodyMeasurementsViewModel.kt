@@ -2,10 +2,14 @@ package co.japl.android.synapsefit.app.ui.measurements
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.japl.android.synapsefit.core.domain.model.BodyMeasurement
+import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryPort
 import co.japl.android.synapsefit.core.usecase.SaveBodyMeasurementUseCase
+import co.japl.android.synapsefit.navigation.AppNavigator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -22,13 +26,30 @@ data class BodyMeasurementsUiState(
     val isSaving: Boolean = false,
     val isSavedSuccess: Boolean = false,
     val errorMessage: String? = null,
+    val history: List<BodyMeasurement> = emptyList(),
 )
 
 class BodyMeasurementsViewModel(
     private val saveBodyMeasurementUseCase: SaveBodyMeasurementUseCase? = null,
+    private val bodyMeasurementRepositoryPort: BodyMeasurementRepositoryPort? = null,
+    private val appNavigator: AppNavigator? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(BodyMeasurementsUiState())
     val uiState: StateFlow<BodyMeasurementsUiState> = _uiState.asStateFlow()
+
+    init {
+        loadHistory()
+    }
+
+    private fun loadHistory() {
+        viewModelScope.launch {
+            appNavigator?.setLoading(true)
+            bodyMeasurementRepositoryPort?.getMeasurementsHistory()?.collectLatest { list ->
+                _uiState.update { it.copy(history = list) }
+                appNavigator?.setLoading(false)
+            }
+        }
+    }
 
     fun onWeightChange(value: String) {
         _uiState.update { it.copy(weightKg = value, errorMessage = null) }
@@ -76,6 +97,7 @@ class BodyMeasurementsViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, errorMessage = null) }
+            appNavigator?.setLoading(true)
 
             if (saveBodyMeasurementUseCase != null) {
                 val result =
@@ -92,6 +114,7 @@ class BodyMeasurementsViewModel(
                     )
                 if (result.isSuccess) {
                     _uiState.update { BodyMeasurementsUiState(isSavedSuccess = true) }
+                    appNavigator?.setLoading(false)
                 } else {
                     _uiState.update {
                         it.copy(
@@ -99,9 +122,11 @@ class BodyMeasurementsViewModel(
                             errorMessage = result.exceptionOrNull()?.message ?: "Error al guardar la medida",
                         )
                     }
+                    appNavigator?.setLoading(false)
                 }
             } else {
                 _uiState.update { BodyMeasurementsUiState(isSavedSuccess = true) }
+                appNavigator?.setLoading(false)
             }
         }
     }

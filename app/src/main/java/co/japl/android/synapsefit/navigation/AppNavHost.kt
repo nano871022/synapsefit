@@ -6,12 +6,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import co.japl.android.synapsefit.DependencyContainer
 import co.japl.android.synapsefit.app.ui.dashboard.DashboardScreen
 import co.japl.android.synapsefit.app.ui.dashboard.DashboardViewModel
 import co.japl.android.synapsefit.app.ui.history.WorkoutHistoryScreen
@@ -39,6 +42,7 @@ import co.japl.android.synapsefit.app.ui.workout.WorkoutPlansViewModel
 fun AppNavHost(
     navController: NavHostController,
     appNavigator: AppNavigator,
+    dependencyContainer: DependencyContainer,
     modifier: Modifier = Modifier,
     startDestination: String = Routes.DASHBOARD,
 ) {
@@ -49,7 +53,18 @@ fun AppNavHost(
     ) {
         // V1: Dashboard
         composable(Routes.DASHBOARD) {
-            val viewModel: DashboardViewModel = viewModel()
+            val viewModel: DashboardViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return DashboardViewModel(
+                                    bodyMeasurementRepositoryPort = dependencyContainer.bodyMeasurementRepository,
+                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
+                                ) as T
+                            }
+                        },
+                )
             val state by viewModel.uiState.collectAsState()
             DashboardScreen(
                 state = state,
@@ -67,7 +82,19 @@ fun AppNavHost(
 
         // V2: Body Measurements Entry
         composable(Routes.MEASUREMENTS_ENTRY) {
-            val viewModel: BodyMeasurementsViewModel = viewModel()
+            val viewModel: BodyMeasurementsViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return BodyMeasurementsViewModel(
+                                    saveBodyMeasurementUseCase = dependencyContainer.saveBodyMeasurementUseCase,
+                                    bodyMeasurementRepositoryPort = dependencyContainer.bodyMeasurementRepository,
+                                    appNavigator = appNavigator,
+                                ) as T
+                            }
+                        },
+                )
             val state by viewModel.uiState.collectAsState()
             BodyMeasurementsScreen(
                 state = state,
@@ -81,12 +108,26 @@ fun AppNavHost(
                 onThighRightChange = viewModel::onThighRightChange,
                 onNotesChange = viewModel::onNotesChange,
                 onSaveClick = viewModel::saveMeasurement,
+                onViewGraphClick = {
+                    navController.navigate(Routes.MEASUREMENTS_PROGRESS)
+                },
             )
         }
 
         // V3: Measurement Progress Graph
         composable(Routes.MEASUREMENTS_PROGRESS) {
-            val viewModel: MeasurementProgressViewModel = viewModel()
+            val viewModel: MeasurementProgressViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return MeasurementProgressViewModel(
+                                    bodyMeasurementRepositoryPort = dependencyContainer.bodyMeasurementRepository,
+                                    appNavigator = appNavigator,
+                                ) as T
+                            }
+                        },
+                )
             val state by viewModel.uiState.collectAsState()
             MeasurementProgressGraphScreen(
                 state = state,
@@ -97,7 +138,18 @@ fun AppNavHost(
 
         // V4: Workout Plans
         composable(Routes.WORKOUT_PLANS) {
-            val viewModel: WorkoutPlansViewModel = viewModel()
+            val viewModel: WorkoutPlansViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return WorkoutPlansViewModel(
+                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
+                                    appNavigator = appNavigator,
+                                ) as T
+                            }
+                        },
+                )
             val state by viewModel.uiState.collectAsState()
             WorkoutPlansScreen(
                 state = state,
@@ -112,7 +164,19 @@ fun AppNavHost(
 
         // V5: AI Coach Generator
         composable(Routes.WORKOUT_AI_GENERATOR) {
-            val viewModel: AICoachGeneratorViewModel = viewModel()
+            val viewModel: AICoachGeneratorViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return AICoachGeneratorViewModel(
+                                    generateWorkoutPlanUseCase = dependencyContainer.generateWorkoutPlanUseCase,
+                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
+                                    appNavigator = appNavigator,
+                                ) as T
+                            }
+                        },
+                )
             val state by viewModel.uiState.collectAsState()
             AICoachGeneratorScreen(
                 state = state,
@@ -120,6 +184,8 @@ fun AppNavHost(
                 onGymChainQueryChange = viewModel::onGymChainQueryChange,
                 onPromptContextChange = viewModel::onPromptContextChange,
                 onGenerateClick = viewModel::generatePlan,
+                onAcceptClick = viewModel::acceptPlan,
+                onDiscardClick = viewModel::discardPlan,
             )
         }
 
@@ -129,7 +195,17 @@ fun AppNavHost(
             arguments = listOf(navArgument("planId") { type = NavType.StringType }),
         ) { backStackEntry ->
             val planId = backStackEntry.arguments?.getString("planId") ?: ""
-            val viewModel: WorkoutPlanDetailViewModel = viewModel()
+            val viewModel: WorkoutPlanDetailViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return WorkoutPlanDetailViewModel(
+                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
+                                ) as T
+                            }
+                        },
+                )
             viewModel.loadPlanDetail(planId)
             val state by viewModel.uiState.collectAsState()
             WorkoutPlanDetailScreen(
@@ -146,7 +222,18 @@ fun AppNavHost(
             arguments = listOf(navArgument("planId") { type = NavType.StringType }),
         ) { backStackEntry ->
             val planId = backStackEntry.arguments?.getString("planId") ?: ""
-            val viewModel: ActiveWorkoutSessionViewModel = viewModel()
+            val viewModel: ActiveWorkoutSessionViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return ActiveWorkoutSessionViewModel(
+                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
+                                    recordWorkoutSessionUseCase = dependencyContainer.recordWorkoutSessionUseCase,
+                                ) as T
+                            }
+                        },
+                )
             viewModel.startSession(planId)
             val state by viewModel.uiState.collectAsState()
             ActiveWorkoutSessionScreen(
@@ -163,14 +250,34 @@ fun AppNavHost(
 
         // V8: Workout History
         composable(Routes.WORKOUT_HISTORY) {
-            val viewModel: WorkoutHistoryViewModel = viewModel()
+            val viewModel: WorkoutHistoryViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return WorkoutHistoryViewModel(
+                                    workoutLogRepositoryPort = dependencyContainer.workoutLogRepository,
+                                ) as T
+                            }
+                        },
+                )
             val state by viewModel.uiState.collectAsState()
             WorkoutHistoryScreen(state = state)
         }
 
         // V9: Backup Sync
         composable(Routes.SETTINGS_BACKUP) {
-            val viewModel: BackupSyncViewModel = viewModel()
+            val viewModel: BackupSyncViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return BackupSyncViewModel(
+                                    performDriveSyncUseCase = dependencyContainer.performDriveSyncUseCase,
+                                ) as T
+                            }
+                        },
+                )
             val state by viewModel.uiState.collectAsState()
             BackupSyncScreen(
                 state = state,
@@ -180,11 +287,24 @@ fun AppNavHost(
 
         // V10: LLM Settings
         composable(Routes.SETTINGS_LLM) {
-            val viewModel: LlmSettingsViewModel = viewModel()
+            val viewModel: LlmSettingsViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return LlmSettingsViewModel(
+                                    llmConfigRepositoryPort = dependencyContainer.llmConfigRepository,
+                                    llmClientPort = dependencyContainer.llmClient,
+                                    appNavigator = appNavigator,
+                                ) as T
+                            }
+                        },
+                )
             val state by viewModel.uiState.collectAsState()
             LLMSettingsScreen(
                 state = state,
                 onSaveConfig = viewModel::saveConfig,
+                onFetchModels = viewModel::fetchModels,
             )
         }
 

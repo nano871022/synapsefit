@@ -17,6 +17,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val dependencyContainer = DependencyContainer(this)
         setContent {
             SynapseFitTheme {
                 val navController = rememberNavController()
@@ -31,6 +32,7 @@ class MainActivity : ComponentActivity() {
                     AppNavHost(
                         navController = navController,
                         appNavigator = appNavigator,
+                        dependencyContainer = dependencyContainer,
                     )
                 }
             }

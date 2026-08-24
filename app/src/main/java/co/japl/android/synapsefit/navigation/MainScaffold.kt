@@ -3,8 +3,11 @@
 package co.japl.android.synapsefit.navigation
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -21,6 +24,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -37,6 +41,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,6 +73,7 @@ fun MainScaffold(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var menuExpanded by remember { mutableStateOf(false) }
+    val isLoading by appNavigator.isLoading.collectAsState()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: Routes.DASHBOARD
@@ -144,42 +150,51 @@ fun MainScaffold(
     ) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text(stringResource(R.string.app_name)) },
-                    navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.menu_drawer))
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { menuExpanded = !menuExpanded }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.menu_options))
-                        }
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false },
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.settings_llm)) },
-                                onClick = {
-                                    menuExpanded = false
-                                    scope.launch { appNavigator.navigateTo(Routes.SETTINGS_LLM) }
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.settings_about)) },
-                                onClick = {
-                                    menuExpanded = false
-                                    scope.launch { appNavigator.navigateTo(Routes.SETTINGS_ABOUT) }
-                                },
-                            )
-                        }
-                    },
-                    colors =
-                        TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.background,
-                        ),
-                )
+                Column {
+                    TopAppBar(
+                        title = { Text(stringResource(R.string.app_name)) },
+                        navigationIcon = {
+                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.menu_drawer))
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = { menuExpanded = !menuExpanded }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.menu_options))
+                            }
+                            DropdownMenu(
+                                expanded = menuExpanded,
+                                onDismissRequest = { menuExpanded = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.settings_llm)) },
+                                    onClick = {
+                                        menuExpanded = false
+                                        scope.launch { appNavigator.navigateTo(Routes.SETTINGS_LLM) }
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.settings_about)) },
+                                    onClick = {
+                                        menuExpanded = false
+                                        scope.launch { appNavigator.navigateTo(Routes.SETTINGS_ABOUT) }
+                                    },
+                                )
+                            }
+                        },
+                        colors =
+                            TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.background,
+                            ),
+                    )
+                    if (isLoading) {
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth().height(2.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                        )
+                    }
+                }
             },
             bottomBar = {
                 if (widthSizeClass == WindowWidthSizeClass.Compact) {

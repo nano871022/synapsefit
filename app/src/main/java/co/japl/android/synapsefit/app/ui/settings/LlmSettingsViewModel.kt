@@ -6,7 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.LlmConfig
 import co.japl.android.synapsefit.core.domain.model.LlmProvider
+import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
 import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
+import co.japl.android.synapsefit.navigation.AppNavigator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,11 +27,14 @@ data class LlmProviderUiModel(
 data class LlmSettingsUiState(
     val providers: List<LlmProviderUiModel> = emptyList(),
     val activeProviderId: String? = null,
+    val availableModels: List<String> = emptyList(),
     val isLoading: Boolean = false,
 )
 
 class LlmSettingsViewModel(
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort? = null,
+    private val llmClientPort: LlmClientPort? = null,
+    private val appNavigator: AppNavigator? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LlmSettingsUiState())
     val uiState: StateFlow<LlmSettingsUiState> = _uiState.asStateFlow()
@@ -41,6 +46,7 @@ class LlmSettingsViewModel(
     fun loadConfigs() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
+            appNavigator?.setLoading(true)
 
             val configs =
                 llmConfigRepositoryPort?.getAllConfigs()?.let { flow ->
@@ -67,6 +73,28 @@ class LlmSettingsViewModel(
                     isLoading = false,
                 )
             }
+            appNavigator?.setLoading(false)
+        }
+    }
+
+    fun fetchModels(
+        provider: LlmProvider,
+        apiKey: String,
+    ) {
+        if (apiKey.isBlank()) return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            appNavigator?.setLoading(true)
+
+            val result = llmClientPort?.fetchAvailableModels(provider, apiKey)
+            result?.onSuccess { models ->
+                _uiState.update { it.copy(availableModels = models, isLoading = false) }
+            }?.onFailure {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+
+            appNavigator?.setLoading(false)
         }
     }
 
@@ -76,19 +104,21 @@ class LlmSettingsViewModel(
         modelName: String,
     ) {
         viewModelScope.launch {
+            appNavigator?.setLoading(true)
             val now = System.currentTimeMillis()
             val config =
                 LlmConfig(
                     id = java.util.UUID.randomUUID().toString(),
                     provider = provider,
-                    apiKeyEncrypted = apiKey,
-                    modelName = modelName,
+                    apiKeyEncrypted = apiKey.trim(),
+                    modelName = modelName.trim(),
                     isActive = true,
                     createdAt = now,
                     updatedAt = now,
                 )
             llmConfigRepositoryPort?.saveConfig(config)
             loadConfigs()
+            appNavigator?.setLoading(false)
         }
     }
 

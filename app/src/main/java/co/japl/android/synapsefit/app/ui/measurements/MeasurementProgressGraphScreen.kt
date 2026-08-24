@@ -55,6 +55,7 @@ fun MeasurementProgressGraphScreen(
         )
 
         TimeRangeSelectorRow(
+            selectedDays = state.timeRangeDays,
             onTimeRangeSelected = onTimeRangeSelected,
         )
 
@@ -115,6 +116,7 @@ fun MeasurementProgressGraphScreen(
 
 @Composable
 fun TimeRangeSelectorRow(
+    selectedDays: Int,
     onTimeRangeSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -125,7 +127,7 @@ fun TimeRangeSelectorRow(
     ) {
         options.forEach { (label, days) ->
             FilterChip(
-                selected = label == "6M",
+                selected = days == selectedDays,
                 onClick = { onTimeRangeSelected(days) },
                 label = { Text(label, style = MaterialTheme.typography.labelSmall) },
                 modifier = Modifier.weight(1f),

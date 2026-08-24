@@ -32,6 +32,10 @@ dependencies {
     implementation(libs.security.crypto)
     implementation(libs.kotlinx.coroutines.core)
 
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging)
+
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)

@@ -6,7 +6,6 @@ import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -41,37 +40,34 @@ class WorkoutPlanDetailViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, planId = planId) }
 
-            val planPair =
-                workoutPlanRepositoryPort?.getPlanWithExercises(planId)?.let { flow ->
-                    flow.firstOrNull()
-                }
-
-            if (planPair != null) {
-                val (plan, exercises) = planPair
-                val mappedExercises =
-                    exercises.map { e ->
-                        ExerciseUiModel(
-                            id = e.id,
-                            name = e.name,
-                            muscleGroup = e.muscleGroup,
-                            targetSets = e.targetSets,
-                            targetReps = e.targetReps,
-                            restSeconds = e.restSeconds,
-                            guideVideoUrl = e.guideVideoUrl,
-                            guideImageUrl = e.guideImageUrl,
+            workoutPlanRepositoryPort?.getPlanWithExercises(planId)?.collect { planPair ->
+                if (planPair != null) {
+                    val (plan, exercises) = planPair
+                    val mappedExercises =
+                        exercises.map { e ->
+                            ExerciseUiModel(
+                                id = e.id,
+                                name = e.name,
+                                muscleGroup = e.muscleGroup,
+                                targetSets = e.targetSets,
+                                targetReps = e.targetReps,
+                                restSeconds = e.restSeconds,
+                                guideVideoUrl = e.guideVideoUrl,
+                                guideImageUrl = e.guideImageUrl,
+                            )
+                        }
+                    _uiState.update {
+                        it.copy(
+                            planTitle = plan.title,
+                            goalDescription = plan.goalDescription,
+                            totalExercises = exercises.size,
+                            exercises = mappedExercises,
+                            isLoading = false,
                         )
                     }
-                _uiState.update {
-                    it.copy(
-                        planTitle = plan.title,
-                        goalDescription = plan.goalDescription,
-                        totalExercises = exercises.size,
-                        exercises = mappedExercises,
-                        isLoading = false,
-                    )
+                } else {
+                    _uiState.update { it.copy(isLoading = false) }
                 }
-            } else {
-                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }

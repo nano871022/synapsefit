@@ -5,25 +5,40 @@ package co.japl.android.synapsefit.app.ui.measurements
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.ShowChart
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import co.japl.android.synapsefit.R
+import co.japl.android.synapsefit.core.domain.model.BodyMeasurement
 import co.japl.android.synapsefit.ui.components.AnatomicalInputField
 import co.japl.android.synapsefit.ui.components.NeonButton
 import co.japl.android.synapsefit.ui.theme.spacing
+import co.japl.android.synapsefit.util.DateTimeUtils
 
 @Composable
 fun BodyMeasurementsScreen(
@@ -38,6 +53,7 @@ fun BodyMeasurementsScreen(
     onThighRightChange: (String) -> Unit,
     onNotesChange: (String) -> Unit,
     onSaveClick: () -> Unit,
+    onViewGraphClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -177,5 +193,102 @@ fun BodyMeasurementsScreen(
                 )
             }
         }
+
+        if (state.history.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Historial Reciente",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                OutlinedButton(
+                    onClick = onViewGraphClick,
+                    modifier = Modifier.height(36.dp),
+                    colors =
+                        ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary,
+                        ),
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Icon(Icons.Default.ShowChart, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Ver Gráfico", style = MaterialTheme.typography.labelMedium)
+                }
+            }
+
+            state.history.take(5).forEach { measurement ->
+                MeasurementHistoryItem(measurement = measurement)
+            }
+        }
+    }
+}
+
+@Composable
+fun MeasurementHistoryItem(
+    measurement: BodyMeasurement,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+    ) {
+        Column(
+            modifier = Modifier.padding(MaterialTheme.spacing.medium),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = DateTimeUtils.formatEpoch(measurement.createdAt, "dd MMM, yyyy"),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = "${measurement.weightKg} kg",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                thickness = 0.5.dp,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
+            ) {
+                measurement.chestCm?.let {
+                    MeasurementSmallStat(label = "Pecho", value = "$it cm")
+                }
+                measurement.waistCm?.let {
+                    MeasurementSmallStat(label = "Cintura", value = "$it cm")
+                }
+                measurement.hipCm?.let {
+                    MeasurementSmallStat(label = "Cadera", value = "$it cm")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MeasurementSmallStat(
+    label: String,
+    value: String,
+) {
+    Column {
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = value, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
     }
 }

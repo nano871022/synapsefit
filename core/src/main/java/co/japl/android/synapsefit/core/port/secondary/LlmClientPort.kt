@@ -12,4 +12,9 @@ interface LlmClientPort {
         gymChainQuery: String?,
         config: LlmConfig,
     ): Result<Pair<WorkoutPlan, List<Exercise>>>
+
+    suspend fun fetchAvailableModels(
+        provider: co.japl.android.synapsefit.core.domain.model.LlmProvider,
+        apiKey: String,
+    ): Result<List<String>>
 }

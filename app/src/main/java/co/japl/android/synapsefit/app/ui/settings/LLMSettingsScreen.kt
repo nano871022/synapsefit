@@ -3,20 +3,26 @@
 package co.japl.android.synapsefit.app.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -32,7 +38,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import co.japl.android.synapsefit.R
@@ -45,12 +53,34 @@ import co.japl.android.synapsefit.ui.theme.spacing
 fun LLMSettingsScreen(
     state: LlmSettingsUiState,
     onSaveConfig: (LlmProvider, String, String) -> Unit,
+    onFetchModels: (LlmProvider, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectedProvider by remember { mutableStateOf(LlmProvider.GEMINI) }
     var apiKeyInput by remember { mutableStateOf("") }
-    var modelNameInput by remember { mutableStateOf("gemini-1.5-flash") }
-    var expanded by remember { mutableStateOf(false) }
+    var modelNameInput by remember { mutableStateOf("") }
+    var providerExpanded by remember { mutableStateOf(false) }
+    var modelExpanded by remember { mutableStateOf(false) }
+
+    // Default model if nothing is selected or fetched
+    val defaultModel = when (selectedProvider) {
+        LlmProvider.GEMINI -> "gemini-1.5-flash"
+        LlmProvider.OPENAI -> "gpt-4o-mini"
+        LlmProvider.ANTHROPIC -> "claude-3-haiku-20240307"
+    }
+
+    // Set initial model name or update when models are fetched
+    androidx.compose.runtime.LaunchedEffect(selectedProvider) {
+        if (state.availableModels.isEmpty()) {
+            modelNameInput = defaultModel
+        }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(state.availableModels) {
+        if (state.availableModels.isNotEmpty()) {
+            modelNameInput = state.availableModels.first()
+        }
+    }
 
     Column(
         modifier =
@@ -75,56 +105,93 @@ fun LLMSettingsScreen(
         )
 
         ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
+            expanded = providerExpanded,
+            onExpandedChange = { providerExpanded = !providerExpanded },
         ) {
             OutlinedTextField(
                 value = selectedProvider.name,
                 onValueChange = {},
                 readOnly = true,
                 label = { Text(stringResource(R.string.llm_provider)) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerExpanded) },
                 modifier = Modifier.menuAnchor().fillMaxWidth(),
             )
             ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
+                expanded = providerExpanded,
+                onDismissRequest = { providerExpanded = false },
             ) {
                 LlmProvider.entries.forEach { p ->
                     DropdownMenuItem(
                         text = { Text(p.name) },
                         onClick = {
                             selectedProvider = p
-                            modelNameInput =
-                                when (p) {
-                                    LlmProvider.GEMINI -> "gemini-1.5-flash"
-                                    LlmProvider.OPENAI -> "gpt-4o-mini"
-                                    LlmProvider.ANTHROPIC -> "claude-3-haiku-20240307"
-                                }
-                            expanded = false
+                            modelNameInput = "" // Will be reset by the logic above
+                            providerExpanded = false
                         },
                     )
                 }
             }
         }
 
-        OutlinedTextField(
-            value = apiKeyInput,
-            onValueChange = { apiKeyInput = it },
-            label = { Text(stringResource(R.string.api_key)) },
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-            visualTransformation = PasswordVisualTransformation(),
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-        )
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)
+        ) {
+            OutlinedTextField(
+                value = apiKeyInput,
+                onValueChange = { apiKeyInput = it },
+                label = { Text(stringResource(R.string.api_key)) },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+            )
+            NeonButton(
+                text = "Fetch",
+                onClick = { onFetchModels(selectedProvider, apiKeyInput) },
+                enabled = apiKeyInput.isNotBlank() && !state.isLoading,
+                modifier = Modifier.width(100.dp)
+            )
+        }
 
-        OutlinedTextField(
-            value = modelNameInput,
-            onValueChange = { modelNameInput = it },
-            label = { Text(stringResource(R.string.model_name)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-        )
+        if (state.availableModels.isNotEmpty()) {
+            ExposedDropdownMenuBox(
+                expanded = modelExpanded,
+                onExpandedChange = { modelExpanded = !modelExpanded },
+            ) {
+                OutlinedTextField(
+                    value = modelNameInput,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.model_name)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelExpanded) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                )
+                ExposedDropdownMenu(
+                    expanded = modelExpanded,
+                    onDismissRequest = { modelExpanded = false },
+                ) {
+                    state.availableModels.forEach { model ->
+                        DropdownMenuItem(
+                            text = { Text(model) },
+                            onClick = {
+                                modelNameInput = model
+                                modelExpanded = false
+                            },
+                        )
+                    }
+                }
+            }
+        } else {
+            OutlinedTextField(
+                value = modelNameInput,
+                onValueChange = { modelNameInput = it },
+                label = { Text(stringResource(R.string.model_name)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+        }
 
         NeonButton(
             text = stringResource(R.string.save_and_activate_provider),
@@ -135,7 +202,14 @@ fun LLMSettingsScreen(
                 }
             },
             enabled = apiKeyInput.isNotBlank(),
+            isLoading = state.isLoading,
         )
+
+        if (state.isLoading && state.providers.isEmpty()) {
+            Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
 
         if (state.providers.isNotEmpty()) {
             Text(
@@ -190,20 +264,43 @@ fun ProviderCard(
         shape = RoundedCornerShape(12.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                containerColor =
+                    if (providerModel.isActive) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainer
+                    },
             ),
+        border =
+            if (providerModel.isActive) {
+                androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+            } else {
+                null
+            },
     ) {
         Row(
             modifier = Modifier.padding(MaterialTheme.spacing.medium).fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column {
-                Text(
-                    text = providerModel.provider.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = providerModel.provider.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    if (providerModel.isActive) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
                 Text(
                     text = stringResource(R.string.model_prefix, providerModel.modelName),
                     style = MaterialTheme.typography.bodySmall,
@@ -216,11 +313,14 @@ fun ProviderCard(
                 )
             }
             if (providerModel.isActive) {
-                Badge(containerColor = MaterialTheme.colorScheme.primary) {
+                Badge(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                ) {
                     Text(
                         text = stringResource(R.string.active_badge),
                         color = MaterialTheme.colorScheme.onPrimary,
                         style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 4.dp),
                     )
                 }
             }

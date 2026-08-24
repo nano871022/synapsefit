@@ -19,11 +19,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import co.japl.android.synapsefit.R
+import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
+import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.ui.components.NeonButton
 import co.japl.android.synapsefit.ui.theme.spacing
 
@@ -34,6 +38,8 @@ fun AICoachGeneratorScreen(
     onGymChainQueryChange: (String) -> Unit,
     onPromptContextChange: (String) -> Unit,
     onGenerateClick: () -> Unit,
+    onAcceptClick: () -> Unit,
+    onDiscardClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -91,33 +97,132 @@ fun AICoachGeneratorScreen(
         )
 
         NeonButton(
-            text = stringResource(R.string.generate_plan_ai),
+            text = if (state.generatedPlan == null) stringResource(R.string.generate_plan_ai) else "Generar Otra",
             onClick = onGenerateClick,
             isLoading = state.isGenerating,
             enabled = !state.isGenerating,
         )
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                ),
-        ) {
-            Column(
-                modifier = Modifier.padding(MaterialTheme.spacing.medium),
-                verticalArrangement = Arrangement.Center,
+        if (state.generatedPlan != null) {
+            PlanPreview(
+                plan = state.generatedPlan,
+                exercises = state.generatedExercises,
+                onAccept = onAcceptClick,
+                onDiscard = onDiscardClick,
+                isLoading = state.isLoading
+            )
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
             ) {
-                Text(
-                    text = "Tu rutina personalizada aparecerá aquí...",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                Column(
+                    modifier = Modifier.padding(MaterialTheme.spacing.medium),
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = "Tu rutina personalizada aparecerá aquí...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PlanPreview(
+    plan: WorkoutPlan,
+    exercises: List<Exercise>,
+    onAccept: () -> Unit,
+    onDiscard: () -> Unit,
+    isLoading: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(MaterialTheme.spacing.medium),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)
+        ) {
+            Text(
+                text = plan.title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Text(
+                text = plan.goalDescription,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Text(
+                text = "Ejercicios:",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.secondary
+            )
+
+            exercises.forEach { exercise ->
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "• ${exercise.name}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "${exercise.targetSets}x${exercise.targetReps}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Text(
+                        text = "Músculo: ${exercise.muscleGroup} | Descanso: ${exercise.restSeconds}s",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 12.dp)
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                NeonButton(
+                    text = "Aceptar",
+                    onClick = onAccept,
+                    modifier = Modifier.weight(1f),
+                    enabled = !isLoading
+                )
+                NeonButton(
+                    text = "Descartar",
+                    onClick = onDiscard,
+                    modifier = Modifier.weight(1f),
+                    enabled = !isLoading
                 )
             }
         }
     }
 }
+
 
 @Composable
 fun EnvironmentSelector(
