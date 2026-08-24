@@ -4,8 +4,9 @@ import co.japl.android.synapsefit.core.domain.model.BodyMeasurement
 import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryPort
 
 class SaveBodyMeasurementUseCase(
-    private val repositoryPort: BodyMeasurementRepositoryPort
+    private val repositoryPort: BodyMeasurementRepositoryPort,
 ) {
+    @Suppress("LongParameterList", "CyclomaticComplexMethod", "TooGenericExceptionCaught", "ReturnCount")
     suspend operator fun invoke(
         weightKg: Double,
         chestCm: Double? = null,
@@ -16,7 +17,7 @@ class SaveBodyMeasurementUseCase(
         thighLeftCm: Double? = null,
         thighRightCm: Double? = null,
         notes: String? = null,
-        id: String? = null
+        id: String? = null,
     ): Result<Unit> {
         if (weightKg <= 0) {
             return Result.failure(IllegalArgumentException("Weight must be greater than 0"))
@@ -44,20 +45,21 @@ class SaveBodyMeasurementUseCase(
         }
 
         val now = System.currentTimeMillis()
-        val measurement = BodyMeasurement(
-            id = id ?: java.util.UUID.randomUUID().toString(),
-            weightKg = weightKg,
-            chestCm = chestCm,
-            waistCm = waistCm,
-            hipCm = hipCm,
-            bicepLeftCm = bicepLeftCm,
-            bicepRightCm = bicepRightCm,
-            thighLeftCm = thighLeftCm,
-            thighRightCm = thighRightCm,
-            notes = notes,
-            createdAt = now,
-            updatedAt = now
-        )
+        val measurement =
+            BodyMeasurement(
+                id = id ?: java.util.UUID.randomUUID().toString(),
+                weightKg = weightKg,
+                chestCm = chestCm,
+                waistCm = waistCm,
+                hipCm = hipCm,
+                bicepLeftCm = bicepLeftCm,
+                bicepRightCm = bicepRightCm,
+                thighLeftCm = thighLeftCm,
+                thighRightCm = thighRightCm,
+                notes = notes,
+                createdAt = now,
+                updatedAt = now,
+            )
 
         return try {
             repositoryPort.saveMeasurement(measurement)

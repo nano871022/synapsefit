@@ -9,5 +9,5 @@ data class WorkoutLog(
     val sourceDevice: SourceDevice = SourceDevice.MOBILE,
     val timestamp: Long,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
 )

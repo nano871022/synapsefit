@@ -10,6 +10,6 @@ interface LlmClientPort {
         promptContext: String,
         environment: TrainingEnvironment,
         gymChainQuery: String?,
-        config: LlmConfig
+        config: LlmConfig,
     ): Result<Pair<WorkoutPlan, List<Exercise>>>
 }

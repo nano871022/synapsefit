@@ -12,5 +12,5 @@ data class BodyMeasurement(
     val thighRightCm: Double? = null,
     val notes: String? = null,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
 )
