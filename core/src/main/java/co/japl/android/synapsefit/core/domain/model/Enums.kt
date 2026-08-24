@@ -2,13 +2,13 @@ package co.japl.android.synapsefit.core.domain.model
 
 enum class SourceDevice {
     MOBILE,
-    WEAR_OS
+    WEAR_OS,
 }
 
 enum class LlmProvider {
     GEMINI,
     OPENAI,
-    ANTHROPIC
+    ANTHROPIC,
 }
 
 enum class AnatomicalZone {
@@ -19,11 +19,11 @@ enum class AnatomicalZone {
     BICEP_LEFT,
     BICEP_RIGHT,
     THIGH_LEFT,
-    THIGH_RIGHT
+    THIGH_RIGHT,
 }
 
 enum class TrainingEnvironment {
     BODYWEIGHT,
     DUMBBELLS,
-    CHAIN_GYM
+    CHAIN_GYM,
 }

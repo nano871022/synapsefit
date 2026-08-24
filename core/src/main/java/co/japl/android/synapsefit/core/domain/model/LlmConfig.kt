@@ -7,5 +7,5 @@ data class LlmConfig(
     val modelName: String,
     val isActive: Boolean = false,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
 )

@@ -11,5 +11,5 @@ data class Exercise(
     val guideVideoUrl: String? = null,
     val guideImageUrl: String? = null,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
 )

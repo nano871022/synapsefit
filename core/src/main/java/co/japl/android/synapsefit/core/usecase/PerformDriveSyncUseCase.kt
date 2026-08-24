@@ -3,7 +3,7 @@ package co.japl.android.synapsefit.core.usecase
 import co.japl.android.synapsefit.core.port.secondary.DriveSyncPort
 
 class PerformDriveSyncUseCase(
-    private val driveSyncPort: DriveSyncPort
+    private val driveSyncPort: DriveSyncPort,
 ) {
     suspend fun backup(databaseBytes: ByteArray): Result<String> {
         if (databaseBytes.isEmpty()) {

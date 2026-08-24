@@ -7,5 +7,5 @@ data class WorkoutPlan(
     val isActive: Boolean = true,
     val generatedByLlm: Boolean = false,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
 )
