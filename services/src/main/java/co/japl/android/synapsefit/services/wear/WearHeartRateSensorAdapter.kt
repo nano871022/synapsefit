@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class WearHeartRateSensorAdapter : WearSensorPort {
-
     private val _heartRateBpm = MutableStateFlow(0)
     override val heartRateBpm: StateFlow<Int> = _heartRateBpm.asStateFlow()
 

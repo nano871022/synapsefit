@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 data class WorkoutSetUiModel(
@@ -96,7 +97,7 @@ class ActiveWorkoutSessionViewModel(
         timerJob?.cancel()
         timerJob =
             viewModelScope.launch {
-                while (true) {
+                while (isActive) {
                     delay(1000L)
                     _uiState.update { it.copy(elapsedTimeSeconds = it.elapsedTimeSeconds + 1) }
                 }

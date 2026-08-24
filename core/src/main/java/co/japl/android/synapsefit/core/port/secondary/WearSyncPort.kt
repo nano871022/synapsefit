@@ -7,6 +7,12 @@ interface WearSyncPort {
     val pendingSyncDataCount: StateFlow<Int>
 
     fun onConnectionStateChanged(isConnected: Boolean)
-    fun queueDataForDeferredSync(exerciseId: String, reps: Int, heartRateBpm: Int)
+
+    fun queueDataForDeferredSync(
+        exerciseId: String,
+        reps: Int,
+        heartRateBpm: Int,
+    )
+
     fun flushSyncQueue()
 }

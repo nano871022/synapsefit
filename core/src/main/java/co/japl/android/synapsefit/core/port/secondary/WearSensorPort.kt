@@ -7,6 +7,8 @@ interface WearSensorPort {
     val isMonitoring: StateFlow<Boolean>
 
     fun startHeartRateMonitoring()
+
     fun stopHeartRateMonitoring()
+
     fun onHeartRateSensorChanged(bpm: Int)
 }

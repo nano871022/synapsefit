@@ -9,7 +9,6 @@ import androidx.compose.runtime.getValue
 import co.japl.android.synapsefit.wear.ui.viewmodel.WearActiveWorkoutViewModel
 
 class MainActivity : ComponentActivity() {
-
     private val viewModel: WearActiveWorkoutViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,7 +18,7 @@ class MainActivity : ComponentActivity() {
             WearActiveWorkoutScreen(
                 uiState = uiState,
                 onIncrementReps = { viewModel.incrementReps() },
-                onDecrementReps = { viewModel.decrementReps() }
+                onDecrementReps = { viewModel.decrementReps() },
             )
         }
     }
