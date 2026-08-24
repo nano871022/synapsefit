@@ -1,5 +1,5 @@
 Especificación detallada de implementación para la creación de las 12 interfaces de usuario de SynapseFit en Jetpack Compose, siguiendo la arquitectura de componentes pasivos (Dumb UI) y el sistema de diseño Kinetic Pulse.
-V1: DashboardView
+## V1: DashboardView
  * Ruta de Navegación: dashboard
  * Módulo: :app (co.japl.android.synapsefit.app.ui.dashboard)
 Estructura de Componentes Composables
@@ -23,7 +23,8 @@ Eventos de Interfaz (DashboardUiEvents)
  * onStartWorkoutClick: (planId: String) -> Unit
  * onLogMeasurementClick: () -> Unit
  * onProfileClick: () -> Unit
-V2: BodyMeasurementsView
+   
+## V2: BodyMeasurementsView
  * Ruta de Navegación: measurements/entry
  * Módulo: :app (co.japl.android.synapsefit.app.ui.measurements)
 Estructura de Componentes Composables
@@ -49,7 +50,8 @@ Eventos de Interfaz (BodyMeasurementsUiEvents)
  * onWeightChange: (String) -> Unit
  * onZoneValueChange: (zone: AnatomicalZone, value: String) -> Unit
  * onSaveClick: () -> Unit
-V3: MeasurementProgressGraphView
+   
+## V3: MeasurementProgressGraphView
  * Ruta de Navegación: measurements/progress
  * Módulo: :app (co.japl.android.synapsefit.app.ui.measurements)
 Estructura de Componentes Composables
@@ -65,7 +67,7 @@ data class MeasurementProgressUiState(
     val isLoading: Boolean = false
 )
 
-V4: WorkoutPlansView
+## V4: WorkoutPlansView
  * Ruta de Navegación: workout/plans
  * Módulo: :app (co.japl.android.synapsefit.app.ui.workout)
 Estructura de Componentes Composables
@@ -80,7 +82,7 @@ data class WorkoutPlansUiState(
     val isLoading: Boolean = false
 )
 
-V5: AICoachGeneratorView
+## V5: AICoachGeneratorView
  * Ruta de Navegación: workout/ai-generator
  * Módulo: :app (co.japl.android.synapsefit.app.ui.workout)
 Estructura de Componentes Composables
@@ -97,7 +99,7 @@ data class AICoachGeneratorUiState(
     val generationError: String? = null
 )
 
-V6: WorkoutPlanDetailView
+## V6: WorkoutPlanDetailView
  * Ruta de Navegación: workout/detail/{planId}
  * Módulo: :app (co.japl.android.synapsefit.app.ui.workout)
 Estructura de Componentes Composables
@@ -114,7 +116,7 @@ data class WorkoutPlanDetailUiState(
     val isLoading: Boolean = false
 )
 
-V7: ActiveWorkoutSessionView
+## V7: ActiveWorkoutSessionView
  * Ruta de Navegación: workout/active/{planId}
  * Módulo: :app (co.japl.android.synapsefit.app.ui.workout)
 Estructura de Componentes Composables
@@ -133,7 +135,7 @@ data class ActiveWorkoutUiState(
     val isSessionComplete: Boolean = false
 )
 
-V8: WorkoutHistoryView
+## V8: WorkoutHistoryView
  * Ruta de Navegación: workout/history
  * Módulo: :app (co.japl.android.synapsefit.app.ui.history)
 Estructura de Componentes Composables
@@ -150,7 +152,7 @@ data class WorkoutHistoryUiState(
     val recordedSessions: List<SessionHistoryUiModel> = emptyList()
 )
 
-V9: BackupSyncView
+## V9: BackupSyncView
  * Ruta de Navegación: settings/backup
  * Módulo: :app (co.japl.android.synapsefit.app.ui.settings)
 Estructura de Componentes Composables
@@ -167,7 +169,7 @@ data class BackupSyncUiState(
     val isSyncing: Boolean = false
 )
 
-V10: LLMSettingsView
+## V10: LLMSettingsView
  * Ruta de Navegación: settings/llm
  * Módulo: :app (co.japl.android.synapsefit.app.ui.settings)
 Estructura de Componentes Composables
@@ -181,7 +183,7 @@ data class LlmSettingsUiState(
     val isLoading: Boolean = false
 )
 
-V11: AboutDeveloperView
+## V11: AboutDeveloperView
  * Ruta de Navegación: settings/about
  * Módulo: :app (co.japl.android.synapsefit.app.ui.settings)
 Estructura de Componentes Composables
@@ -195,7 +197,7 @@ data class AboutDeveloperUiState(
     val applicationId: String = "co.japl.android.synapsefit"
 )
 
-V12: WearOSActiveSessionView
+## V12: WearOSActiveSessionView
  * Ruta de Navegación: Native Wear OS Activity
  * Módulo: :wear (co.japl.android.synapsefit.wear.ui)
 Estructura de Componentes Composables (Wear Compose)
