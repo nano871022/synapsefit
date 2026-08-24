@@ -1,0 +1,82 @@
+@file:Suppress("MaxLineLength")
+
+package co.japl.android.synapsefit.app.ui.workout
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
+import co.japl.android.synapsefit.core.usecase.GenerateWorkoutPlanUseCase
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+data class AICoachGeneratorUiState(
+    val selectedEnvironment: TrainingEnvironment = TrainingEnvironment.BODYWEIGHT,
+    val gymChainQuery: String = "",
+    val promptContext: String = "",
+    val isGenerating: Boolean = false,
+    val generationError: String? = null,
+    val generatedPlanId: String? = null,
+)
+
+class AICoachGeneratorViewModel(
+    private val generateWorkoutPlanUseCase: GenerateWorkoutPlanUseCase? = null,
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(AICoachGeneratorUiState())
+    val uiState: StateFlow<AICoachGeneratorUiState> = _uiState.asStateFlow()
+
+    fun onEnvironmentSelected(env: TrainingEnvironment) {
+        _uiState.update { it.copy(selectedEnvironment = env, generationError = null) }
+    }
+
+    fun onGymChainQueryChange(query: String) {
+        _uiState.update { it.copy(gymChainQuery = query) }
+    }
+
+    fun onPromptContextChange(context: String) {
+        _uiState.update { it.copy(promptContext = context) }
+    }
+
+    fun generatePlan() {
+        val state = _uiState.value
+        viewModelScope.launch {
+            _uiState.update { it.copy(isGenerating = true, generationError = null) }
+
+            if (generateWorkoutPlanUseCase != null) {
+                val result =
+                    generateWorkoutPlanUseCase(
+                        promptContext = state.promptContext.ifBlank { "Plan de entrenamiento general de hipertrofia y fuerza" },
+                        environment = state.selectedEnvironment,
+                        gymChainQuery = if (state.selectedEnvironment == TrainingEnvironment.CHAIN_GYM) state.gymChainQuery else null,
+                    )
+                result.fold(
+                    onSuccess = { (plan, _) ->
+                        _uiState.update {
+                            it.copy(
+                                isGenerating = false,
+                                generatedPlanId = plan.id,
+                            )
+                        }
+                    },
+                    onFailure = { error ->
+                        _uiState.update {
+                            it.copy(
+                                isGenerating = false,
+                                generationError = error.message ?: "Error al generar la rutina con IA",
+                            )
+                        }
+                    },
+                )
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isGenerating = false,
+                        generationError = "Configuración LLM no disponible",
+                    )
+                }
+            }
+        }
+    }
+}
