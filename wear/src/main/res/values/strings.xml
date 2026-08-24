@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wear_app_name">SynapseFit Wear</string>
+    <string name="wear_default_exercise">Press de Banca</string>
+    <string name="wear_bpm_unit">BPM</string>
+    <string name="wear_reps_label">Reps</string>
+    <string name="wear_inc_reps">+</string>
+    <string name="wear_dec_reps">-</string>
+    <string name="wear_synced">Sincronizado</string>
+    <string name="wear_not_synced">Sin Sincronizar</string>
+</resources>
