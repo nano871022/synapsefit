@@ -35,4 +35,6 @@
 ## Fase 7: QA, Hardening y Lanzamiento
  * Ejecutar la suite completa de pruebas de integración (./gradlew testDebugUnitTest).
  * Validar el cumplimiento de guardas arquitectónicas con ktlintCheck y detekt.
- * Generar el paquete firmado final .aab y realizar el despliegue al track de pruebas internas de Google Play Console.
+ * Generar el paquete firmado final apk desde git hub actions para q sea descargado para realizar pruebas en dispositivos.
+ * genera  github actions pára ejecutar las pruebas y el lint del proyecto para q se pueda descargar y verificar
+ * genera github actions para ejecutar actualizacion de version(ejecucion manual), actualiza version del proyecto ademas de crear el tag en github.
