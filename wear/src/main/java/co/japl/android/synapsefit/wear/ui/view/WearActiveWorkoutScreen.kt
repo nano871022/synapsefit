@@ -1,4 +1,4 @@
-package co.japl.android.synapsefit.wear.ui
+package co.japl.android.synapsefit.wear.ui.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,7 +24,6 @@ import androidx.wear.compose.foundation.CurvedLayout
 import androidx.wear.compose.foundation.curvedRow
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
-import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.curvedText
 import co.japl.android.synapsefit.ui.theme.BackgroundDark
@@ -35,6 +33,7 @@ import co.japl.android.synapsefit.ui.theme.OnSurfaceDark
 import co.japl.android.synapsefit.ui.theme.PrimaryCyan
 import co.japl.android.synapsefit.ui.theme.SurfaceContainerHigh
 import co.japl.android.synapsefit.wear.R
+import co.japl.android.synapsefit.wear.ui.viewmodel.WearActiveWorkoutUiState
 
 @Composable
 fun WearActiveWorkoutScreen(

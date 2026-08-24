@@ -1,12 +1,17 @@
-package co.japl.android.synapsefit.wear.ui
+package co.japl.android.synapsefit.wear.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import co.japl.android.synapsefit.core.port.secondary.WearSensorPort
+import co.japl.android.synapsefit.core.port.secondary.WearSyncPort
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class WearActiveWorkoutViewModel : ViewModel() {
+class WearActiveWorkoutViewModel(
+    private val sensorPort: WearSensorPort? = null,
+    private val syncPort: WearSyncPort? = null
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WearActiveWorkoutUiState())
     val uiState: StateFlow<WearActiveWorkoutUiState> = _uiState.asStateFlow()
@@ -16,6 +21,7 @@ class WearActiveWorkoutViewModel : ViewModel() {
     }
 
     fun updateHeartRate(bpm: Int) {
+        sensorPort?.onHeartRateSensorChanged(bpm)
         _uiState.update { it.copy(currentHeartRateBpm = bpm) }
     }
 
@@ -28,6 +34,7 @@ class WearActiveWorkoutViewModel : ViewModel() {
     }
 
     fun setSyncStatus(isSynced: Boolean) {
+        syncPort?.onConnectionStateChanged(isSynced)
         _uiState.update { it.copy(isSyncedWithPhone = isSynced) }
     }
 }

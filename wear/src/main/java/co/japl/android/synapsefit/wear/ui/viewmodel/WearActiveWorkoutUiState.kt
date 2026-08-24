@@ -1,4 +1,4 @@
-package co.japl.android.synapsefit.wear.ui
+package co.japl.android.synapsefit.wear.ui.viewmodel
 
 data class WearActiveWorkoutUiState(
     val exerciseName: String = "",

@@ -1,8 +1,8 @@
-package co.japl.android.synapsefit.wear
+package co.japl.android.synapsefit.wear.viewmodel
 
-import co.japl.android.synapsefit.wear.service.WearHeartRateSensorManager
-import co.japl.android.synapsefit.wear.service.WearableSyncService
-import co.japl.android.synapsefit.wear.ui.WearActiveWorkoutViewModel
+import co.japl.android.synapsefit.services.wear.WearHeartRateSensorAdapter
+import co.japl.android.synapsefit.services.wear.WearableSyncAdapter
+import co.japl.android.synapsefit.wear.ui.viewmodel.WearActiveWorkoutViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -11,11 +11,18 @@ import org.junit.Test
 
 class WearActiveWorkoutViewModelTest {
 
+    private lateinit var sensorAdapter: WearHeartRateSensorAdapter
+    private lateinit var syncAdapter: WearableSyncAdapter
     private lateinit var viewModel: WearActiveWorkoutViewModel
 
     @Before
     fun setUp() {
-        viewModel = WearActiveWorkoutViewModel()
+        sensorAdapter = WearHeartRateSensorAdapter()
+        syncAdapter = WearableSyncAdapter()
+        viewModel = WearActiveWorkoutViewModel(
+            sensorPort = sensorAdapter,
+            syncPort = syncAdapter
+        )
     }
 
     @Test
@@ -34,9 +41,12 @@ class WearActiveWorkoutViewModelTest {
     }
 
     @Test
-    fun testUpdateHeartRate() {
+    fun testUpdateHeartRatePassesThroughCorePort() {
+        sensorAdapter.startHeartRateMonitoring()
         viewModel.updateHeartRate(145)
+
         assertEquals(145, viewModel.uiState.value.currentHeartRateBpm)
+        assertEquals(145, sensorAdapter.heartRateBpm.value)
     }
 
     @Test
@@ -54,45 +64,14 @@ class WearActiveWorkoutViewModelTest {
     }
 
     @Test
-    fun testSetSyncStatus() {
+    fun testSetSyncStatusPassesThroughCorePort() {
         viewModel.setSyncStatus(false)
+
         assertFalse(viewModel.uiState.value.isSyncedWithPhone)
+        assertFalse(syncAdapter.isPhoneConnected.value)
 
         viewModel.setSyncStatus(true)
         assertTrue(viewModel.uiState.value.isSyncedWithPhone)
-    }
-
-    @Test
-    fun testWearHeartRateSensorManager() {
-        val sensorManager = WearHeartRateSensorManager()
-        assertFalse(sensorManager.isMonitoring.value)
-
-        sensorManager.startHeartRateMonitoring()
-        assertTrue(sensorManager.isMonitoring.value)
-
-        sensorManager.onHeartRateSensorChanged(120)
-        assertEquals(120, sensorManager.heartRateBpm.value)
-
-        sensorManager.stopHeartRateMonitoring()
-        assertFalse(sensorManager.isMonitoring.value)
-    }
-
-    @Test
-    fun testWearableSyncService() {
-        val syncService = WearableSyncService()
-        assertTrue(syncService.isPhoneConnected.value)
-
-        syncService.queueDataForDeferredSync("ex-1", 10, 130)
-        assertEquals(1, syncService.pendingSyncDataCount.value)
-
-        syncService.onConnectionStateChanged(false)
-        assertFalse(syncService.isPhoneConnected.value)
-
-        syncService.flushSyncQueue()
-        assertEquals(1, syncService.pendingSyncDataCount.value)
-
-        syncService.onConnectionStateChanged(true)
-        syncService.flushSyncQueue()
-        assertEquals(0, syncService.pendingSyncDataCount.value)
+        assertTrue(syncAdapter.isPhoneConnected.value)
     }
 }
