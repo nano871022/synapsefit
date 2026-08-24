@@ -9,8 +9,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -36,7 +40,7 @@ fun AICoachGeneratorScreen(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(MaterialTheme.spacing.medium)
+                .padding(MaterialTheme.spacing.marginEdge)
                 .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
     ) {
@@ -83,7 +87,7 @@ fun AICoachGeneratorScreen(
             onValueChange = onPromptContextChange,
             label = { Text(stringResource(R.string.goal_prompt_placeholder)) },
             modifier = Modifier.fillMaxWidth(),
-            minLines = 4,
+            minLines = 3,
         )
 
         NeonButton(
@@ -92,6 +96,26 @@ fun AICoachGeneratorScreen(
             isLoading = state.isGenerating,
             enabled = !state.isGenerating,
         )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+        ) {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.spacing.medium),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = "Tu rutina personalizada aparecerá aquí...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 
@@ -103,14 +127,19 @@ fun EnvironmentSelector(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
     ) {
         TrainingEnvironment.entries.forEach { env ->
             FilterChip(
                 selected = env == selectedEnvironment,
                 onClick = { onEnvironmentSelected(env) },
-                label = { Text(getEnvLabel(env)) },
+                label = { Text(getEnvLabel(env), style = MaterialTheme.typography.labelSmall) },
                 modifier = Modifier.weight(1f),
+                colors =
+                    FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
             )
         }
     }

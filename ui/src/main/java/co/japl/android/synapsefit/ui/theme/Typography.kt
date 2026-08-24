@@ -8,23 +8,28 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
+// Typography definitions aligned with rawdesign/design.md
+// Display / Headline: Hanken Grotesk (SansSerif fallback)
+// Body / Title: Inter (SansSerif fallback)
+// Technical / Label: JetBrains Mono (Monospace fallback)
+
 val KineticTypography =
     Typography(
         displayLarge =
             TextStyle(
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.ExtraBold,
-                fontSize = 57.sp,
-                lineHeight = 64.sp,
-                letterSpacing = (-0.25).sp,
+                fontSize = 48.sp,
+                lineHeight = 56.sp,
+                letterSpacing = (-0.02).sp,
             ),
         displayMedium =
             TextStyle(
                 fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Bold,
-                fontSize = 45.sp,
-                lineHeight = 52.sp,
-                letterSpacing = 0.sp,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 40.sp,
+                lineHeight = 48.sp,
+                letterSpacing = (-0.02).sp,
             ),
         displaySmall =
             TextStyle(
@@ -45,7 +50,7 @@ val KineticTypography =
         headlineMedium =
             TextStyle(
                 fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
                 fontSize = 28.sp,
                 lineHeight = 36.sp,
                 letterSpacing = 0.sp,
@@ -69,10 +74,10 @@ val KineticTypography =
         titleMedium =
             TextStyle(
                 fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp,
                 lineHeight = 24.sp,
-                letterSpacing = 0.15.sp,
+                letterSpacing = 0.sp,
             ),
         titleSmall =
             TextStyle(
@@ -88,7 +93,7 @@ val KineticTypography =
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp,
                 lineHeight = 24.sp,
-                letterSpacing = 0.5.sp,
+                letterSpacing = 0.sp,
             ),
         bodyMedium =
             TextStyle(
@@ -112,7 +117,7 @@ val KineticTypography =
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
                 lineHeight = 20.sp,
-                letterSpacing = 0.1.sp,
+                letterSpacing = 0.05.sp,
             ),
         labelMedium =
             TextStyle(
@@ -120,14 +125,14 @@ val KineticTypography =
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
-                letterSpacing = 0.5.sp,
+                letterSpacing = 0.05.sp,
             ),
         labelSmall =
             TextStyle(
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Medium,
-                fontSize = 11.sp,
+                fontSize = 12.sp,
                 lineHeight = 16.sp,
-                letterSpacing = 0.5.sp,
+                letterSpacing = 0.05.sp,
             ),
     )
