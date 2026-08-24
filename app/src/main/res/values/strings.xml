@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App & General Navigation -->
+    <string name="app_name">SynapseFit</string>
+    <string name="menu_drawer">Menú</string>
+    <string name="menu_options">Opciones</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_measurements_entry">Registrar Medidas</string>
+    <string name="nav_measurements_progress">Tendencias</string>
+    <string name="nav_workout_plans">Planes de Rutina</string>
+    <string name="nav_workout_history">Historial</string>
+    <string name="nav_settings_backup">Respaldo Nube</string>
+    <string name="settings_llm">Ajustes LLM</string>
+    <string name="settings_about">Acerca de</string>
+
+    <!-- V1: Dashboard -->
+    <string name="hello_user">¡Hola, %1$s!</string>
+    <string name="syncing">Sincronizando...</string>
+    <string name="synced">Sincronizado</string>
+    <string name="profile">Perfil</string>
+    <string name="latest_weight_title">Última Medida de Peso</string>
+    <string name="no_records">Sin registros</string>
+    <string name="tendency">Tendencia: %1$s kg</string>
+    <string name="log_measurement">Registrar Medida</string>
+    <string name="today_workout_title">Entrenamiento de Hoy</string>
+    <string name="start_session">Iniciar Sesión</string>
+    <string name="log_weight">Registrar Peso</string>
+    <string name="live_session">Sesión en Vivo</string>
+    <string name="no_active_routine">Sin rutina activa</string>
+
+    <!-- V2: Body Measurements -->
+    <string name="anthropometric_record">Registro Antropométrico</string>
+    <string name="weight_corp">Peso Corporal *</string>
+    <string name="weight_unit">kg</string>
+    <string name="cm_unit">cm</string>
+    <string name="anatomical_measurements_optional">Medidas Anatómicas (Opcionales)</string>
+    <string name="chest">Pecho</string>
+    <string name="waist">Cintura</string>
+    <string name="hip">Cadera</string>
+    <string name="bicep_left">Bíceps Izq</string>
+    <string name="bicep_right">Bíceps Der</string>
+    <string name="thigh_left">Muslo Izq</string>
+    <string name="thigh_right">Muslo Der</string>
+    <string name="notes_observations">Notas y Observaciones</string>
+    <string name="save_measurements">Guardar Medidas</string>
+    <string name="weight_required_error">El peso es obligatorio y debe ser mayor a 0</string>
+
+    <!-- V3: Measurement Progress -->
+    <string name="trend_analysis">Análisis de Tendencias</string>
+    <string name="evolution">Evolución - %1$s</string>
+    <string name="average">Promedio: %1$s</string>
+    <string name="not_enough_data">No hay suficientes datos para graficar</string>
+    <string name="zone_weight">Peso (kg)</string>
+    <string name="zone_chest">Pecho (cm)</string>
+    <string name="zone_waist">Cintura (cm)</string>
+    <string name="zone_hip">Cadera (cm)</string>
+    <string name="zone_bicep_left">Bíceps Izq (cm)</string>
+    <string name="zone_bicep_right">Bíceps Der (cm)</string>
+    <string name="zone_thigh_left">Muslo Izq (cm)</string>
+    <string name="zone_thigh_right">Muslo Der (cm)</string>
+
+    <!-- V4: Workout Plans -->
+    <string name="workout_plans">Planes de Entrenamiento</string>
+    <string name="generate_with_ai">Generar con IA</string>
+    <string name="active_plan">Plan Activo</string>
+    <string name="no_active_plan_configured">No tienes un plan activo configurado</string>
+    <string name="plan_history">Historial de Planes</string>
+    <string name="ia_generated">IA Generated</string>
+    <string name="exercises_programmed">%1$d ejercicios programados</string>
+    <string name="view_detail">Ver Detalle</string>
+
+    <!-- V5: AI Coach Generator -->
+    <string name="ai_coach_generator">Generador AI Coach</string>
+    <string name="training_environment">Entorno de Entrenamiento</string>
+    <string name="env_bodyweight">Peso Corporal</string>
+    <string name="env_dumbbells">Mancuernas</string>
+    <string name="env_chain_gym">Gimnasio Cadena</string>
+    <string name="gym_chain_label">Cadena / Sede de Gimnasio</string>
+    <string name="gym_chain_placeholder">Ej: SmartFit Sede Central</string>
+    <string name="goal_and_context">Objetivo y Contexto Personal</string>
+    <string name="goal_prompt_placeholder">Ej: Aumento de masa muscular, 4 días a la semana, enfoque en torso</string>
+    <string name="generate_plan_ai">Generar Plan con IA</string>
+
+    <!-- V6: Workout Plan Detail -->
+    <string name="plan_detail">Detalle de Plan</string>
+    <string name="start_workout">Comenzar Entrenamiento</string>
+    <string name="objective">Objetivo</string>
+    <string name="no_description_available">Sin descripción disponible</string>
+    <string name="total_exercises">Total de Ejercicios: %1$d</string>
+    <string name="prescribed_exercises">Ejercicios Prescritos</string>
+    <string name="rest_seconds_abbr">%1$ds desc.</string>
+
+    <!-- V7: Active Workout Session -->
+    <string name="finish_workout">Finalizar Entrenamiento</string>
+    <string name="elapsed_time">Tiempo Transcurrido</string>
+    <string name="rest_between_sets">Descanso entre series</string>
+    <string name="exercise_prefix">Ejercicio: %1$s</string>
+    <string name="set_col">Serie</string>
+    <string name="reps_col">Reps</string>
+    <string name="weight_col">Peso (kg)</string>
+    <string name="done_col">Listo</string>
+
+    <!-- V8: Workout History -->
+    <string name="workout_history">Historial de Entrenamiento</string>
+    <string name="records_stat">Registros</string>
+    <string name="total_volume_stat">Volumen Total</string>
+    <string name="recent_records">Registros Recientes</string>
+    <string name="no_workout_records">Aún no hay registros de entrenamiento</string>
+    <string name="date_prefix">Fecha: %1$s</string>
+    <string name="model_prefix">Modelo: %1$s</string>
+    <string name="key_prefix">Key: %1$s</string>
+
+    <!-- V9: Backup & Sync -->
+    <string name="backup_sync">Respaldo y Sincronización</string>
+    <string name="drive_appdata">Google Drive (AppData)</string>
+    <string name="connected">Conectado</string>
+    <string name="not_connected">No conectado</string>
+    <string name="last_backup_details">Detalles del Último Respaldo</string>
+    <string name="no_backups">Sin respaldos</string>
+    <string name="sha256_hash">Hash SHA-256 de Integridad:</string>
+    <string name="backup_now">Realizar Respaldo Ahora</string>
+
+    <!-- V10: LLM Settings -->
+    <string name="llm_providers_config">Configuración de Proveedores IA</string>
+    <string name="security_keystore_badge">Almacenamiento seguro cifrado mediante Android KeyStore (AES256_GCM)</string>
+    <string name="configure_credentials">Configurar Credenciales</string>
+    <string name="llm_provider">Proveedor LLM</string>
+    <string name="api_key">API Key</string>
+    <string name="model_name">Nombre del Modelo</string>
+    <string name="save_and_activate_provider">Guardar y Activar Proveedor</string>
+    <string name="registered_providers">Proveedores Registrados</string>
+    <string name="active_badge">ACTIVO</string>
+
+    <!-- V11: About Developer -->
+    <string name="about_synapsefit">Acerca de SynapseFit</string>
+    <string name="app_info">Información de la Aplicación</string>
+    <string name="version_label">Versión: %1$s (%2$d)</string>
+    <string name="id_label">ID: %1$s</string>
+    <string name="hexagonal_architecture">Arquitectura Hexagonal Multi-módulo</string>
+    <string name="hexagonal_desc">Módulos: :app, :core (Kotlin puro), :services (Room/Drive/LLM), :ui (Kinetic Pulse), :util, :wear (Wear OS Companion).</string>
+    <string name="data_sovereignty">Soberanía de datos local primero con respaldo cifrado SHA-256.</string>
+</resources>
