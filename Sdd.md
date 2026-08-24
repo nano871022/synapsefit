@@ -13,7 +13,7 @@
 
 SynapseFit is an offline-first fitness and body metric application engineered to guarantee complete data sovereignty, AI-assisted training plan generation, and wearable telemetry integration.
 
-
+```
 +-------------------------------------------------------+
 |                    :app Module                        |
 |  (Dumb UI Screens, AppNavHost, ViewModels, DI)       |
@@ -36,7 +36,7 @@ v                             v
 |                    :wear Module                       |
 |  (Standalone Wear OS App, Sensors, Deferred Sync)     |
 +-------------------------------------------------------+
-
+```
 ---
 
 ## 2. Module Specifications
@@ -151,8 +151,9 @@ CREATE TABLE IF NOT EXISTS llm_configs (
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
 );
+```
 
-4. Navigation & View Mapping
+## 4. Navigation & View Mapping
 The presentation layer utilizes a single-activity architecture (MainActivity) coordinated via AppNavigator.
 sealed class NavigationCommand {
     data class ToRoute(
@@ -185,7 +186,9 @@ Supported Screen Inventory
 | V10 | LLMSettingsView | settings/llm | TopAppBar (menu.xml) |
 | V11 | AboutDeveloperView | settings/about | TopAppBar (menu.xml) |
 | V12 | WearOSActiveSessionView | Native Wear Activity | Wear OS App |
-5. Design System Specification ("Kinetic Pulse")
+
+## 5. Design System Specification ("Kinetic Pulse")
+
 Color Tokens
  * Background / Level 0: #101416
  * Surface Container / Level 1: #1C2023
@@ -204,11 +207,15 @@ Adaptive Layout Rules (WindowSizeClass)
  * Compact (<600dp - Smartphones / Z Fold 4 Folded): 1-column stacked layouts, bottom navigation bar enabled.
  * Medium (600dp–840dp - Z Fold 4 Unfolded): 2-pane layouts (ListDetailPaneScaffold / SupportingPaneScaffold), navigation rail enabled.
  * Expanded (>840dp - Redmi Pad Pro / Tablets): Multi-column dashboard grid with persistent navigation drawer.
-6. AI Architecture & Data Security
+ * 
+## 6. AI Architecture & Data Security
+
  * Multi-LLM Switchboard: Handles Gemini, OpenAI, and Anthropic API connections. Prioritizes active configuration ordered by ORDER BY updated_at DESC, created_at DESC LIMIT 1.
  * Credential Encryption: All API keys are encrypted using EncryptedSharedPreferences backed by the Android KeyStore (AES256_GCM) before being stored in Room.
  * Web 4.0 Backup Sovereignty: Backups use the private DriveScopes.DRIVE_APPDATA folder on Google Drive. Export files (co.japl.android.synapsefit.backup.enc) are compressed, encrypted, and validated via SHA-256 hash checksums.
-7. CI/CD DevOps Pipeline (GitHub Actions)
+ 
+## 7. CI/CD DevOps Pipeline (GitHub Actions)
+
  * Trigger: Pushes to main branch or pull requests with Conventional Commits (feat:, fix:, refactor:).
  * Automated Tasks:
    * Static code analysis (ktlint, detekt).
