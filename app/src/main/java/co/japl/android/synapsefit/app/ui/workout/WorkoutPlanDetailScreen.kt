@@ -10,7 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -20,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import co.japl.android.synapsefit.R
-import co.japl.android.synapsefit.ui.components.KineticCard
 import co.japl.android.synapsefit.ui.components.NeonButton
 import co.japl.android.synapsefit.ui.theme.spacing
 
@@ -37,7 +39,7 @@ fun WorkoutPlanDetailScreen(
                 NeonButton(
                     text = stringResource(R.string.start_workout),
                     onClick = { onStartSessionClick(state.planId) },
-                    modifier = Modifier.padding(MaterialTheme.spacing.medium),
+                    modifier = Modifier.padding(MaterialTheme.spacing.marginEdge),
                 )
             }
         },
@@ -47,7 +49,7 @@ fun WorkoutPlanDetailScreen(
                 Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(MaterialTheme.spacing.medium),
+                    .padding(MaterialTheme.spacing.marginEdge),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
         ) {
             item {
@@ -86,23 +88,43 @@ fun RoutineSummaryModule(
     totalExercises: Int,
     modifier: Modifier = Modifier,
 ) {
-    KineticCard(modifier = modifier) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = stringResource(R.string.objective),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = goalDescription.ifBlank { stringResource(R.string.no_description_available) },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = stringResource(R.string.total_exercises, totalExercises),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            ),
+    ) {
+        Row(
+            modifier = Modifier.padding(MaterialTheme.spacing.medium).fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "EJERCICIOS",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = "$totalExercises",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = stringResource(R.string.objective).uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = goalDescription.ifBlank { stringResource(R.string.no_description_available) },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
         }
     }
 }
@@ -112,9 +134,16 @@ fun ExerciseListItem(
     exercise: ExerciseUiModel,
     modifier: Modifier = Modifier,
 ) {
-    KineticCard(modifier = modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            ),
+    ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.padding(MaterialTheme.spacing.medium).fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -130,7 +159,7 @@ fun ExerciseListItem(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     AssistChip(
                         onClick = { },
-                        label = { Text(exercise.muscleGroup) },
+                        label = { Text(exercise.muscleGroup, style = MaterialTheme.typography.labelSmall) },
                     )
                     Text(
                         text = "${exercise.targetSets} x ${exercise.targetReps}",

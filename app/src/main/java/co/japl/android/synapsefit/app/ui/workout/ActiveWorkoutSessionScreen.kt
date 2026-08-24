@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -48,7 +51,7 @@ fun ActiveWorkoutSessionScreen(
             NeonButton(
                 text = stringResource(R.string.finish_workout),
                 onClick = onFinishSession,
-                modifier = Modifier.padding(MaterialTheme.spacing.medium),
+                modifier = Modifier.padding(MaterialTheme.spacing.marginEdge),
             )
         },
     ) { paddingValues ->
@@ -57,7 +60,7 @@ fun ActiveWorkoutSessionScreen(
                 Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(MaterialTheme.spacing.medium)
+                    .padding(MaterialTheme.spacing.marginEdge)
                     .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
         ) {
@@ -89,12 +92,26 @@ fun ActiveWorkoutSessionScreen(
                 color = MaterialTheme.colorScheme.primary,
             )
 
-            SetTrackingTable(
-                sets = state.sets,
-                onRepsChange = onSetRepsChange,
-                onWeightChange = onSetWeightChange,
-                onCompleteSet = onCompleteSet,
-            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+            ) {
+                Column(
+                    modifier = Modifier.padding(MaterialTheme.spacing.medium),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+                ) {
+                    SetTrackingTable(
+                        sets = state.sets,
+                        onRepsChange = onSetRepsChange,
+                        onWeightChange = onSetWeightChange,
+                        onCompleteSet = onCompleteSet,
+                    )
+                }
+            }
         }
     }
 }
@@ -125,7 +142,7 @@ fun WorkoutChronometer(
             }
             Text(
                 text = formatted,
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.displayMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
         }
@@ -139,7 +156,7 @@ fun RestTimerWidget(
 ) {
     KineticCard(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -149,7 +166,7 @@ fun RestTimerWidget(
             Text(
                 text = stringResource(R.string.rest_between_sets),
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = "${secondsRemaining}s",
@@ -178,23 +195,27 @@ fun SetTrackingTable(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = stringResource(R.string.set_col),
-                style = MaterialTheme.typography.labelMedium,
+                text = stringResource(R.string.set_col).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.width(48.dp),
             )
             Text(
-                text = stringResource(R.string.reps_col),
-                style = MaterialTheme.typography.labelMedium,
+                text = stringResource(R.string.weight_col).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = stringResource(R.string.weight_col),
-                style = MaterialTheme.typography.labelMedium,
+                text = stringResource(R.string.reps_col).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = stringResource(R.string.done_col),
-                style = MaterialTheme.typography.labelMedium,
+                text = stringResource(R.string.done_col).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.width(48.dp),
             )
         }
@@ -208,16 +229,8 @@ fun SetTrackingTable(
                 Text(
                     text = "#${setItem.setIndex}",
                     style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.width(48.dp),
-                )
-
-                OutlinedTextField(
-                    value = setItem.repsCompleted,
-                    onValueChange = { onRepsChange(setItem.setIndex, it) },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    enabled = !setItem.isCompleted,
                 )
 
                 OutlinedTextField(
@@ -226,6 +239,15 @@ fun SetTrackingTable(
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    enabled = !setItem.isCompleted,
+                )
+
+                OutlinedTextField(
+                    value = setItem.repsCompleted,
+                    onValueChange = { onRepsChange(setItem.setIndex, it) },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     enabled = !setItem.isCompleted,
                 )
 

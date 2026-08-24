@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ChevronRight
@@ -23,6 +24,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,8 +48,8 @@ fun WorkoutPlansScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onGeneratePlanClick,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
@@ -55,7 +57,7 @@ fun WorkoutPlansScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null)
-                    Text(stringResource(R.string.generate_with_ai))
+                    Text(stringResource(R.string.generate_with_ai), style = MaterialTheme.typography.labelSmall)
                 }
             }
         },
@@ -65,7 +67,7 @@ fun WorkoutPlansScreen(
                 Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(MaterialTheme.spacing.medium),
+                    .padding(MaterialTheme.spacing.marginEdge),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
         ) {
             item {
@@ -132,9 +134,10 @@ fun ActivePlanCard(
             modifier
                 .fillMaxWidth()
                 .clickable { onPlanClick(plan.id) },
+        shape = RoundedCornerShape(16.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
             ),
     ) {
         Column(
@@ -160,8 +163,14 @@ fun ActivePlanCard(
                     )
                 }
                 if (plan.generatedByLlm) {
-                    Badge(containerColor = MaterialTheme.colorScheme.tertiary) {
-                        Text(stringResource(R.string.ia_generated), color = MaterialTheme.colorScheme.onTertiary)
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.ia_generated),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            style = MaterialTheme.typography.labelSmall,
+                        )
                     }
                 }
             }
@@ -172,11 +181,20 @@ fun ActivePlanCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            Text(
-                text = stringResource(R.string.exercises_programmed, plan.totalExercises),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.exercises_programmed, plan.totalExercises),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                OutlinedButton(onClick = { onPlanClick(plan.id) }) {
+                    Text(stringResource(R.string.view_detail), style = MaterialTheme.typography.labelSmall)
+                }
+            }
         }
     }
 }
