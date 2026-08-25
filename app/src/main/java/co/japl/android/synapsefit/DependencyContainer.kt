@@ -3,9 +3,9 @@ package co.japl.android.synapsefit
 import android.content.Context
 import androidx.room.Room
 import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryPort
+import co.japl.android.synapsefit.core.port.secondary.DriveSyncPort
 import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
 import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
-import co.japl.android.synapsefit.core.port.secondary.DriveSyncPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.GenerateWorkoutPlanUseCase
@@ -25,7 +25,7 @@ class DependencyContainer(context: Context) {
         Room.databaseBuilder(
             context.applicationContext,
             SynapseFitDatabase::class.java,
-            "synapsefit_database.db"
+            "synapsefit_database.db",
         ).build()
     }
 
@@ -62,7 +62,7 @@ class DependencyContainer(context: Context) {
         GenerateWorkoutPlanUseCase(
             llmConfigRepository,
             llmClient,
-            workoutPlanRepository
+            workoutPlanRepository,
         )
     }
 

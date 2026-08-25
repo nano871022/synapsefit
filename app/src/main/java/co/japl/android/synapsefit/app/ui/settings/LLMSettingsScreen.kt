@@ -38,7 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -63,11 +62,12 @@ fun LLMSettingsScreen(
     var modelExpanded by remember { mutableStateOf(false) }
 
     // Default model if nothing is selected or fetched
-    val defaultModel = when (selectedProvider) {
-        LlmProvider.GEMINI -> "gemini-1.5-flash"
-        LlmProvider.OPENAI -> "gpt-4o-mini"
-        LlmProvider.ANTHROPIC -> "claude-3-haiku-20240307"
-    }
+    val defaultModel =
+        when (selectedProvider) {
+            LlmProvider.GEMINI -> "gemini-1.5-flash"
+            LlmProvider.OPENAI -> "gpt-4o-mini"
+            LlmProvider.ANTHROPIC -> "claude-3-haiku-20240307"
+        }
 
     // Set initial model name or update when models are fetched
     androidx.compose.runtime.LaunchedEffect(selectedProvider) {
@@ -136,7 +136,7 @@ fun LLMSettingsScreen(
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
         ) {
             OutlinedTextField(
                 value = apiKeyInput,
@@ -151,7 +151,7 @@ fun LLMSettingsScreen(
                 text = "Fetch",
                 onClick = { onFetchModels(selectedProvider, apiKeyInput) },
                 enabled = apiKeyInput.isNotBlank() && !state.isLoading,
-                modifier = Modifier.width(100.dp)
+                modifier = Modifier.width(100.dp),
             )
         }
 

@@ -36,58 +36,59 @@ class DashboardViewModel(
 
     fun loadDashboardData() {
         dashboardJob?.cancel()
-        dashboardJob = viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+        dashboardJob =
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true) }
 
-            launch {
-                bodyMeasurementRepositoryPort?.getMeasurementsHistory()?.collect { measurements ->
-                    val latestMeasurement = measurements.maxByOrNull { it.createdAt }
-                    val sorted = measurements.sortedByDescending { it.createdAt }
-                    val secondLatestMeasurement = sorted.getOrNull(1)
+                launch {
+                    bodyMeasurementRepositoryPort?.getMeasurementsHistory()?.collect { measurements ->
+                        val latestMeasurement = measurements.maxByOrNull { it.createdAt }
+                        val sorted = measurements.sortedByDescending { it.createdAt }
+                        val secondLatestMeasurement = sorted.getOrNull(1)
 
-                    val latestWeight = latestMeasurement?.weightKg
-                    val deltaWeight =
-                        if (latestMeasurement != null && secondLatestMeasurement != null) {
-                            latestMeasurement.weightKg - secondLatestMeasurement.weightKg
-                        } else {
-                            null
-                        }
+                        val latestWeight = latestMeasurement?.weightKg
+                        val deltaWeight =
+                            if (latestMeasurement != null && secondLatestMeasurement != null) {
+                                latestMeasurement.weightKg - secondLatestMeasurement.weightKg
+                            } else {
+                                null
+                            }
 
-                    _uiState.update {
-                        it.copy(
-                            latestWeightKg = latestWeight,
-                            weightTrendDeltaKg = deltaWeight,
-                            isLoading = false
-                        )
-                    }
-                }
-            }
-
-            launch {
-                workoutPlanRepositoryPort?.getActivePlan()?.collect { activePlan ->
-                    if (activePlan != null) {
                         _uiState.update {
                             it.copy(
-                                todayWorkoutTitle = activePlan.title,
-                                todayWorkoutPlanId = activePlan.id,
-                                isLoading = false
+                                latestWeightKg = latestWeight,
+                                weightTrendDeltaKg = deltaWeight,
+                                isLoading = false,
                             )
                         }
-                    } else {
-                        // If no active plan, show the latest created one as a suggestion
-                        workoutPlanRepositoryPort.getAllPlans().collect { allPlans ->
-                            val latestPlan = allPlans.maxByOrNull { it.updatedAt }
+                    }
+                }
+
+                launch {
+                    workoutPlanRepositoryPort?.getActivePlan()?.collect { activePlan ->
+                        if (activePlan != null) {
                             _uiState.update {
                                 it.copy(
-                                    todayWorkoutTitle = latestPlan?.title ?: "Sin rutina activa",
-                                    todayWorkoutPlanId = latestPlan?.id,
-                                    isLoading = false
+                                    todayWorkoutTitle = activePlan.title,
+                                    todayWorkoutPlanId = activePlan.id,
+                                    isLoading = false,
                                 )
+                            }
+                        } else {
+                            // If no active plan, show the latest created one as a suggestion
+                            workoutPlanRepositoryPort.getAllPlans().collect { allPlans ->
+                                val latestPlan = allPlans.maxByOrNull { it.updatedAt }
+                                _uiState.update {
+                                    it.copy(
+                                        todayWorkoutTitle = latestPlan?.title ?: "Sin rutina activa",
+                                        todayWorkoutPlanId = latestPlan?.id,
+                                        isLoading = false,
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
-        }
     }
 }
