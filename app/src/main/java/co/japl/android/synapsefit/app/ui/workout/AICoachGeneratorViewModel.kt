@@ -111,10 +111,9 @@ class AICoachGeneratorViewModel(
                 it.copy(
                     generatedPlan = null,
                     generatedExercises = emptyList(),
-                    isLoading = false
+                    isLoading = false,
                 )
             }
         }
     }
 }
-

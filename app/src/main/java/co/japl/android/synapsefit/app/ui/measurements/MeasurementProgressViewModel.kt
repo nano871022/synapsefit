@@ -47,57 +47,60 @@ class MeasurementProgressViewModel(
 
     fun loadGraphData() {
         graphDataJob?.cancel()
-        graphDataJob = viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            appNavigator?.setLoading(true)
+        graphDataJob =
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true) }
+                appNavigator?.setLoading(true)
 
-            bodyMeasurementRepositoryPort?.getMeasurementsHistory()?.collect { measurements ->
-                val selectedZone = _uiState.value.selectedMetric
-                val timeRangeDays = _uiState.value.timeRangeDays
-                val now = System.currentTimeMillis()
-                val startTime = if (timeRangeDays > 0) {
-                    now - (timeRangeDays.toLong() * 24 * 60 * 60 * 1000)
-                } else {
-                    0L
-                }
-
-                val filteredMeasurements = measurements
-                    .filter { it.createdAt >= startTime }
-                    .sortedBy { it.createdAt }
-
-                val points =
-                    filteredMeasurements.mapNotNull { m ->
-                        val valForZone =
-                            when (selectedZone) {
-                                AnatomicalZone.WEIGHT -> m.weightKg
-                                AnatomicalZone.CHEST -> m.chestCm
-                                AnatomicalZone.WAIST -> m.waistCm
-                                AnatomicalZone.HIP -> m.hipCm
-                                AnatomicalZone.BICEP_LEFT -> m.bicepLeftCm
-                                AnatomicalZone.BICEP_RIGHT -> m.bicepRightCm
-                                AnatomicalZone.THIGH_LEFT -> m.thighLeftCm
-                                AnatomicalZone.THIGH_RIGHT -> m.thighRightCm
-                            }
-                        valForZone?.let { v ->
-                            GraphDataPoint(
-                                xLabel = DateTimeUtils.formatEpoch(m.createdAt, "MM-dd"),
-                                value = v.toFloat(),
-                            )
+                bodyMeasurementRepositoryPort?.getMeasurementsHistory()?.collect { measurements ->
+                    val selectedZone = _uiState.value.selectedMetric
+                    val timeRangeDays = _uiState.value.timeRangeDays
+                    val now = System.currentTimeMillis()
+                    val startTime =
+                        if (timeRangeDays > 0) {
+                            now - (timeRangeDays.toLong() * 24 * 60 * 60 * 1000)
+                        } else {
+                            0L
                         }
+
+                    val filteredMeasurements =
+                        measurements
+                            .filter { it.createdAt >= startTime }
+                            .sortedBy { it.createdAt }
+
+                    val points =
+                        filteredMeasurements.mapNotNull { m ->
+                            val valForZone =
+                                when (selectedZone) {
+                                    AnatomicalZone.WEIGHT -> m.weightKg
+                                    AnatomicalZone.CHEST -> m.chestCm
+                                    AnatomicalZone.WAIST -> m.waistCm
+                                    AnatomicalZone.HIP -> m.hipCm
+                                    AnatomicalZone.BICEP_LEFT -> m.bicepLeftCm
+                                    AnatomicalZone.BICEP_RIGHT -> m.bicepRightCm
+                                    AnatomicalZone.THIGH_LEFT -> m.thighLeftCm
+                                    AnatomicalZone.THIGH_RIGHT -> m.thighRightCm
+                                }
+                            valForZone?.let { v ->
+                                GraphDataPoint(
+                                    xLabel = DateTimeUtils.formatEpoch(m.createdAt, "MM-dd"),
+                                    value = v.toFloat(),
+                                )
+                            }
+                        }
+
+                    val values = points.map { it.value.toDouble() }
+                    val avg = MathUtils.calculateAverage(values)
+
+                    _uiState.update {
+                        it.copy(
+                            dataPoints = points,
+                            averageValue = avg,
+                            isLoading = false,
+                        )
                     }
-
-                val values = points.map { it.value.toDouble() }
-                val avg = MathUtils.calculateAverage(values)
-
-                _uiState.update {
-                    it.copy(
-                        dataPoints = points,
-                        averageValue = avg,
-                        isLoading = false,
-                    )
+                    appNavigator?.setLoading(false)
                 }
-                appNavigator?.setLoading(false)
             }
-        }
     }
 }

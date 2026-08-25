@@ -42,16 +42,17 @@ class WorkoutPlansViewModel(
             appNavigator?.setLoading(true)
 
             workoutPlanRepositoryPort?.getAllPlans()?.collect { allPlans ->
-                val summaries = allPlans.map { plan ->
-                    WorkoutPlanSummary(
-                        id = plan.id,
-                        title = plan.title,
-                        goalDescription = plan.goalDescription,
-                        isActive = plan.isActive,
-                        generatedByLlm = plan.generatedByLlm,
-                        totalExercises = 0 // We could load this separately if needed
-                    )
-                }
+                val summaries =
+                    allPlans.map { plan ->
+                        WorkoutPlanSummary(
+                            id = plan.id,
+                            title = plan.title,
+                            goalDescription = plan.goalDescription,
+                            isActive = plan.isActive,
+                            generatedByLlm = plan.generatedByLlm,
+                            totalExercises = 0,
+                        )
+                    }
 
                 val active = summaries.find { it.isActive }
                 val archived = summaries.filter { !it.isActive }

@@ -6,13 +6,11 @@ import co.japl.android.synapsefit.core.domain.model.LlmProvider
 import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
+import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import java.util.UUID
 
 @Suppress("TooGenericExceptionCaught")
@@ -78,7 +76,8 @@ class MultiLlmClientAdapter : LlmClientPort {
     ): Result<Pair<WorkoutPlan, List<Exercise>>> {
         val environmentName = environment.name.lowercase().replace('_', ' ')
         val gymSuffix = if (!gymChainQuery.isNullOrBlankCheck()) " in $gymChainQuery" else ""
-        val prompt = """
+        val prompt =
+            """
             Genera un plan de entrenamiento para $environmentName$gymSuffix.
             Contexto: $promptContext
             Responde en formato JSON plano con esta estructura:
@@ -95,7 +94,7 @@ class MultiLlmClientAdapter : LlmClientPort {
                 }
               ]
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val response =
             geminiApi.generateContent(
@@ -109,11 +108,12 @@ class MultiLlmClientAdapter : LlmClientPort {
         // Extract JSON from textResponse (handles Markdown and extra text)
         val jsonStart = textResponse.indexOf('{')
         val jsonEnd = textResponse.lastIndexOf('}')
-        val cleanedJson = if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
-            textResponse.substring(jsonStart, jsonEnd + 1)
-        } else {
-            textResponse.trim()
-        }
+        val cleanedJson =
+            if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
+                textResponse.substring(jsonStart, jsonEnd + 1)
+            } else {
+                textResponse.trim()
+            }
 
         val now = System.currentTimeMillis()
         val planId = UUID.randomUUID().toString()
@@ -124,31 +124,33 @@ class MultiLlmClientAdapter : LlmClientPort {
             val title = jsonObject.get("title")?.asString ?: "Gemini: $environmentName"
             val goal = jsonObject.get("goal")?.asString ?: promptContext
 
-            val workoutPlan = WorkoutPlan(
-                id = planId,
-                title = title,
-                goalDescription = goal,
-                isActive = true,
-                generatedByLlm = true,
-                createdAt = now,
-                updatedAt = now
-            )
+            val workoutPlan =
+                WorkoutPlan(
+                    id = planId,
+                    title = title,
+                    goalDescription = goal,
+                    isActive = true,
+                    generatedByLlm = true,
+                    createdAt = now,
+                    updatedAt = now,
+                )
 
             val exerciseArray = jsonObject.getAsJsonArray("exercises")
-            val exercises = exerciseArray.map { element ->
-                val exObj = element.asJsonObject
-                Exercise(
-                    id = UUID.randomUUID().toString(),
-                    planId = planId,
-                    name = exObj.get("name")?.asString ?: "Ejercicio sin nombre",
-                    muscleGroup = exObj.get("muscleGroup")?.asString ?: "VARIOUS",
-                    targetSets = exObj.get("sets")?.asInt ?: 3,
-                    targetReps = exObj.get("reps")?.asString ?: "10",
-                    restSeconds = exObj.get("rest")?.asInt ?: 60,
-                    createdAt = now,
-                    updatedAt = now
-                )
-            }
+            val exercises =
+                exerciseArray.map { element ->
+                    val exObj = element.asJsonObject
+                    Exercise(
+                        id = UUID.randomUUID().toString(),
+                        planId = planId,
+                        name = exObj.get("name")?.asString ?: "Ejercicio sin nombre",
+                        muscleGroup = exObj.get("muscleGroup")?.asString ?: "VARIOUS",
+                        targetSets = exObj.get("sets")?.asInt ?: 3,
+                        targetReps = exObj.get("reps")?.asString ?: "10",
+                        restSeconds = exObj.get("rest")?.asInt ?: 60,
+                        createdAt = now,
+                        updatedAt = now,
+                    )
+                }
 
             if (exercises.isEmpty()) {
                 throw IllegalStateException("No se encontraron ejercicios en el JSON")
@@ -158,28 +160,32 @@ class MultiLlmClientAdapter : LlmClientPort {
         } catch (e: Exception) {
             println("LLM Parsing Error: ${e.message} | JSON: $cleanedJson")
             // Fallback to basic plan if parsing fails
-            val workoutPlan = WorkoutPlan(
-                id = planId,
-                title = "Gemini: $environmentName (Error Formato)",
-                goalDescription = "La IA respondió pero no pudimos procesar los ejercicios. Intenta de nuevo con un prompt más específico.",
-                isActive = true,
-                generatedByLlm = true,
-                createdAt = now,
-                updatedAt = now
-            )
-            val exercises = listOf(
-                Exercise(
-                    id = UUID.randomUUID().toString(),
-                    planId = planId,
-                    name = "Error en formato de respuesta",
-                    muscleGroup = "SISTEMA",
-                    targetSets = 0,
-                    targetReps = "0",
-                    restSeconds = 0,
+            val workoutPlan =
+                WorkoutPlan(
+                    id = planId,
+                    title = "Gemini: $environmentName (Error Formato)",
+                    goalDescription =
+                        "La IA respondió pero no pudimos procesar los ejercicios. " +
+                            "Intenta de nuevo con un prompt más específico.",
+                    isActive = true,
+                    generatedByLlm = true,
                     createdAt = now,
-                    updatedAt = now
+                    updatedAt = now,
                 )
-            )
+            val exercises =
+                listOf(
+                    Exercise(
+                        id = UUID.randomUUID().toString(),
+                        planId = planId,
+                        name = "Error en formato de respuesta",
+                        muscleGroup = "SISTEMA",
+                        targetSets = 0,
+                        targetReps = "0",
+                        restSeconds = 0,
+                        createdAt = now,
+                        updatedAt = now,
+                    ),
+                )
             Result.success(Pair(workoutPlan, exercises))
         }
     }
