@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions", "LongMethod")
+
 package co.japl.android.synapsefit.app.ui.measurements
 
 import androidx.lifecycle.ViewModel
@@ -25,6 +27,7 @@ data class BodyMeasurementsUiState(
     val notes: String = "",
     val isSaving: Boolean = false,
     val isSavedSuccess: Boolean = false,
+    val isPopupOpen: Boolean = false,
     val errorMessage: String? = null,
     val history: List<BodyMeasurement> = emptyList(),
 )
@@ -49,6 +52,14 @@ class BodyMeasurementsViewModel(
                 appNavigator?.setLoading(false)
             }
         }
+    }
+
+    fun openPopup() {
+        _uiState.update { it.copy(isPopupOpen = true, errorMessage = null) }
+    }
+
+    fun closePopup() {
+        _uiState.update { it.copy(isPopupOpen = false, errorMessage = null) }
     }
 
     fun onWeightChange(value: String) {
@@ -113,7 +124,22 @@ class BodyMeasurementsViewModel(
                         notes = state.notes.ifBlank { null },
                     )
                 if (result.isSuccess) {
-                    _uiState.update { BodyMeasurementsUiState(isSavedSuccess = true) }
+                    _uiState.update {
+                        it.copy(
+                            isSaving = false,
+                            isSavedSuccess = true,
+                            isPopupOpen = false,
+                            weightKg = "",
+                            chestCm = "",
+                            waistCm = "",
+                            hipCm = "",
+                            bicepLeftCm = "",
+                            bicepRightCm = "",
+                            thighLeftCm = "",
+                            thighRightCm = "",
+                            notes = "",
+                        )
+                    }
                     appNavigator?.setLoading(false)
                 } else {
                     _uiState.update {
@@ -125,7 +151,22 @@ class BodyMeasurementsViewModel(
                     appNavigator?.setLoading(false)
                 }
             } else {
-                _uiState.update { BodyMeasurementsUiState(isSavedSuccess = true) }
+                _uiState.update {
+                    it.copy(
+                        isSaving = false,
+                        isSavedSuccess = true,
+                        isPopupOpen = false,
+                        weightKg = "",
+                        chestCm = "",
+                        waistCm = "",
+                        hipCm = "",
+                        bicepLeftCm = "",
+                        bicepRightCm = "",
+                        thighLeftCm = "",
+                        thighRightCm = "",
+                        notes = "",
+                    )
+                }
                 appNavigator?.setLoading(false)
             }
         }

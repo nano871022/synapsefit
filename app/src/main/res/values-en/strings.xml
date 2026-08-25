@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App & General Navigation -->
+    <string name="app_name">SynapseFit</string>
+    <string name="menu_drawer">Menu</string>
+    <string name="menu_options">Options</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_measurements_entry">Log Measurements</string>
+    <string name="nav_measurements_progress">Trends</string>
+    <string name="nav_workout_plans">Workout Plans</string>
+    <string name="nav_workout_history">History</string>
+    <string name="nav_settings_backup">Cloud Backup</string>
+    <string name="settings_llm">LLM Settings</string>
+    <string name="settings_about">About</string>
+
+    <!-- V1: Dashboard -->
+    <string name="hello_user">Hello, %1$s!</string>
+    <string name="syncing">Syncing...</string>
+    <string name="synced">Synced</string>
+    <string name="profile">Profile</string>
+    <string name="latest_weight_title">Latest Weight Measurement</string>
+    <string name="no_records">No records</string>
+    <string name="tendency">Trend: %1$s kg</string>
+    <string name="log_measurement">Log Measurement</string>
+    <string name="today_workout_title">Today\'s Workout</string>
+    <string name="start_session">Start Session</string>
+    <string name="log_weight">Log Weight</string>
+    <string name="live_session">Live Session</string>
+    <string name="no_active_routine">No active routine</string>
+
+    <!-- V2: Body Measurements -->
+    <string name="anthropometric_record">Anthropometric Record</string>
+    <string name="weight_corp">Body Weight *</string>
+    <string name="weight_unit">kg</string>
+    <string name="cm_unit">cm</string>
+    <string name="anatomical_measurements_optional">Anatomical Measurements (Optional)</string>
+    <string name="chest">Chest</string>
+    <string name="waist">Waist</string>
+    <string name="hip">Hip</string>
+    <string name="bicep_left">Left Bicep</string>
+    <string name="bicep_right">Right Bicep</string>
+    <string name="thigh_left">Left Thigh</string>
+    <string name="thigh_right">Right Thigh</string>
+    <string name="notes_observations">Notes &amp; Observations</string>
+    <string name="save_measurements">Save Measurements</string>
+    <string name="weight_required_error">Weight is required and must be greater than 0</string>
+
+    <!-- V3: Measurement Progress -->
+    <string name="trend_analysis">Trend Analysis</string>
+    <string name="evolution">Evolution - %1$s</string>
+    <string name="average">Average: %1$s</string>
+    <string name="not_enough_data">Not enough data to graph</string>
+    <string name="zone_weight">Weight (kg)</string>
+    <string name="zone_chest">Chest (cm)</string>
+    <string name="zone_waist">Waist (cm)</string>
+    <string name="zone_hip">Hip (cm)</string>
+    <string name="zone_bicep_left">Left Bicep (cm)</string>
+    <string name="zone_bicep_right">Right Bicep (cm)</string>
+    <string name="zone_thigh_left">Left Thigh (cm)</string>
+    <string name="zone_thigh_right">Right Thigh (cm)</string>
+
+    <!-- V4: Workout Plans -->
+    <string name="workout_plans">Workout Plans</string>
+    <string name="generate_with_ai">Generate with AI</string>
+    <string name="active_plan">Active Plan</string>
+    <string name="no_active_plan_configured">No active plan configured</string>
+    <string name="plan_history">Plan History</string>
+    <string name="ia_generated">AI Generated</string>
+    <string name="exercises_programmed">%1$d exercises programmed</string>
+    <string name="view_detail">View Detail</string>
+
+    <!-- V5: AI Coach Generator -->
+    <string name="ai_coach_generator">AI Coach Generator</string>
+    <string name="training_environment">Training Environment</string>
+    <string name="env_bodyweight">Bodyweight</string>
+    <string name="env_dumbbells">Dumbbells</string>
+    <string name="env_chain_gym">Chain Gym</string>
+    <string name="gym_chain_label">Gym Chain / Location</string>
+    <string name="gym_chain_placeholder">Ex: SmartFit Main HQ</string>
+    <string name="goal_and_context">Goal &amp; Personal Context</string>
+    <string name="goal_prompt_placeholder">Ex: Muscle gain, 4 days a week, upper body focus</string>
+    <string name="generate_plan_ai">Generate Plan with AI</string>
+    <string name="training_days_per_week">Training days per week</string>
+
+    <!-- V6: Workout Plan Detail -->
+    <string name="plan_detail">Plan Detail</string>
+    <string name="start_workout">Start Workout</string>
+    <string name="objective">Goal</string>
+    <string name="no_description_available">No description available</string>
+    <string name="total_exercises">Total Exercises: %1$d</string>
+    <string name="prescribed_exercises">Prescribed Exercises</string>
+    <string name="rest_seconds_abbr">%1$ds rest</string>
+
+    <!-- V7: Active Workout Session -->
+    <string name="finish_workout">Finish Workout</string>
+    <string name="elapsed_time">Elapsed Time</string>
+    <string name="rest_between_sets">Rest between sets</string>
+    <string name="exercise_prefix">Exercise: %1$s</string>
+    <string name="set_col">Set</string>
+    <string name="reps_col">Reps</string>
+    <string name="weight_col">Weight (kg)</string>
+    <string name="done_col">Done</string>
+    <string name="set_label">Set %1$d of %2$d</string>
+    <string name="target_reps">Target reps: %1$s</string>
+    <string name="complete_set">Complete Set</string>
+    <string name="next_set_or_exercise">Next Set / Exercise</string>
+    <string name="workout_summary">Workout Summary</string>
+    <string name="total_workout_time">Total Time</string>
+    <string name="exercise_summary_item">%1$s — %2$d sets | Max: %3$s kg | Time: %4$s</string>
+    <string name="accept_and_close">Accept &amp; Close</string>
+
+    <!-- V8: Workout History -->
+    <string name="workout_history">Workout History</string>
+    <string name="records_stat">Records</string>
+    <string name="total_volume_stat">Total Volume</string>
+    <string name="recent_records">Recent Records</string>
+    <string name="no_workout_records">No workout records yet</string>
+    <string name="date_prefix">Date: %1$s</string>
+    <string name="model_prefix">Model: %1$s</string>
+    <string name="key_prefix">Key: %1$s</string>
+
+    <!-- V9: Backup & Sync -->
+    <string name="backup_sync">Backup &amp; Sync</string>
+    <string name="drive_appdata">Google Drive (AppData)</string>
+    <string name="connected">Connected</string>
+    <string name="not_connected">Not connected</string>
+    <string name="last_backup_details">Last Backup Details</string>
+    <string name="no_backups">No backups</string>
+    <string name="sha256_hash">Integrity SHA-256 Hash:</string>
+    <string name="backup_now">Perform Backup Now</string>
+
+    <!-- V10: LLM Settings -->
+    <string name="llm_providers_config">AI Provider Configuration</string>
+    <string name="security_keystore_badge">Encrypted secure storage via Android KeyStore (AES256_GCM)</string>
+    <string name="configure_credentials">Configure Credentials</string>
+    <string name="llm_provider">LLM Provider</string>
+    <string name="api_key">API Key</string>
+    <string name="model_name">Model Name</string>
+    <string name="save_and_activate_provider">Save and Activate Provider</string>
+    <string name="registered_providers">Registered Providers</string>
+    <string name="active_badge">ACTIVE</string>
+
+    <!-- V11: About Developer -->
+    <string name="about_synapsefit">About SynapseFit</string>
+    <string name="app_info">Application Information</string>
+    <string name="version_label">Version: %1$s (%2$d)</string>
+    <string name="id_label">ID: %1$s</string>
+    <string name="hexagonal_architecture">Multi-module Hexagonal Architecture</string>
+    <string name="hexagonal_desc">Modules: :app, :core (Pure Kotlin), :services (Room/Drive/LLM), :ui (Kinetic Pulse), :util, :wear (Wear OS Companion).</string>
+    <string name="data_sovereignty">Local-first data sovereignty with SHA-256 encrypted backup.</string>
+</resources>

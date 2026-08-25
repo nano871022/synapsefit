@@ -44,7 +44,7 @@ class WorkoutHistoryViewModel(
             _uiState.update { it.copy(isLoading = true) }
 
             val logs =
-                workoutLogRepositoryPort?.getLogsForExercise("")?.let { flow ->
+                workoutLogRepositoryPort?.getLogsForDateRange(0L, Long.MAX_VALUE)?.let { flow ->
                     flow.firstOrNull()
                 } ?: emptyList()
 

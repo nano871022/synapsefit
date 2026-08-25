@@ -111,6 +111,8 @@ fun AppNavHost(
                 onViewGraphClick = {
                     navController.navigate(Routes.MEASUREMENTS_PROGRESS)
                 },
+                onOpenPopupClick = viewModel::openPopup,
+                onClosePopupClick = viewModel::closePopup,
             )
         }
 
@@ -182,6 +184,7 @@ fun AppNavHost(
                 state = state,
                 onEnvironmentSelected = viewModel::onEnvironmentSelected,
                 onGymChainQueryChange = viewModel::onGymChainQueryChange,
+                onDaysPerWeekChange = viewModel::onDaysPerWeekChange,
                 onPromptContextChange = viewModel::onPromptContextChange,
                 onGenerateClick = viewModel::generatePlan,
                 onAcceptClick = viewModel::acceptPlan,
@@ -241,6 +244,7 @@ fun AppNavHost(
                 onSetRepsChange = viewModel::onSetRepsChange,
                 onSetWeightChange = viewModel::onSetWeightChange,
                 onCompleteSet = viewModel::completeSet,
+                onNextSetOrExercise = viewModel::nextSetOrExercise,
                 onFinishSession = {
                     viewModel.finishSession()
                     navController.navigateUp()

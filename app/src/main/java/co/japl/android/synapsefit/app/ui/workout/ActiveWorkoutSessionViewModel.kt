@@ -1,4 +1,4 @@
-@file:Suppress("MagicNumber")
+@file:Suppress("MagicNumber", "LongParameterList", "UnusedParameter")
 
 package co.japl.android.synapsefit.app.ui.workout
 
@@ -24,6 +24,18 @@ data class WorkoutSetUiModel(
     val isCompleted: Boolean = false,
 )
 
+data class ExerciseSessionSummary(
+    val exerciseName: String,
+    val totalSetsCompleted: Int,
+    val maxWeightLiftedKg: Double,
+    val timeSpentSeconds: Long,
+)
+
+data class WorkoutSummary(
+    val totalTimeSeconds: Long,
+    val exerciseSummaries: List<ExerciseSessionSummary>,
+)
+
 data class ActiveWorkoutUiState(
     val planId: String = "",
     val planTitle: String = "",
@@ -34,8 +46,14 @@ data class ActiveWorkoutUiState(
     val currentExerciseId: String = "",
     val exercises: List<ExerciseUiModel> = emptyList(),
     val currentExerciseIndex: Int = 0,
-    val sets: List<WorkoutSetUiModel> = emptyList(),
+    val currentSetIndex: Int = 1,
+    val totalSetsForCurrentExercise: Int = 3,
+    val targetRepsForCurrentSet: String = "10",
+    val currentSetWeightKg: String = "",
+    val currentSetReps: String = "",
+    val isCurrentSetCompleted: Boolean = false,
     val isSessionComplete: Boolean = false,
+    val summary: WorkoutSummary? = null,
 )
 
 class ActiveWorkoutSessionViewModel(
@@ -47,6 +65,12 @@ class ActiveWorkoutSessionViewModel(
 
     private var timerJob: Job? = null
     private var restTimerJob: Job? = null
+
+    // Track time spent per exercise ID and weights per exercise ID
+    private val exerciseStartTime = mutableMapOf<String, Long>()
+    private val exerciseTimeSpent = mutableMapOf<String, Long>()
+    private val exerciseCompletedSetsCount = mutableMapOf<String, Int>()
+    private val exerciseMaxWeight = mutableMapOf<String, Double>()
 
     fun startSession(planId: String) {
         viewModelScope.launch {
@@ -72,10 +96,9 @@ class ActiveWorkoutSessionViewModel(
                     }
 
                 val firstExercise = mappedExercises.firstOrNull()
-                val initialSets =
-                    (1..(firstExercise?.targetSets ?: 3)).map { idx ->
-                        WorkoutSetUiModel(setIndex = idx, repsCompleted = firstExercise?.targetReps ?: "10")
-                    }
+                if (firstExercise != null) {
+                    exerciseStartTime[firstExercise.id] = System.currentTimeMillis()
+                }
 
                 _uiState.update {
                     it.copy(
@@ -84,7 +107,12 @@ class ActiveWorkoutSessionViewModel(
                         currentExerciseIndex = 0,
                         currentExerciseId = firstExercise?.id ?: "",
                         currentExerciseName = firstExercise?.name ?: "",
-                        sets = initialSets,
+                        currentSetIndex = 1,
+                        totalSetsForCurrentExercise = firstExercise?.targetSets ?: 3,
+                        targetRepsForCurrentSet = firstExercise?.targetReps ?: "10",
+                        currentSetReps = firstExercise?.targetReps ?: "10",
+                        currentSetWeightKg = "",
+                        isCurrentSetCompleted = false,
                     )
                 }
             }
@@ -108,33 +136,20 @@ class ActiveWorkoutSessionViewModel(
         setIndex: Int,
         reps: String,
     ) {
-        _uiState.update { state ->
-            val updated =
-                state.sets.map { s ->
-                    if (s.setIndex == setIndex) s.copy(repsCompleted = reps) else s
-                }
-            state.copy(sets = updated)
-        }
+        _uiState.update { it.copy(currentSetReps = reps) }
     }
 
     fun onSetWeightChange(
         setIndex: Int,
         weight: String,
     ) {
-        _uiState.update { state ->
-            val updated =
-                state.sets.map { s ->
-                    if (s.setIndex == setIndex) s.copy(weightLiftedKg = weight) else s
-                }
-            state.copy(sets = updated)
-        }
+        _uiState.update { it.copy(currentSetWeightKg = weight) }
     }
 
     fun completeSet(setIndex: Int) {
         val state = _uiState.value
-        val setModel = state.sets.find { it.setIndex == setIndex } ?: return
-        val reps = setModel.repsCompleted.toIntOrNull() ?: 0
-        val weight = setModel.weightLiftedKg.toDoubleOrNull() ?: 0.0
+        val reps = state.currentSetReps.toIntOrNull() ?: 0
+        val weight = state.currentSetWeightKg.toDoubleOrNull() ?: 0.0
 
         viewModelScope.launch {
             if (recordWorkoutSessionUseCase != null && state.currentExerciseId.isNotBlank() && reps > 0) {
@@ -147,16 +162,64 @@ class ActiveWorkoutSessionViewModel(
                 )
             }
 
+            val currentExId = state.currentExerciseId
+            exerciseCompletedSetsCount[currentExId] = (exerciseCompletedSetsCount[currentExId] ?: 0) + 1
+            val currentMax = exerciseMaxWeight[currentExId] ?: 0.0
+            if (weight > currentMax) {
+                exerciseMaxWeight[currentExId] = weight
+            }
+
             _uiState.update { s ->
-                val updated =
-                    s.sets.map { item ->
-                        if (item.setIndex == setIndex) item.copy(isCompleted = true) else item
-                    }
-                s.copy(sets = updated)
+                s.copy(isCurrentSetCompleted = true)
             }
 
             val currentExercise = state.exercises.getOrNull(state.currentExerciseIndex)
             startRestTimer(currentExercise?.restSeconds ?: 60)
+        }
+    }
+
+    fun nextSetOrExercise() {
+        val state = _uiState.value
+        val currentExId = state.currentExerciseId
+
+        if (state.currentSetIndex < state.totalSetsForCurrentExercise) {
+            // Next set in the same exercise
+            val nextSetIdx = state.currentSetIndex + 1
+            _uiState.update {
+                it.copy(
+                    currentSetIndex = nextSetIdx,
+                    isCurrentSetCompleted = false,
+                    restTimerSecondsRemaining = null,
+                )
+            }
+        } else {
+            // Current exercise complete, record time spent
+            val startT = exerciseStartTime[currentExId] ?: System.currentTimeMillis()
+            val timeSpent = (System.currentTimeMillis() - startT) / 1000
+            exerciseTimeSpent[currentExId] = (exerciseTimeSpent[currentExId] ?: 0L) + timeSpent
+
+            if (state.currentExerciseIndex + 1 < state.exercises.size) {
+                val nextExIndex = state.currentExerciseIndex + 1
+                val nextEx = state.exercises[nextExIndex]
+                exerciseStartTime[nextEx.id] = System.currentTimeMillis()
+
+                _uiState.update {
+                    it.copy(
+                        currentExerciseIndex = nextExIndex,
+                        currentExerciseId = nextEx.id,
+                        currentExerciseName = nextEx.name,
+                        currentSetIndex = 1,
+                        totalSetsForCurrentExercise = nextEx.targetSets,
+                        targetRepsForCurrentSet = nextEx.targetReps,
+                        currentSetReps = nextEx.targetReps,
+                        currentSetWeightKg = "",
+                        isCurrentSetCompleted = false,
+                        restTimerSecondsRemaining = null,
+                    )
+                }
+            } else {
+                finishSession()
+            }
         }
     }
 
@@ -180,6 +243,36 @@ class ActiveWorkoutSessionViewModel(
     fun finishSession() {
         timerJob?.cancel()
         restTimerJob?.cancel()
-        _uiState.update { it.copy(isSessionComplete = true) }
+
+        val state = _uiState.value
+        val currentExId = state.currentExerciseId
+        if (currentExId.isNotBlank() && exerciseStartTime.containsKey(currentExId)) {
+            val startT = exerciseStartTime[currentExId] ?: System.currentTimeMillis()
+            val timeSpent = (System.currentTimeMillis() - startT) / 1000
+            exerciseTimeSpent[currentExId] = (exerciseTimeSpent[currentExId] ?: 0L) + timeSpent
+        }
+
+        val summaries =
+            state.exercises.map { ex ->
+                ExerciseSessionSummary(
+                    exerciseName = ex.name,
+                    totalSetsCompleted = exerciseCompletedSetsCount[ex.id] ?: 0,
+                    maxWeightLiftedKg = exerciseMaxWeight[ex.id] ?: 0.0,
+                    timeSpentSeconds = exerciseTimeSpent[ex.id] ?: 0L,
+                )
+            }
+
+        val workoutSummary =
+            WorkoutSummary(
+                totalTimeSeconds = state.elapsedTimeSeconds,
+                exerciseSummaries = summaries,
+            )
+
+        _uiState.update {
+            it.copy(
+                isSessionComplete = true,
+                summary = workoutSummary,
+            )
+        }
     }
 }

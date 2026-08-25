@@ -63,6 +63,8 @@ class DependencyContainer(context: Context) {
             llmConfigRepository,
             llmClient,
             workoutPlanRepository,
+            bodyMeasurementRepository,
+            workoutLogRepository,
         )
     }
 
