@@ -43,7 +43,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Run Unit Tests
-        run: ./gradlew :core:test :util:testDebugUnitTest :services:testDebugUnitTest :ui:testDebugUnitTest :wear:testDebugUnitTest :app:testDebugUnitTest
+        run: ./gradlew :core:test :util:testDebugUnitTest :services:feature:testDebugUnitTest :services:repository:testDebugUnitTest :services:gcp:testDebugUnitTest :services:llm:testDebugUnitTest :services:wear:testDebugUnitTest :ui:testDebugUnitTest :wear:testDebugUnitTest :app:testDebugUnitTest
 
   build-apks:
     name: Build Debug APK Artifacts

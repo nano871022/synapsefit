@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "co.japl.android.synapsefit.services"
+    namespace = "co.japl.android.synapsefit.services.gcp"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
@@ -22,12 +22,14 @@ android {
 }
 
 dependencies {
-    api(project(":core"))
-    api(project(":util"))
+    implementation(project(":core"))
+    implementation(project(":util"))
 
-    api(project(":services:feature"))
-    api(project(":services:repository"))
-    api(project(":services:gcp"))
-    api(project(":services:llm"))
-    api(project(":services:wear"))
+    implementation(libs.security.crypto)
+    implementation(libs.kotlinx.coroutines.core)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

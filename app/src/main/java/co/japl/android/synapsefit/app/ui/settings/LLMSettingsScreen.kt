@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod")
+@file:Suppress("FunctionNaming", "LongMethod", "CyclomaticComplexMethod")
 
 package co.japl.android.synapsefit.app.ui.settings
 

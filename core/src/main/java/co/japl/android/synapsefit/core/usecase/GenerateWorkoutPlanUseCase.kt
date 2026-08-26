@@ -10,6 +10,8 @@ import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import kotlinx.coroutines.flow.firstOrNull
 
+private const val RECENT_LOGS_COUNT = 5
+
 class GenerateWorkoutPlanUseCase(
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort,
     private val llmClientPort: LlmClientPort,
@@ -35,7 +37,7 @@ class GenerateWorkoutPlanUseCase(
         val latestMeasurements =
             bodyMeasurementRepositoryPort?.getLatestMeasurement()?.firstOrNull()
         val recentLogs =
-            workoutLogRepositoryPort?.getLogsForDateRange(0L, Long.MAX_VALUE)?.firstOrNull()?.take(5)
+            workoutLogRepositoryPort?.getLogsForDateRange(0L, Long.MAX_VALUE)?.firstOrNull()?.take(RECENT_LOGS_COUNT)
 
         val enrichedPrompt = StringBuilder(promptContext)
         daysPerWeek?.let { days ->
