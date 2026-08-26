@@ -7,6 +7,7 @@ import co.japl.android.synapsefit.navigation.AppNavigator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -44,13 +45,16 @@ class WorkoutPlansViewModel(
             workoutPlanRepositoryPort?.getAllPlans()?.collect { allPlans ->
                 val summaries =
                     allPlans.map { plan ->
+                        val exercisesCount =
+                            workoutPlanRepositoryPort.getPlanWithExercises(plan.id)
+                                ?.firstOrNull()?.second?.size ?: 0
                         WorkoutPlanSummary(
                             id = plan.id,
                             title = plan.title,
                             goalDescription = plan.goalDescription,
                             isActive = plan.isActive,
                             generatedByLlm = plan.generatedByLlm,
-                            totalExercises = 0,
+                            totalExercises = exercisesCount,
                         )
                     }
 

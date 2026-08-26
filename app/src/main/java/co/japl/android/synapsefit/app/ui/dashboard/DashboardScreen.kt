@@ -2,7 +2,6 @@
 
 package co.japl.android.synapsefit.app.ui.dashboard
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,8 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.CloudDone
-import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
@@ -31,13 +28,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import co.japl.android.synapsefit.R
@@ -83,16 +78,6 @@ fun DashboardScreen(
                     onStartWorkoutClick(planId)
                 }
             },
-        )
-
-        DriveSyncStatusCard(isSyncing = state.isSyncing)
-
-        QuickActionsRow(
-            onLogMeasurement = onLogMeasurementClick,
-            onStartWorkout = {
-                state.todayWorkoutPlanId?.let { onStartWorkoutClick(it) }
-            },
-            hasActivePlan = state.todayWorkoutPlanId != null,
         )
     }
 }
@@ -300,79 +285,6 @@ fun TodayWorkoutCard(
                 onClick = { onStartWorkout(planId) },
                 enabled = planId != null,
             )
-        }
-    }
-}
-
-@Composable
-fun DriveSyncStatusCard(
-    isSyncing: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.5f),
-    ) {
-        Row(
-            modifier = Modifier.padding(MaterialTheme.spacing.small),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-        ) {
-            Box(
-                modifier =
-                    Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = if (isSyncing) Icons.Default.CloudSync else Icons.Default.CloudDone,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.surfaceTint,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-            Column {
-                Text(
-                    text = stringResource(R.string.drive_appdata),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = if (isSyncing) stringResource(R.string.syncing) else stringResource(R.string.synced),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun QuickActionsRow(
-    onLogMeasurement: () -> Unit,
-    onStartWorkout: () -> Unit,
-    hasActivePlan: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-    ) {
-        OutlinedButton(
-            onClick = onLogMeasurement,
-            modifier = Modifier.weight(1f),
-        ) {
-            Text(stringResource(R.string.log_weight), style = MaterialTheme.typography.labelMedium)
-        }
-        OutlinedButton(
-            onClick = onStartWorkout,
-            enabled = hasActivePlan,
-            modifier = Modifier.weight(1f),
-        ) {
-            Text(stringResource(R.string.live_session), style = MaterialTheme.typography.labelMedium)
         }
     }
 }

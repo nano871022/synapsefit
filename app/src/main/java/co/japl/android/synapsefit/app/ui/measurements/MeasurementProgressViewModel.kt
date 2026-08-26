@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package co.japl.android.synapsefit.app.ui.measurements
 
 import androidx.lifecycle.ViewModel
@@ -13,6 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+private const val MILLIS_PER_DAY = 24L * 60L * 60L * 1000L
 
 data class MeasurementProgressUiState(
     val selectedMetric: AnatomicalZone = AnatomicalZone.WEIGHT,
@@ -58,7 +62,7 @@ class MeasurementProgressViewModel(
                     val now = System.currentTimeMillis()
                     val startTime =
                         if (timeRangeDays > 0) {
-                            now - (timeRangeDays.toLong() * 24 * 60 * 60 * 1000)
+                            now - (timeRangeDays.toLong() * MILLIS_PER_DAY)
                         } else {
                             0L
                         }

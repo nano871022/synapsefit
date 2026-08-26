@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 data class AICoachGeneratorUiState(
     val selectedEnvironment: TrainingEnvironment = TrainingEnvironment.BODYWEIGHT,
     val gymChainQuery: String = "",
+    val daysPerWeek: String = "4",
     val promptContext: String = "",
     val isGenerating: Boolean = false,
     val generationError: String? = null,
@@ -44,6 +45,10 @@ class AICoachGeneratorViewModel(
         _uiState.update { it.copy(gymChainQuery = query) }
     }
 
+    fun onDaysPerWeekChange(days: String) {
+        _uiState.update { it.copy(daysPerWeek = days) }
+    }
+
     fun onPromptContextChange(context: String) {
         _uiState.update { it.copy(promptContext = context) }
     }
@@ -55,11 +60,13 @@ class AICoachGeneratorViewModel(
             appNavigator?.setLoading(true)
 
             if (generateWorkoutPlanUseCase != null) {
+                val daysInt = state.daysPerWeek.toIntOrNull()
                 val result =
                     generateWorkoutPlanUseCase(
                         promptContext = state.promptContext.ifBlank { "Plan de entrenamiento general de hipertrofia y fuerza" },
                         environment = state.selectedEnvironment,
                         gymChainQuery = if (state.selectedEnvironment == TrainingEnvironment.CHAIN_GYM) state.gymChainQuery else null,
+                        daysPerWeek = daysInt,
                     )
                 result.fold(
                     onSuccess = { (plan, exercises) ->

@@ -78,15 +78,16 @@ class MultiLlmClientAdapter : LlmClientPort {
         val gymSuffix = if (!gymChainQuery.isNullOrBlankCheck()) " in $gymChainQuery" else ""
         val prompt =
             """
-            Genera un plan de entrenamiento para $environmentName$gymSuffix.
-            Contexto: $promptContext
+            Genera un plan de entrenamiento dividido por días de la semana para $environmentName$gymSuffix.
+            Contexto del usuario (objetivo, medidas antropométricas e historial): $promptContext
+            Organiza los ejercicios especificados por día (ej. 'Día 1 - Pecho y Tríceps', 'Día 2 - Espalda y Bíceps', etc.) e incluye instrucciones claras de ejecución.
             Responde en formato JSON plano con esta estructura:
             {
               "title": "Nombre del plan",
-              "goal": "Descripción del objetivo",
+              "goal": "Descripción del objetivo y división por días",
               "exercises": [
                 {
-                  "name": "Nombre ejercicio",
+                  "name": "[Día 1] Nombre ejercicio con indicación de ejecución",
                   "muscleGroup": "Grupo muscular",
                   "sets": 3,
                   "reps": "10-12",

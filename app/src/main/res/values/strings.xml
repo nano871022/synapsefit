@@ -80,6 +80,7 @@
     <string name="goal_and_context">Objetivo y Contexto Personal</string>
     <string name="goal_prompt_placeholder">Ej: Aumento de masa muscular, 4 días a la semana, enfoque en torso</string>
     <string name="generate_plan_ai">Generar Plan con IA</string>
+    <string name="training_days_per_week">Días de entrenamiento por semana</string>
 
     <!-- V6: Workout Plan Detail -->
     <string name="plan_detail">Detalle de Plan</string>
@@ -99,6 +100,14 @@
     <string name="reps_col">Reps</string>
     <string name="weight_col">Peso (kg)</string>
     <string name="done_col">Listo</string>
+    <string name="set_label">Serie %1$d de %2$d</string>
+    <string name="target_reps">Reps objetivo: %1$s</string>
+    <string name="complete_set">Completar Serie</string>
+    <string name="next_set_or_exercise">Siguiente Serie / Ejercicio</string>
+    <string name="workout_summary">Resumen del Entrenamiento</string>
+    <string name="total_workout_time">Tiempo Total</string>
+    <string name="exercise_summary_item">%1$s — %2$d series | Max: %3$s kg | Tiempo: %4$s</string>
+    <string name="accept_and_close">Aceptar y Cerrar</string>
 
     <!-- V8: Workout History -->
     <string name="workout_history">Historial de Entrenamiento</string>

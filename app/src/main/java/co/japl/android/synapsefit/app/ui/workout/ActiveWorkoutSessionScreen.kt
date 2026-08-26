@@ -18,18 +18,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.ui.components.HeartRateGauge
 import co.japl.android.synapsefit.ui.components.KineticCard
@@ -42,6 +45,7 @@ fun ActiveWorkoutSessionScreen(
     onSetRepsChange: (setIndex: Int, reps: String) -> Unit,
     onSetWeightChange: (setIndex: Int, weight: String) -> Unit,
     onCompleteSet: (setIndex: Int) -> Unit,
+    onNextSetOrExercise: () -> Unit = {},
     onFinishSession: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -102,17 +106,63 @@ fun ActiveWorkoutSessionScreen(
             ) {
                 Column(
                     modifier = Modifier.padding(MaterialTheme.spacing.medium),
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
                 ) {
-                    SetTrackingTable(
-                        sets = state.sets,
-                        onRepsChange = onSetRepsChange,
-                        onWeightChange = onSetWeightChange,
-                        onCompleteSet = onCompleteSet,
+                    Text(
+                        text = stringResource(R.string.set_label, state.currentSetIndex, state.totalSetsForCurrentExercise),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
+
+                    Text(
+                        text = stringResource(R.string.target_reps, state.targetRepsForCurrentSet),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    OutlinedTextField(
+                        value = state.currentSetWeightKg,
+                        onValueChange = { onSetWeightChange(state.currentSetIndex, it) },
+                        label = { Text(stringResource(R.string.weight_col)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        enabled = !state.isCurrentSetCompleted,
+                    )
+
+                    OutlinedTextField(
+                        value = state.currentSetReps,
+                        onValueChange = { onSetRepsChange(state.currentSetIndex, it) },
+                        label = { Text(stringResource(R.string.reps_col)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        enabled = !state.isCurrentSetCompleted,
+                    )
+
+                    if (!state.isCurrentSetCompleted) {
+                        NeonButton(
+                            text = stringResource(R.string.complete_set),
+                            onClick = { onCompleteSet(state.currentSetIndex) },
+                            enabled = state.currentSetReps.isNotBlank(),
+                        )
+                    } else {
+                        NeonButton(
+                            text = stringResource(R.string.next_set_or_exercise),
+                            onClick = onNextSetOrExercise,
+                        )
+                    }
                 }
             }
         }
+    }
+
+    if (state.isSessionComplete && state.summary != null) {
+        WorkoutSummaryDialog(
+            summary = state.summary,
+            onDismiss = onFinishSession,
+        )
     }
 }
 
@@ -178,84 +228,66 @@ fun RestTimerWidget(
 }
 
 @Composable
-fun SetTrackingTable(
-    sets: List<WorkoutSetUiModel>,
-    onRepsChange: (Int, String) -> Unit,
-    onWeightChange: (Int, String) -> Unit,
-    onCompleteSet: (Int) -> Unit,
+fun WorkoutSummaryDialog(
+    summary: WorkoutSummary,
+    onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp,
+            modifier = modifier.fillMaxWidth().padding(MaterialTheme.spacing.small),
         ) {
-            Text(
-                text = stringResource(R.string.set_col).uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.width(48.dp),
-            )
-            Text(
-                text = stringResource(R.string.weight_col).uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = stringResource(R.string.reps_col).uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = stringResource(R.string.done_col).uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.width(48.dp),
-            )
-        }
-
-        sets.forEach { setItem ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
+                modifier =
+                    Modifier
+                        .padding(MaterialTheme.spacing.medium)
+                        .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
             ) {
                 Text(
-                    text = "#${setItem.setIndex}",
+                    text = stringResource(R.string.workout_summary),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+
+                val mins = summary.totalTimeSeconds / 60
+                val secs = summary.totalTimeSeconds % 60
+                val timeFormatted = String.format("%02d:%02d", mins, secs)
+
+                Text(
+                    text = "${stringResource(R.string.total_workout_time)}: $timeFormatted",
                     style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.width(48.dp),
                 )
 
-                OutlinedTextField(
-                    value = setItem.weightLiftedKg,
-                    onValueChange = { onWeightChange(setItem.setIndex, it) },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    enabled = !setItem.isCompleted,
-                )
+                HorizontalDivider()
 
-                OutlinedTextField(
-                    value = setItem.repsCompleted,
-                    onValueChange = { onRepsChange(setItem.setIndex, it) },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    enabled = !setItem.isCompleted,
-                )
+                summary.exerciseSummaries.forEach { item ->
+                    val exMins = item.timeSpentSeconds / 60
+                    val exSecs = item.timeSpentSeconds % 60
+                    val exTimeFormatted = String.format("%02d:%02d", exMins, exSecs)
 
-                Checkbox(
-                    checked = setItem.isCompleted,
-                    onCheckedChange = { if (it) onCompleteSet(setItem.setIndex) },
-                    enabled = !setItem.isCompleted,
-                    modifier = Modifier.width(48.dp),
+                    Text(
+                        text =
+                            stringResource(
+                                R.string.exercise_summary_item,
+                                item.exerciseName,
+                                item.totalSetsCompleted,
+                                item.maxWeightLiftedKg.toString(),
+                                exTimeFormatted,
+                            ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                NeonButton(
+                    text = stringResource(R.string.accept_and_close),
+                    onClick = onDismiss,
                 )
             }
         }

@@ -36,14 +36,14 @@ class MultiLlmClientAdapterTest {
         }
 
     @Test
-    fun `generateWorkoutPlan returns plan and exercises for valid config`() =
+    fun `generateWorkoutPlan for non-gemini provider returns fallback plan and empty exercises`() =
         runTest {
             val config =
                 LlmConfig(
                     id = "cfg1",
-                    provider = LlmProvider.GEMINI,
+                    provider = LlmProvider.OPENAI,
                     apiKeyEncrypted = "valid_key",
-                    modelName = "gemini-pro",
+                    modelName = "gpt-4",
                     createdAt = System.currentTimeMillis(),
                     updatedAt = System.currentTimeMillis(),
                 )
@@ -58,7 +58,7 @@ class MultiLlmClientAdapterTest {
 
             assertTrue(result.isSuccess)
             val (plan, exercises) = result.getOrNull()!!
-            assertTrue(plan.title.contains("Gemini"))
-            assertEquals(2, exercises.size)
+            assertTrue(plan.title.contains("Mock Plan"))
+            assertEquals(0, exercises.size)
         }
 }

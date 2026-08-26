@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -23,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.core.domain.model.Exercise
@@ -36,6 +38,7 @@ fun AICoachGeneratorScreen(
     state: AICoachGeneratorUiState,
     onEnvironmentSelected: (TrainingEnvironment) -> Unit,
     onGymChainQueryChange: (String) -> Unit,
+    onDaysPerWeekChange: (String) -> Unit = {},
     onPromptContextChange: (String) -> Unit,
     onGenerateClick: () -> Unit,
     onAcceptClick: () -> Unit,
@@ -81,6 +84,15 @@ fun AICoachGeneratorScreen(
                 onQueryChange = onGymChainQueryChange,
             )
         }
+
+        OutlinedTextField(
+            value = state.daysPerWeek,
+            onValueChange = onDaysPerWeekChange,
+            label = { Text(stringResource(R.string.training_days_per_week)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        )
 
         Text(
             text = stringResource(R.string.goal_and_context),
