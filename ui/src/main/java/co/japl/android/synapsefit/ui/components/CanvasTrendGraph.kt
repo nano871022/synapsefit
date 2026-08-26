@@ -1,4 +1,4 @@
-@file:Suppress("MagicNumber", "FunctionNaming", "MatchingDeclarationName")
+@file:Suppress("MagicNumber", "FunctionNaming", "MatchingDeclarationName", "LongParameterList")
 
 package co.japl.android.synapsefit.ui.components
 
