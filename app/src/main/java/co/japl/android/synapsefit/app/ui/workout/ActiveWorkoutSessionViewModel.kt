@@ -1,4 +1,12 @@
-@file:Suppress("MagicNumber", "LongParameterList", "UnusedParameter", "LongMethod", "TooManyFunctions")
+@file:Suppress(
+    "MagicNumber",
+    "LongParameterList",
+    "UnusedParameter",
+    "LongMethod",
+    "TooManyFunctions",
+    "CyclomaticComplexMethod",
+    "MaxLineLength",
+)
 
 package co.japl.android.synapsefit.app.ui.workout
 
@@ -107,7 +115,29 @@ class ActiveWorkoutSessionViewModel(
                         )
                     }
 
-                val firstExercise = mappedExercises.firstOrNull()
+                val calendarDayOfWeek = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_WEEK)
+                val activeDayNumber =
+                    when (calendarDayOfWeek) {
+                        java.util.Calendar.MONDAY -> 1
+                        java.util.Calendar.TUESDAY -> 2
+                        java.util.Calendar.WEDNESDAY -> 3
+                        java.util.Calendar.THURSDAY -> 4
+                        java.util.Calendar.FRIDAY -> 5
+                        java.util.Calendar.SATURDAY -> 6
+                        else -> 1
+                    }
+
+                val filteredForActiveDay =
+                    mappedExercises.filter { ex ->
+                        val match = Regex("\\[Día (\\d+)\\]", RegexOption.IGNORE_CASE).find(ex.name)
+                        if (match != null) {
+                            match.groupValues[1].toIntOrNull() == activeDayNumber
+                        } else {
+                            true
+                        }
+                    }.ifEmpty { mappedExercises }
+
+                val firstExercise = filteredForActiveDay.firstOrNull()
                 if (firstExercise != null) {
                     exerciseStartTime[firstExercise.id] = System.currentTimeMillis()
                     fetchExerciseMedia(firstExercise.name)
@@ -117,8 +147,8 @@ class ActiveWorkoutSessionViewModel(
 
                 _uiState.update {
                     it.copy(
-                        planTitle = plan.title,
-                        exercises = mappedExercises,
+                        planTitle = "${plan.title} (Día $activeDayNumber)",
+                        exercises = filteredForActiveDay,
                         currentExerciseIndex = 0,
                         currentExerciseId = firstExercise?.id ?: "",
                         currentExerciseName = firstExercise?.name ?: "",
