@@ -1,5 +1,6 @@
 package co.japl.android.synapsefit.services.llm
 
+import android.content.Context
 import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.LlmConfig
 import co.japl.android.synapsefit.core.domain.model.LlmProvider
@@ -17,7 +18,9 @@ import java.util.UUID
 private const val TIMEOUT_SECONDS = 300L
 
 @Suppress("TooGenericExceptionCaught", "TooManyFunctions", "SwallowedException")
-class MultiLlmClientAdapter : LlmClientPort {
+class MultiLlmClientAdapter(
+    private val context: Context? = null,
+) : LlmClientPort {
     private val client =
         OkHttpClient.Builder()
             .connectTimeout(TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)
@@ -98,31 +101,25 @@ class MultiLlmClientAdapter : LlmClientPort {
         return parseGeminiResponse(cleanedJson, promptContext, environmentName)
     }
 
+    private fun getUserLanguage(): String {
+        val locale = context?.resources?.configuration?.locales?.get(0) ?: java.util.Locale.getDefault()
+        return locale.displayLanguage.ifBlank { "Spanish" }
+    }
+
     private fun buildGeminiPrompt(
         environmentName: String,
         gymChainQuery: String?,
         promptContext: String,
     ): String {
         val gymSuffix = if (!gymChainQuery.isNullOrBlankCheck()) " in $gymChainQuery" else ""
-        return """
-            Genera un plan de entrenamiento dividido por días de la semana para $environmentName$gymSuffix.
-            Contexto del usuario (objetivo, medidas antropométricas e historial): $promptContext
-            Organiza los ejercicios especificados por día (ej. 'Día 1 - Pecho y Tríceps', 'Día 2 - Espalda y Bíceps', etc.) e incluye instrucciones claras de ejecución.
-            Responde en formato JSON plano con esta estructura:
-            {
-              "title": "Nombre del plan",
-              "goal": "Descripción del objetivo y división por días",
-              "exercises": [
-                {
-                  "name": "[Día 1] Nombre ejercicio con indicación de ejecución",
-                  "muscleGroup": "Grupo muscular",
-                  "sets": 3,
-                  "reps": "10-12",
-                  "rest": 60
-                }
-              ]
-            }
-            """.trimIndent()
+        val userLanguage = getUserLanguage()
+        return context?.getString(
+            R.string.llm_workout_plan_prompt,
+            environmentName,
+            gymSuffix,
+            promptContext,
+            userLanguage,
+        ) ?: error("Context is required to load llm_workout_plan_prompt resource")
     }
 
     private fun extractJson(textResponse: String): String {
@@ -177,14 +174,20 @@ class MultiLlmClientAdapter : LlmClientPort {
         val exerciseArray = jsonObject.getAsJsonArray("exercises") ?: return emptyList()
         return exerciseArray.map { element ->
             val exObj = element.asJsonObject
+            val name = exObj.get("name")?.asString ?: "Ejercicio sin nombre"
+            val parsedDayFromName =
+                Regex("\\[(?:Día|Day)\\s*(\\d+)\\]", RegexOption.IGNORE_CASE)
+                    .find(name)?.groupValues?.get(1)?.toIntOrNull()
+            val day = exObj.get("day")?.asInt ?: (parsedDayFromName ?: 1)
             Exercise(
                 id = UUID.randomUUID().toString(),
                 planId = planId,
-                name = exObj.get("name")?.asString ?: "Ejercicio sin nombre",
+                name = name,
                 muscleGroup = exObj.get("muscleGroup")?.asString ?: "VARIOUS",
                 targetSets = exObj.get("sets")?.asInt ?: 3,
                 targetReps = exObj.get("reps")?.asString ?: "10",
                 restSeconds = exObj.get("rest")?.asInt ?: 60,
+                day = day,
                 createdAt = now,
                 updatedAt = now,
             )
@@ -250,15 +253,10 @@ class MultiLlmClientAdapter : LlmClientPort {
     ): Result<Pair<String, String>> {
         return try {
             if (config.provider == LlmProvider.GEMINI && config.apiKeyEncrypted.isNotBlank()) {
+                val userLanguage = getUserLanguage()
                 val prompt =
-                    """
-                    Proporciona un enlace de video de YouTube relevante y una URL de imagen para realizar el ejercicio '$exerciseName'.
-                    Responde un JSON plano con la siguiente estructura exactas sin ningún otro texto:
-                    {
-                      "videoUrl": "https://www.youtube.com/results?search_query=...",
-                      "imageUrl": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
-                    }
-                    """.trimIndent()
+                    context?.getString(R.string.llm_exercise_media_prompt, exerciseName, userLanguage)
+                        ?: error("Context is required to load llm_exercise_media_prompt resource")
 
                 val response =
                     geminiApi.generateContent(

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="llm_workout_plan_prompt">
+        Generate a workout plan split by days of the week for %1$s%2$s.
+        User context (goal, anthropometric measurements, and history): %3$s.
+        Organize the exercises specified by day (e.g., Day 1, Day 2, etc.) and include clear execution instructions.
+        IMPORTANT: The user\'s language is %4$s. You MUST generate all text and exercise descriptions in %4$s.
+        Respond in plain JSON format with this exact structure:
+        {
+          "title": "Plan title in %4$s",
+          "goal": "Description of the objective and split by days in %4$s",
+          "exercises": [
+            {
+              "day": 1,
+              "name": "Exercise name with execution notes in %4$s",
+              "muscleGroup": "Muscle Group",
+              "sets": 3,
+              "reps": "10-12",
+              "rest": 60
+            }
+          ]
+        }
+    </string>
+
+    <string name="llm_exercise_media_prompt">
+        Provide a relevant YouTube video URL and an image URL for performing the exercise \'%1$s\'.
+        IMPORTANT: The user\'s language is %2$s. You MUST respond in %2$s.
+        Respond in plain JSON format with this exact structure without any other text:
+        {
+          "videoUrl": "https://www.youtube.com/results?search_query=...",
+          "imageUrl": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
+        }
+    </string>
+</resources>

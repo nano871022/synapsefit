@@ -68,6 +68,7 @@ class DatabaseMappersTest {
                 targetSets = 4,
                 targetReps = "8-12",
                 restSeconds = 90,
+                day = 2,
                 guideVideoUrl = "https://example.com/video",
                 guideImageUrl = "https://example.com/image",
                 createdAt = now,

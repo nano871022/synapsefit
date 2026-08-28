@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -123,24 +124,23 @@ fun ActiveWorkoutSessionScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
             ) {
-                state.exerciseVideoUrl?.let { url ->
-                    OutlinedButton(
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                            context.startActivity(intent)
-                        },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(stringResource(R.string.watch_video))
-                    }
+                val queryFormatted = state.currentExerciseName.replace(" ", "+")
+                val videoUrl = state.exerciseVideoUrl ?: "https://www.youtube.com/results?search_query=$queryFormatted"
+                OutlinedButton(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.watch_video))
                 }
-                if (state.exerciseImageUrl != null) {
-                    OutlinedButton(
-                        onClick = onOpenImagePopup,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(stringResource(R.string.view_image))
-                    }
+
+                OutlinedButton(
+                    onClick = onOpenImagePopup,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.view_image))
                 }
             }
 
@@ -227,19 +227,32 @@ fun ExerciseImageDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var imageBitmap by remember(imageUrl) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
-    var isLoading by remember(imageUrl) { mutableStateOf(true) }
+    val fallbackUrl = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
+    val targetUrl = imageUrl.ifBlank { fallbackUrl }
+    var imageBitmap by remember(targetUrl) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    var isLoading by remember(targetUrl) { mutableStateOf(true) }
 
-    LaunchedEffect(imageUrl) {
+    LaunchedEffect(targetUrl) {
         isLoading = true
         withContext(Dispatchers.IO) {
             runCatching {
-                val connection = URL(imageUrl).openConnection()
+                val connection = URL(targetUrl).openConnection()
                 connection.connectTimeout = 5000
                 connection.readTimeout = 5000
                 val inputStream = connection.getInputStream()
                 val bitmap = BitmapFactory.decodeStream(inputStream)
                 bitmap?.asImageBitmap()
+            }.getOrNull() ?: runCatching {
+                if (targetUrl != fallbackUrl) {
+                    val connection = URL(fallbackUrl).openConnection()
+                    connection.connectTimeout = 5000
+                    connection.readTimeout = 5000
+                    val inputStream = connection.getInputStream()
+                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                    bitmap?.asImageBitmap()
+                } else {
+                    null
+                }
             }.getOrNull()
         }.also { bitmap ->
             imageBitmap = bitmap
@@ -278,11 +291,20 @@ fun ExerciseImageDialog(
                             contentScale = ContentScale.Crop,
                         )
                     } else {
-                        Text(
-                            text = imageUrl,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.FitnessCenter,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.height(64.dp).width(64.dp),
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.app_name),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
 

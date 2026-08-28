@@ -77,7 +77,20 @@ class GenerateWorkoutPlanUseCaseTest {
             val plan = WorkoutPlan("p1", "Upper Body", "Gain muscle", true, true, 1000L, 1000L)
             val exercises =
                 listOf(
-                    Exercise("e1", "p1", "Pushups", "Chest", 3, "12-15", 60, null, null, 1000L, 1000L),
+                    Exercise(
+                        id = "e1",
+                        planId = "p1",
+                        name = "Pushups",
+                        muscleGroup = "Chest",
+                        targetSets = 3,
+                        targetReps = "12-15",
+                        restSeconds = 60,
+                        day = 1,
+                        guideVideoUrl = null,
+                        guideImageUrl = null,
+                        createdAt = 1000L,
+                        updatedAt = 1000L,
+                    ),
                 )
 
             coEvery {

@@ -8,6 +8,7 @@ data class Exercise(
     val targetSets: Int,
     val targetReps: String,
     val restSeconds: Int,
+    val day: Int = 1,
     val guideVideoUrl: String? = null,
     val guideImageUrl: String? = null,
     val createdAt: Long,

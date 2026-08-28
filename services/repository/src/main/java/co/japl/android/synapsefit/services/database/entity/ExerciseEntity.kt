@@ -32,6 +32,8 @@ data class ExerciseEntity(
     val targetReps: String,
     @ColumnInfo(name = "rest_seconds")
     val restSeconds: Int,
+    @ColumnInfo(name = "day")
+    val day: Int = 1,
     @ColumnInfo(name = "guide_video_url")
     val guideVideoUrl: String? = null,
     @ColumnInfo(name = "guide_image_url")

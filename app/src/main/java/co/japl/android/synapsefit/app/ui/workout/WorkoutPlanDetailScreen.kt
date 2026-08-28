@@ -34,8 +34,7 @@ fun WorkoutPlanDetailScreen(
 ) {
     val groupedExercises =
         state.exercises.groupBy { exercise ->
-            val match = Regex("\\[(Día \\d+)\\]", RegexOption.IGNORE_CASE).find(exercise.name)
-            match?.groupValues?.get(1) ?: "General"
+            "Día ${exercise.day}"
         }
 
     Scaffold(

@@ -61,4 +61,28 @@ class MultiLlmClientAdapterTest {
             assertTrue(plan.title.contains("Mock Plan"))
             assertEquals(0, exercises.size)
         }
+
+    @Test
+    fun `generateWorkoutPlan for gemini provider fails without Context`() =
+        runTest {
+            val config =
+                LlmConfig(
+                    id = "cfg1",
+                    provider = LlmProvider.GEMINI,
+                    apiKeyEncrypted = "valid_key",
+                    modelName = "gemini-1.5-flash",
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
+                )
+
+            val result =
+                adapter.generateWorkoutPlan(
+                    promptContext = "Build muscle",
+                    environment = TrainingEnvironment.BODYWEIGHT,
+                    gymChainQuery = null,
+                    config = config,
+                )
+
+            assertTrue(result.isFailure)
+        }
 }
