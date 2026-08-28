@@ -1,5 +1,6 @@
 package co.japl.android.synapsefit.services.llm
 
+import android.content.Context
 import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.LlmConfig
 import co.japl.android.synapsefit.core.domain.model.LlmProvider
@@ -17,7 +18,9 @@ import java.util.UUID
 private const val TIMEOUT_SECONDS = 300L
 
 @Suppress("TooGenericExceptionCaught", "TooManyFunctions", "SwallowedException")
-class MultiLlmClientAdapter : LlmClientPort {
+class MultiLlmClientAdapter(
+    private val context: Context? = null,
+) : LlmClientPort {
     private val client =
         OkHttpClient.Builder()
             .connectTimeout(TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)
@@ -104,25 +107,16 @@ class MultiLlmClientAdapter : LlmClientPort {
         promptContext: String,
     ): String {
         val gymSuffix = if (!gymChainQuery.isNullOrBlankCheck()) " in $gymChainQuery" else ""
-        return """
-            Genera un plan de entrenamiento dividido por días de la semana para $environmentName$gymSuffix.
-            Contexto del usuario (objetivo, medidas antropométricas e historial): $promptContext
-            Organiza los ejercicios especificados por día (ej. 'Día 1 - Pecho y Tríceps', 'Día 2 - Espalda y Bíceps', etc.) e incluye instrucciones claras de ejecución.
-            Responde en formato JSON plano con esta estructura:
-            {
-              "title": "Nombre del plan",
-              "goal": "Descripción del objetivo y división por días",
-              "exercises": [
-                {
-                  "name": "[Día 1] Nombre ejercicio con indicación de ejecución",
-                  "muscleGroup": "Grupo muscular",
-                  "sets": 3,
-                  "reps": "10-12",
-                  "rest": 60
-                }
-              ]
-            }
-            """.trimIndent()
+        return context?.getString(R.string.llm_workout_plan_prompt, environmentName, gymSuffix, promptContext)
+            ?: "Generate a workout plan split by days of the week for $environmentName$gymSuffix.\n" +
+            "User context (goal, anthropometric measurements, and history): $promptContext.\n" +
+            "Organize the exercises specified by day and include clear execution instructions.\n" +
+            "IMPORTANT: Respond in the language used in the user's context/system locale.\n" +
+            "Respond in plain JSON format with this exact structure:\n" +
+            "{\n  \"title\": \"Plan title\",\n  \"goal\": \"Description of the objective\",\n" +
+            "  \"exercises\": [ {\n    \"day\": 1,\n    \"name\": \"Exercise name\",\n" +
+            "    \"muscleGroup\": \"Muscle Group\",\n    \"sets\": 3,\n    \"reps\": \"10-12\",\n" +
+            "    \"rest\": 60\n  } ]\n}"
     }
 
     private fun extractJson(textResponse: String): String {
@@ -177,14 +171,20 @@ class MultiLlmClientAdapter : LlmClientPort {
         val exerciseArray = jsonObject.getAsJsonArray("exercises") ?: return emptyList()
         return exerciseArray.map { element ->
             val exObj = element.asJsonObject
+            val name = exObj.get("name")?.asString ?: "Ejercicio sin nombre"
+            val parsedDayFromName =
+                Regex("\\[(?:Día|Day)\\s*(\\d+)\\]", RegexOption.IGNORE_CASE)
+                    .find(name)?.groupValues?.get(1)?.toIntOrNull()
+            val day = exObj.get("day")?.asInt ?: (parsedDayFromName ?: 1)
             Exercise(
                 id = UUID.randomUUID().toString(),
                 planId = planId,
-                name = exObj.get("name")?.asString ?: "Ejercicio sin nombre",
+                name = name,
                 muscleGroup = exObj.get("muscleGroup")?.asString ?: "VARIOUS",
                 targetSets = exObj.get("sets")?.asInt ?: 3,
                 targetReps = exObj.get("reps")?.asString ?: "10",
                 restSeconds = exObj.get("rest")?.asInt ?: 60,
+                day = day,
                 createdAt = now,
                 updatedAt = now,
             )
@@ -251,14 +251,12 @@ class MultiLlmClientAdapter : LlmClientPort {
         return try {
             if (config.provider == LlmProvider.GEMINI && config.apiKeyEncrypted.isNotBlank()) {
                 val prompt =
-                    """
-                    Proporciona un enlace de video de YouTube relevante y una URL de imagen para realizar el ejercicio '$exerciseName'.
-                    Responde un JSON plano con la siguiente estructura exactas sin ningún otro texto:
-                    {
-                      "videoUrl": "https://www.youtube.com/results?search_query=...",
-                      "imageUrl": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
-                    }
-                    """.trimIndent()
+                    context?.getString(R.string.llm_exercise_media_prompt, exerciseName)
+                        ?: (
+                            "Provide a relevant YouTube video URL and image URL for '$exerciseName'.\n" +
+                                "IMPORTANT: Respond in the language of the user context.\n" +
+                                "Respond in plain JSON format: {\"videoUrl\": \"...\", \"imageUrl\": \"...\"}"
+                        )
 
                 val response =
                     geminiApi.generateContent(

@@ -159,10 +159,27 @@ fun WorkoutSessionHistoryCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
+                if (session.exerciseName.isNotBlank()) {
+                    Text(
+                        text = session.exerciseName,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
                 Text(
                     text = "${session.repsCompleted} reps x ${session.weightLiftedKg} kg",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    style =
+                        if (session.exerciseName.isNotBlank()) {
+                            MaterialTheme.typography.bodyMedium
+                        } else {
+                            MaterialTheme.typography.titleMedium
+                        },
+                    color =
+                        if (session.exerciseName.isNotBlank()) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
                 )
                 Text(
                     text = stringResource(R.string.date_prefix, DateTimeUtils.formatEpoch(session.timestamp, "yyyy-MM-dd")),

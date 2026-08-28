@@ -113,15 +113,13 @@ class ActiveWorkoutSessionViewModel(
                             targetSets = e.targetSets,
                             targetReps = e.targetReps,
                             restSeconds = e.restSeconds,
+                            day = e.day,
+                            guideVideoUrl = e.guideVideoUrl,
+                            guideImageUrl = e.guideImageUrl,
                         )
                     }
 
-                val planDays =
-                    mappedExercises.mapNotNull { ex ->
-                        Regex("\\[Día (\\d+)\\]", RegexOption.IGNORE_CASE).find(ex.name)?.groupValues?.get(1)?.toIntOrNull()
-                    }.distinct().sorted()
-
-                val totalPlanDays = if (planDays.isNotEmpty()) planDays.maxOrNull() ?: 1 else 1
+                val totalPlanDays = mappedExercises.maxOfOrNull { it.day } ?: 1
 
                 val latestLogs =
                     workoutLogRepositoryPort?.getLatestLogsForPlan(planId)?.let { flow ->
@@ -130,22 +128,13 @@ class ActiveWorkoutSessionViewModel(
 
                 val lastLog = latestLogs.firstOrNull()
                 val lastEx = mappedExercises.find { it.id == lastLog?.exerciseId }
-                val lastDay =
-                    lastEx?.let { ex ->
-                        Regex("\\[Día (\\d+)\\]", RegexOption.IGNORE_CASE).find(ex.name)?.groupValues?.get(1)?.toIntOrNull()
-                    } ?: 0
+                val lastDay = lastEx?.day ?: 0
 
                 val activeDayNumber = if (lastDay == 0) 1 else (lastDay % totalPlanDays) + 1
 
                 val filteredForActiveDay =
-                    mappedExercises.filter { ex ->
-                        val match = Regex("\\[Día (\\d+)\\]", RegexOption.IGNORE_CASE).find(ex.name)
-                        if (match != null) {
-                            match.groupValues[1].toIntOrNull() == activeDayNumber
-                        } else {
-                            true
-                        }
-                    }.ifEmpty { mappedExercises }
+                    mappedExercises.filter { ex -> ex.day == activeDayNumber }
+                        .ifEmpty { mappedExercises }
 
                 val firstExercise = filteredForActiveDay.firstOrNull()
                 if (firstExercise != null) {
@@ -275,7 +264,11 @@ class ActiveWorkoutSessionViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isMediaLoading = true) }
 
-            val (videoUrl, imageUrl) =
+            val queryFormatted = exercise.name.replace(" ", "+")
+            val defaultVideo = "https://www.youtube.com/results?search_query=$queryFormatted"
+            val defaultImage = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
+
+            val (rawVideo, rawImage) =
                 if (getExerciseMediaUseCase != null) {
                     getExerciseMediaUseCase(
                         exerciseId = exercise.id,
@@ -286,6 +279,9 @@ class ActiveWorkoutSessionViewModel(
                 } else {
                     Pair(exercise.guideVideoUrl, exercise.guideImageUrl)
                 }
+
+            val videoUrl = rawVideo?.takeIf { it.isNotBlank() } ?: defaultVideo
+            val imageUrl = rawImage?.takeIf { it.isNotBlank() } ?: defaultImage
 
             _uiState.update {
                 it.copy(

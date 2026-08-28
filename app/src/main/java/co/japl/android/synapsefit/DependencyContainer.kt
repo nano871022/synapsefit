@@ -27,7 +27,7 @@ class DependencyContainer(context: Context) {
             context.applicationContext,
             SynapseFitDatabase::class.java,
             "synapsefit_database.db",
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     val bodyMeasurementRepository: BodyMeasurementRepositoryPort by lazy {
@@ -51,7 +51,7 @@ class DependencyContainer(context: Context) {
     }
 
     val llmClient: LlmClientPort by lazy {
-        MultiLlmClientAdapter()
+        MultiLlmClientAdapter(context)
     }
 
     // UseCases

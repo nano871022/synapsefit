@@ -16,6 +16,7 @@ data class ExerciseUiModel(
     val targetSets: Int,
     val targetReps: String,
     val restSeconds: Int,
+    val day: Int = 1,
     val guideVideoUrl: String? = null,
     val guideImageUrl: String? = null,
 )
@@ -52,6 +53,7 @@ class WorkoutPlanDetailViewModel(
                                 targetSets = e.targetSets,
                                 targetReps = e.targetReps,
                                 restSeconds = e.restSeconds,
+                                day = e.day,
                                 guideVideoUrl = e.guideVideoUrl,
                                 guideImageUrl = e.guideImageUrl,
                             )
