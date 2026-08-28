@@ -60,4 +60,10 @@ interface WorkoutPlanDao {
         videoUrl: String?,
         imageUrl: String?,
     )
+
+    @Query(
+        "SELECT * FROM exercises WHERE LOWER(name) = LOWER(:exerciseName) " +
+            "AND guide_video_url IS NOT NULL AND guide_video_url != '' LIMIT 1",
+    )
+    suspend fun findMediaByExerciseName(exerciseName: String): ExerciseEntity?
 }

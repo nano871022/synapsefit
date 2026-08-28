@@ -193,11 +193,23 @@ fun ExerciseListItem(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
+                val rawName = exercise.name.trim()
+                val hasParentheses = rawName.contains("(") && rawName.contains(")")
+                val title = if (hasParentheses) rawName.substringBefore("(").trim() else rawName
+                val description = if (hasParentheses) rawName.substringAfter("(").substringBefore(")").trim() else ""
+
                 Text(
-                    text = exercise.name,
+                    text = title,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
+                if (description.isNotBlank()) {
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     AssistChip(
                         onClick = { },

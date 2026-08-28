@@ -61,6 +61,7 @@ fun AppNavHost(
                                 return DashboardViewModel(
                                     bodyMeasurementRepositoryPort = dependencyContainer.bodyMeasurementRepository,
                                     workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
+                                    workoutLogRepositoryPort = dependencyContainer.workoutLogRepository,
                                 ) as T
                             }
                         },
@@ -174,6 +175,7 @@ fun AppNavHost(
                                 return AICoachGeneratorViewModel(
                                     generateWorkoutPlanUseCase = dependencyContainer.generateWorkoutPlanUseCase,
                                     workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
+                                    getExerciseMediaUseCase = dependencyContainer.getExerciseMediaUseCase,
                                     appNavigator = appNavigator,
                                 ) as T
                             }
