@@ -101,14 +101,25 @@ class MultiLlmClientAdapter(
         return parseGeminiResponse(cleanedJson, promptContext, environmentName)
     }
 
+    private fun getUserLanguage(): String {
+        val locale = context?.resources?.configuration?.locales?.get(0) ?: java.util.Locale.getDefault()
+        return locale.displayLanguage.ifBlank { "Spanish" }
+    }
+
     private fun buildGeminiPrompt(
         environmentName: String,
         gymChainQuery: String?,
         promptContext: String,
     ): String {
         val gymSuffix = if (!gymChainQuery.isNullOrBlankCheck()) " in $gymChainQuery" else ""
-        return context?.getString(R.string.llm_workout_plan_prompt, environmentName, gymSuffix, promptContext)
-            ?: error("Context is required to load llm_workout_plan_prompt resource")
+        val userLanguage = getUserLanguage()
+        return context?.getString(
+            R.string.llm_workout_plan_prompt,
+            environmentName,
+            gymSuffix,
+            promptContext,
+            userLanguage,
+        ) ?: error("Context is required to load llm_workout_plan_prompt resource")
     }
 
     private fun extractJson(textResponse: String): String {
@@ -242,8 +253,9 @@ class MultiLlmClientAdapter(
     ): Result<Pair<String, String>> {
         return try {
             if (config.provider == LlmProvider.GEMINI && config.apiKeyEncrypted.isNotBlank()) {
+                val userLanguage = getUserLanguage()
                 val prompt =
-                    context?.getString(R.string.llm_exercise_media_prompt, exerciseName)
+                    context?.getString(R.string.llm_exercise_media_prompt, exerciseName, userLanguage)
                         ?: error("Context is required to load llm_exercise_media_prompt resource")
 
                 val response =
