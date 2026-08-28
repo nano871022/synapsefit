@@ -235,6 +235,7 @@ fun AppNavHost(
                                     recordWorkoutSessionUseCase = dependencyContainer.recordWorkoutSessionUseCase,
                                     llmConfigRepositoryPort = dependencyContainer.llmConfigRepository,
                                     llmClientPort = dependencyContainer.llmClient,
+                                    workoutLogRepositoryPort = dependencyContainer.workoutLogRepository,
                                 ) as T
                             }
                         },

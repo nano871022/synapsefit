@@ -22,6 +22,11 @@ class WorkoutLogRepositoryAdapter(
             entities.map { it.toDomain() }
         }
 
+    override fun getLatestLogsForPlan(planId: String): Flow<List<WorkoutLog>> =
+        dao.getLatestLogsForPlan(planId).map { entities ->
+            entities.map { it.toDomain() }
+        }
+
     override suspend fun saveLog(log: WorkoutLog) {
         dao.insertLog(log.toEntity())
     }

@@ -22,6 +22,14 @@ interface WorkoutLogDao {
         endTimestamp: Long,
     ): Flow<List<WorkoutLogEntity>>
 
+    @Query(
+        "SELECT l.* FROM workout_logs l " +
+            "INNER JOIN exercises e ON l.exercise_id = e.id " +
+            "WHERE e.plan_id = :planId " +
+            "ORDER BY l.timestamp DESC LIMIT 50",
+    )
+    fun getLatestLogsForPlan(planId: String): Flow<List<WorkoutLogEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(log: WorkoutLogEntity)
 

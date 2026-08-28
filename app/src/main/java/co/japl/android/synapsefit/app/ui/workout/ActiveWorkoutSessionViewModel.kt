@@ -15,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
 import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
+import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.RecordWorkoutSessionUseCase
 import kotlinx.coroutines.Job
@@ -75,6 +76,7 @@ class ActiveWorkoutSessionViewModel(
     private val recordWorkoutSessionUseCase: RecordWorkoutSessionUseCase? = null,
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort? = null,
     private val llmClientPort: LlmClientPort? = null,
+    private val workoutLogRepositoryPort: WorkoutLogRepositoryPort? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ActiveWorkoutUiState())
     val uiState: StateFlow<ActiveWorkoutUiState> = _uiState.asStateFlow()
@@ -115,17 +117,26 @@ class ActiveWorkoutSessionViewModel(
                         )
                     }
 
-                val calendarDayOfWeek = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_WEEK)
-                val activeDayNumber =
-                    when (calendarDayOfWeek) {
-                        java.util.Calendar.MONDAY -> 1
-                        java.util.Calendar.TUESDAY -> 2
-                        java.util.Calendar.WEDNESDAY -> 3
-                        java.util.Calendar.THURSDAY -> 4
-                        java.util.Calendar.FRIDAY -> 5
-                        java.util.Calendar.SATURDAY -> 6
-                        else -> 1
-                    }
+                val planDays =
+                    mappedExercises.mapNotNull { ex ->
+                        Regex("\\[Día (\\d+)\\]", RegexOption.IGNORE_CASE).find(ex.name)?.groupValues?.get(1)?.toIntOrNull()
+                    }.distinct().sorted()
+
+                val totalPlanDays = if (planDays.isNotEmpty()) planDays.maxOrNull() ?: 1 else 1
+
+                val latestLogs =
+                    workoutLogRepositoryPort?.getLatestLogsForPlan(planId)?.let { flow ->
+                        flow.firstOrNull()
+                    } ?: emptyList()
+
+                val lastLog = latestLogs.firstOrNull()
+                val lastEx = mappedExercises.find { it.id == lastLog?.exerciseId }
+                val lastDay =
+                    lastEx?.let { ex ->
+                        Regex("\\[Día (\\d+)\\]", RegexOption.IGNORE_CASE).find(ex.name)?.groupValues?.get(1)?.toIntOrNull()
+                    } ?: 0
+
+                val activeDayNumber = if (lastDay == 0) 1 else (lastDay % totalPlanDays) + 1
 
                 val filteredForActiveDay =
                     mappedExercises.filter { ex ->
