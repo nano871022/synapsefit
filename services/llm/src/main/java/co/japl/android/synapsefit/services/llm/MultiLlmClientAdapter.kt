@@ -16,7 +16,7 @@ import java.util.UUID
 
 private const val TIMEOUT_SECONDS = 300L
 
-@Suppress("TooGenericExceptionCaught")
+@Suppress("TooGenericExceptionCaught", "TooManyFunctions", "SwallowedException")
 class MultiLlmClientAdapter : LlmClientPort {
     private val client =
         OkHttpClient.Builder()
@@ -241,6 +241,54 @@ class MultiLlmClientAdapter : LlmClientPort {
             }
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    override suspend fun fetchExerciseMedia(
+        exerciseName: String,
+        config: LlmConfig,
+    ): Result<Pair<String, String>> {
+        return try {
+            if (config.provider == LlmProvider.GEMINI && config.apiKeyEncrypted.isNotBlank()) {
+                val prompt =
+                    """
+                    Proporciona un enlace de video de YouTube relevante y una URL de imagen para realizar el ejercicio '$exerciseName'.
+                    Responde un JSON plano con la siguiente estructura exactas sin ningún otro texto:
+                    {
+                      "videoUrl": "https://www.youtube.com/results?search_query=...",
+                      "imageUrl": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
+                    }
+                    """.trimIndent()
+
+                val response =
+                    geminiApi.generateContent(
+                        model = config.modelName,
+                        apiKey = config.apiKeyEncrypted.trim(),
+                        request = GeminiRequest(contents = listOf(Content(parts = listOf(Part(text = prompt))))),
+                    )
+
+                val textResponse = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: ""
+                val cleanedJson = extractJson(textResponse)
+                val jsonObject = JsonParser.parseString(cleanedJson).asJsonObject
+
+                val queryFormatted = exerciseName.replace(" ", "+")
+                val defaultVideo = "https://www.youtube.com/results?search_query=$queryFormatted"
+                val defaultImage = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
+
+                val videoUrl = jsonObject.get("videoUrl")?.asString ?: defaultVideo
+                val imageUrl = jsonObject.get("imageUrl")?.asString ?: defaultImage
+                Result.success(Pair(videoUrl, imageUrl))
+            } else {
+                val queryFormatted = exerciseName.replace(" ", "+")
+                val videoUrl = "https://www.youtube.com/results?search_query=$queryFormatted"
+                val imageUrl = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
+                Result.success(Pair(videoUrl, imageUrl))
+            }
+        } catch (e: Exception) {
+            val queryFormatted = exerciseName.replace(" ", "+")
+            val videoUrl = "https://www.youtube.com/results?search_query=$queryFormatted"
+            val imageUrl = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
+            Result.success(Pair(videoUrl, imageUrl))
         }
     }
 

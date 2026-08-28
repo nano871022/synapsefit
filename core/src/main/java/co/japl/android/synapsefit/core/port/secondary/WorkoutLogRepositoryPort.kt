@@ -11,6 +11,8 @@ interface WorkoutLogRepositoryPort {
         endTimestamp: Long,
     ): Flow<List<WorkoutLog>>
 
+    fun getLatestLogsForPlan(planId: String): Flow<List<WorkoutLog>>
+
     suspend fun saveLog(log: WorkoutLog)
 
     suspend fun deleteLog(id: String)

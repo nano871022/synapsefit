@@ -19,4 +19,10 @@ interface WorkoutPlanRepositoryPort {
     suspend fun setActivePlan(planId: String)
 
     suspend fun deletePlan(planId: String)
+
+    suspend fun updateExerciseMedia(
+        exerciseId: String,
+        videoUrl: String?,
+        imageUrl: String?,
+    )
 }

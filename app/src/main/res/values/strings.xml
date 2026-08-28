@@ -104,6 +104,9 @@
     <string name="target_reps">Reps objetivo: %1$s</string>
     <string name="complete_set">Completar Serie</string>
     <string name="next_set_or_exercise">Siguiente Serie / Ejercicio</string>
+    <string name="watch_video">Ver Video (YouTube)</string>
+    <string name="view_image">Ver Imagen</string>
+    <string name="close">Cerrar</string>
     <string name="workout_summary">Resumen del Entrenamiento</string>
     <string name="total_workout_time">Tiempo Total</string>
     <string name="exercise_summary_item">%1$s — %2$d series | Max: %3$s kg | Tiempo: %4$s</string>
@@ -139,6 +142,12 @@
     <string name="save_and_activate_provider">Guardar y Activar Proveedor</string>
     <string name="registered_providers">Proveedores Registrados</string>
     <string name="active_badge">ACTIVO</string>
+    <string name="activate">Activar</string>
+    <string name="edit">Editar</string>
+    <string name="duplicate">Duplicar</string>
+    <string name="delete">Eliminar</string>
+    <string name="update_provider">Actualizar Proveedor</string>
+    <string name="add_provider">Agregar Proveedor</string>
 
     <!-- V11: About Developer -->
     <string name="about_synapsefit">Acerca de SynapseFit</string>

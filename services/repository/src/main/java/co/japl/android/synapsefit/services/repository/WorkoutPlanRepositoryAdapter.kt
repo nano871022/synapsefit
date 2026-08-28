@@ -52,4 +52,12 @@ class WorkoutPlanRepositoryAdapter(
     override suspend fun deletePlan(planId: String) {
         dao.deletePlan(planId)
     }
+
+    override suspend fun updateExerciseMedia(
+        exerciseId: String,
+        videoUrl: String?,
+        imageUrl: String?,
+    ) {
+        dao.updateExerciseMedia(exerciseId, videoUrl, imageUrl)
+    }
 }

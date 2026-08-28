@@ -233,11 +233,15 @@ fun AppNavHost(
                                 return ActiveWorkoutSessionViewModel(
                                     workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
                                     recordWorkoutSessionUseCase = dependencyContainer.recordWorkoutSessionUseCase,
+                                    workoutLogRepositoryPort = dependencyContainer.workoutLogRepository,
+                                    getExerciseMediaUseCase = dependencyContainer.getExerciseMediaUseCase,
                                 ) as T
                             }
                         },
                 )
-            viewModel.startSession(planId)
+            androidx.compose.runtime.LaunchedEffect(planId) {
+                viewModel.startSession(planId)
+            }
             val state by viewModel.uiState.collectAsState()
             ActiveWorkoutSessionScreen(
                 state = state,
@@ -249,6 +253,8 @@ fun AppNavHost(
                     viewModel.finishSession()
                     navController.navigateUp()
                 },
+                onOpenImagePopup = viewModel::showImagePopup,
+                onCloseImagePopup = viewModel::hideImagePopup,
             )
         }
 
@@ -309,6 +315,10 @@ fun AppNavHost(
                 state = state,
                 onSaveConfig = viewModel::saveConfig,
                 onFetchModels = viewModel::fetchModels,
+                onActivateConfig = viewModel::setActiveConfig,
+                onDuplicateConfig = viewModel::duplicateConfig,
+                onDeleteConfig = viewModel::deleteConfig,
+                onUpdateConfig = viewModel::updateConfig,
             )
         }
 

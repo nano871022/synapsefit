@@ -1,12 +1,23 @@
-@file:Suppress("MagicNumber", "LongParameterList", "UnusedParameter")
+@file:Suppress(
+    "MagicNumber",
+    "LongParameterList",
+    "UnusedParameter",
+    "LongMethod",
+    "TooManyFunctions",
+    "CyclomaticComplexMethod",
+    "MaxLineLength",
+)
 
 package co.japl.android.synapsefit.app.ui.workout
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
+import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
+import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
 import co.japl.android.synapsefit.core.usecase.RecordWorkoutSessionUseCase
+import co.japl.android.synapsefit.util.DateTimeUtils
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,17 +65,24 @@ data class ActiveWorkoutUiState(
     val isCurrentSetCompleted: Boolean = false,
     val isSessionComplete: Boolean = false,
     val summary: WorkoutSummary? = null,
+    val exerciseVideoUrl: String? = null,
+    val exerciseImageUrl: String? = null,
+    val isImagePopupVisible: Boolean = false,
+    val isMediaLoading: Boolean = false,
 )
 
 class ActiveWorkoutSessionViewModel(
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
     private val recordWorkoutSessionUseCase: RecordWorkoutSessionUseCase? = null,
+    private val workoutLogRepositoryPort: WorkoutLogRepositoryPort? = null,
+    private val getExerciseMediaUseCase: GetExerciseMediaUseCase? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ActiveWorkoutUiState())
     val uiState: StateFlow<ActiveWorkoutUiState> = _uiState.asStateFlow()
 
     private var timerJob: Job? = null
     private var restTimerJob: Job? = null
+    private var sessionStartTimestamp: Long = 0L
 
     // Track time spent per exercise ID and weights per exercise ID
     private val exerciseStartTime = mutableMapOf<String, Long>()
@@ -73,6 +91,9 @@ class ActiveWorkoutSessionViewModel(
     private val exerciseMaxWeight = mutableMapOf<String, Double>()
 
     fun startSession(planId: String) {
+        if (_uiState.value.planId == planId && _uiState.value.exercises.isNotEmpty()) {
+            return
+        }
         viewModelScope.launch {
             _uiState.update { it.copy(planId = planId) }
 
@@ -95,15 +116,49 @@ class ActiveWorkoutSessionViewModel(
                         )
                     }
 
-                val firstExercise = mappedExercises.firstOrNull()
+                val planDays =
+                    mappedExercises.mapNotNull { ex ->
+                        Regex("\\[Día (\\d+)\\]", RegexOption.IGNORE_CASE).find(ex.name)?.groupValues?.get(1)?.toIntOrNull()
+                    }.distinct().sorted()
+
+                val totalPlanDays = if (planDays.isNotEmpty()) planDays.maxOrNull() ?: 1 else 1
+
+                val latestLogs =
+                    workoutLogRepositoryPort?.getLatestLogsForPlan(planId)?.let { flow ->
+                        flow.firstOrNull()
+                    } ?: emptyList()
+
+                val lastLog = latestLogs.firstOrNull()
+                val lastEx = mappedExercises.find { it.id == lastLog?.exerciseId }
+                val lastDay =
+                    lastEx?.let { ex ->
+                        Regex("\\[Día (\\d+)\\]", RegexOption.IGNORE_CASE).find(ex.name)?.groupValues?.get(1)?.toIntOrNull()
+                    } ?: 0
+
+                val activeDayNumber = if (lastDay == 0) 1 else (lastDay % totalPlanDays) + 1
+
+                val filteredForActiveDay =
+                    mappedExercises.filter { ex ->
+                        val match = Regex("\\[Día (\\d+)\\]", RegexOption.IGNORE_CASE).find(ex.name)
+                        if (match != null) {
+                            match.groupValues[1].toIntOrNull() == activeDayNumber
+                        } else {
+                            true
+                        }
+                    }.ifEmpty { mappedExercises }
+
+                val firstExercise = filteredForActiveDay.firstOrNull()
                 if (firstExercise != null) {
                     exerciseStartTime[firstExercise.id] = System.currentTimeMillis()
+                    fetchExerciseMedia(firstExercise)
                 }
+
+                sessionStartTimestamp = System.currentTimeMillis()
 
                 _uiState.update {
                     it.copy(
-                        planTitle = plan.title,
-                        exercises = mappedExercises,
+                        planTitle = "${plan.title} (Día $activeDayNumber)",
+                        exercises = filteredForActiveDay,
                         currentExerciseIndex = 0,
                         currentExerciseId = firstExercise?.id ?: "",
                         currentExerciseName = firstExercise?.name ?: "",
@@ -127,7 +182,8 @@ class ActiveWorkoutSessionViewModel(
             viewModelScope.launch {
                 while (isActive) {
                     delay(1000L)
-                    _uiState.update { it.copy(elapsedTimeSeconds = it.elapsedTimeSeconds + 1) }
+                    val elapsed = DateTimeUtils.calculateElapsedTimeSeconds(sessionStartTimestamp)
+                    _uiState.update { it.copy(elapsedTimeSeconds = elapsed) }
                 }
             }
     }
@@ -169,13 +225,84 @@ class ActiveWorkoutSessionViewModel(
                 exerciseMaxWeight[currentExId] = weight
             }
 
-            _uiState.update { s ->
-                s.copy(isCurrentSetCompleted = true)
-            }
+            val isLastSetForExercise = state.currentSetIndex >= state.totalSetsForCurrentExercise
+            if (isLastSetForExercise) {
+                // Record time spent for finished exercise
+                val startT = exerciseStartTime[currentExId] ?: System.currentTimeMillis()
+                val timeSpent = (System.currentTimeMillis() - startT) / 1000
+                exerciseTimeSpent[currentExId] = (exerciseTimeSpent[currentExId] ?: 0L) + timeSpent
 
-            val currentExercise = state.exercises.getOrNull(state.currentExerciseIndex)
-            startRestTimer(currentExercise?.restSeconds ?: 60)
+                val isLastExercise = state.currentExerciseIndex + 1 >= state.exercises.size
+                if (isLastExercise) {
+                    finishSession()
+                } else {
+                    val nextExIndex = state.currentExerciseIndex + 1
+                    val nextEx = state.exercises[nextExIndex]
+                    exerciseStartTime[nextEx.id] = System.currentTimeMillis()
+                    fetchExerciseMedia(nextEx)
+
+                    _uiState.update {
+                        it.copy(
+                            currentExerciseIndex = nextExIndex,
+                            currentExerciseId = nextEx.id,
+                            currentExerciseName = nextEx.name,
+                            currentSetIndex = 1,
+                            totalSetsForCurrentExercise = nextEx.targetSets,
+                            targetRepsForCurrentSet = nextEx.targetReps,
+                            currentSetReps = nextEx.targetReps,
+                            currentSetWeightKg = "",
+                            isCurrentSetCompleted = false,
+                            restTimerSecondsRemaining = null,
+                        )
+                    }
+                }
+            } else {
+                val nextSetIdx = state.currentSetIndex + 1
+                _uiState.update {
+                    it.copy(
+                        currentSetIndex = nextSetIdx,
+                        isCurrentSetCompleted = false,
+                        restTimerSecondsRemaining = null,
+                    )
+                }
+                val currentExercise = state.exercises.getOrNull(state.currentExerciseIndex)
+                startRestTimer(currentExercise?.restSeconds ?: 60)
+            }
         }
+    }
+
+    private fun fetchExerciseMedia(exercise: ExerciseUiModel) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isMediaLoading = true) }
+
+            val (videoUrl, imageUrl) =
+                if (getExerciseMediaUseCase != null) {
+                    getExerciseMediaUseCase(
+                        exerciseId = exercise.id,
+                        exerciseName = exercise.name,
+                        guideVideoUrl = exercise.guideVideoUrl,
+                        guideImageUrl = exercise.guideImageUrl,
+                    )
+                } else {
+                    Pair(exercise.guideVideoUrl, exercise.guideImageUrl)
+                }
+
+            _uiState.update {
+                it.copy(
+                    exerciseVideoUrl = videoUrl,
+                    exerciseImageUrl = imageUrl,
+                    isMediaLoading = false,
+                )
+            }
+        }
+    }
+
+    fun showImagePopup() {
+        _uiState.update { it.copy(isImagePopupVisible = true) }
+    }
+
+    fun hideImagePopup() {
+        _uiState.update { it.copy(isImagePopupVisible = false) }
     }
 
     fun nextSetOrExercise() {

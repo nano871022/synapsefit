@@ -53,4 +53,11 @@ interface WorkoutPlanDao {
 
     @Query("DELETE FROM workout_plans WHERE id = :planId")
     suspend fun deletePlan(planId: String)
+
+    @Query("UPDATE exercises SET guide_video_url = :videoUrl, guide_image_url = :imageUrl WHERE id = :exerciseId")
+    suspend fun updateExerciseMedia(
+        exerciseId: String,
+        videoUrl: String?,
+        imageUrl: String?,
+    )
 }

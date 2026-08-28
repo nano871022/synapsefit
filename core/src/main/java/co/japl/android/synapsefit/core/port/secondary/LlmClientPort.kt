@@ -17,4 +17,9 @@ interface LlmClientPort {
         provider: co.japl.android.synapsefit.core.domain.model.LlmProvider,
         apiKey: String,
     ): Result<List<String>>
+
+    suspend fun fetchExerciseMedia(
+        exerciseName: String,
+        config: LlmConfig,
+    ): Result<Pair<String, String>>
 }

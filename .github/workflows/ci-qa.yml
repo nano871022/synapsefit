@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "main", "master", "develop" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   static-analysis:
     name: Code Formatting & Static Analysis Check
@@ -43,11 +47,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Run Unit Tests
-        run: ./gradlew :core:test :util:testDebugUnitTest :services:feature:testDebugUnitTest :services:repository:testDebugUnitTest :services:gcp:testDebugUnitTest :services:llm:testDebugUnitTest :services:wear:testDebugUnitTest :ui:testDebugUnitTest :wear:testDebugUnitTest :app:testDebugUnitTest
+        run: ./gradlew :core:test :util:test :services:feature:test :services:repository:test :services:gcp:test :services:llm:test :services:wear:test :ui:test :wear:test :app:testDebugUnitTest --parallel --build-cache
 
   build-apks:
     name: Build Debug APK Artifacts
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4

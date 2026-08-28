@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod")
+@file:Suppress("FunctionNaming", "LongMethod", "MaxLineLength")
 
 package co.japl.android.synapsefit.app.ui.workout
 
@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
@@ -21,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.ui.components.NeonButton
@@ -32,6 +32,12 @@ fun WorkoutPlanDetailScreen(
     onStartSessionClick: (planId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val groupedExercises =
+        state.exercises.groupBy { exercise ->
+            val match = Regex("\\[(Día \\d+)\\]", RegexOption.IGNORE_CASE).find(exercise.name)
+            match?.groupValues?.get(1) ?: "General"
+        }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
@@ -75,7 +81,44 @@ fun WorkoutPlanDetailScreen(
                 )
             }
 
-            items(state.exercises) { exercise ->
+            groupedExercises.forEach { (dayLabel, exercisesForDay) ->
+                item {
+                    DayExerciseCard(
+                        dayLabel = dayLabel,
+                        exercises = exercisesForDay,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DayExerciseCard(
+    dayLabel: String,
+    exercises: List<ExerciseUiModel>,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            ),
+    ) {
+        Column(
+            modifier = Modifier.padding(MaterialTheme.spacing.medium),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
+        ) {
+            Text(
+                text = dayLabel.uppercase(),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+
+            exercises.forEach { exercise ->
                 ExerciseListItem(exercise = exercise)
             }
         }

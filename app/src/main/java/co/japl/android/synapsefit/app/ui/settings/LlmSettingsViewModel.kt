@@ -77,6 +77,73 @@ class LlmSettingsViewModel(
         }
     }
 
+    fun setActiveConfig(id: String) {
+        viewModelScope.launch {
+            appNavigator?.setLoading(true)
+            llmConfigRepositoryPort?.setActiveConfig(id)
+            loadConfigs()
+            appNavigator?.setLoading(false)
+        }
+    }
+
+    fun duplicateConfig(id: String) {
+        viewModelScope.launch {
+            appNavigator?.setLoading(true)
+            val configs = llmConfigRepositoryPort?.getAllConfigs()?.firstOrNull() ?: emptyList()
+            val target = configs.find { it.id == id }
+            if (target != null) {
+                val now = System.currentTimeMillis()
+                val duplicate =
+                    target.copy(
+                        id = java.util.UUID.randomUUID().toString(),
+                        modelName = "${target.modelName} (Copy)",
+                        isActive = false,
+                        createdAt = now,
+                        updatedAt = now,
+                    )
+                llmConfigRepositoryPort?.saveConfig(duplicate)
+                loadConfigs()
+            }
+            appNavigator?.setLoading(false)
+        }
+    }
+
+    fun deleteConfig(id: String) {
+        viewModelScope.launch {
+            appNavigator?.setLoading(true)
+            llmConfigRepositoryPort?.deleteConfig(id)
+            loadConfigs()
+            appNavigator?.setLoading(false)
+        }
+    }
+
+    fun updateConfig(
+        id: String,
+        provider: LlmProvider,
+        apiKey: String,
+        modelName: String,
+    ) {
+        viewModelScope.launch {
+            appNavigator?.setLoading(true)
+            val configs = llmConfigRepositoryPort?.getAllConfigs()?.firstOrNull() ?: emptyList()
+            val target = configs.find { it.id == id }
+            val now = System.currentTimeMillis()
+            val updated =
+                LlmConfig(
+                    id = id,
+                    provider = provider,
+                    apiKeyEncrypted = if (apiKey.isNotBlank()) apiKey.trim() else target?.apiKeyEncrypted ?: "",
+                    modelName = modelName.trim(),
+                    isActive = target?.isActive ?: false,
+                    createdAt = target?.createdAt ?: now,
+                    updatedAt = now,
+                )
+            llmConfigRepositoryPort?.saveConfig(updated)
+            loadConfigs()
+            appNavigator?.setLoading(false)
+        }
+    }
+
     fun fetchModels(
         provider: LlmProvider,
         apiKey: String,

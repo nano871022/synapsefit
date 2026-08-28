@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod", "CyclomaticComplexMethod")
+@file:Suppress("FunctionNaming", "LongMethod", "CyclomaticComplexMethod", "LongParameterList", "MaxLineLength")
 
 package co.japl.android.synapsefit.app.ui.settings
 
@@ -53,34 +53,17 @@ fun LLMSettingsScreen(
     state: LlmSettingsUiState,
     onSaveConfig: (LlmProvider, String, String) -> Unit,
     onFetchModels: (LlmProvider, String) -> Unit,
+    onActivateConfig: (String) -> Unit = {},
+    onDuplicateConfig: (String) -> Unit = {},
+    onDeleteConfig: (String) -> Unit = {},
+    onUpdateConfig: (String, LlmProvider, String, String) -> Unit = { _, _, _, _ -> },
     modifier: Modifier = Modifier,
 ) {
+    var isFormDialogOpen by remember { mutableStateOf(false) }
+    var editingId by remember { mutableStateOf<String?>(null) }
     var selectedProvider by remember { mutableStateOf(LlmProvider.GEMINI) }
     var apiKeyInput by remember { mutableStateOf("") }
     var modelNameInput by remember { mutableStateOf("") }
-    var providerExpanded by remember { mutableStateOf(false) }
-    var modelExpanded by remember { mutableStateOf(false) }
-
-    // Default model if nothing is selected or fetched
-    val defaultModel =
-        when (selectedProvider) {
-            LlmProvider.GEMINI -> "gemini-1.5-flash"
-            LlmProvider.OPENAI -> "gpt-4o-mini"
-            LlmProvider.ANTHROPIC -> "claude-3-haiku-20240307"
-        }
-
-    // Set initial model name or update when models are fetched
-    androidx.compose.runtime.LaunchedEffect(selectedProvider) {
-        if (state.availableModels.isEmpty()) {
-            modelNameInput = defaultModel
-        }
-    }
-
-    androidx.compose.runtime.LaunchedEffect(state.availableModels) {
-        if (state.availableModels.isNotEmpty()) {
-            modelNameInput = state.availableModels.first()
-        }
-    }
 
     Column(
         modifier =
@@ -90,119 +73,28 @@ fun LLMSettingsScreen(
                 .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
     ) {
-        Text(
-            text = stringResource(R.string.llm_providers_config),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.llm_providers_config),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+        }
 
         SecurityBadge()
 
-        Text(
-            text = stringResource(R.string.configure_credentials),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
-
-        ExposedDropdownMenuBox(
-            expanded = providerExpanded,
-            onExpandedChange = { providerExpanded = !providerExpanded },
-        ) {
-            OutlinedTextField(
-                value = selectedProvider.name,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text(stringResource(R.string.llm_provider)) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerExpanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth(),
-            )
-            ExposedDropdownMenu(
-                expanded = providerExpanded,
-                onDismissRequest = { providerExpanded = false },
-            ) {
-                LlmProvider.entries.forEach { p ->
-                    DropdownMenuItem(
-                        text = { Text(p.name) },
-                        onClick = {
-                            selectedProvider = p
-                            modelNameInput = "" // Will be reset by the logic above
-                            providerExpanded = false
-                        },
-                    )
-                }
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-        ) {
-            OutlinedTextField(
-                value = apiKeyInput,
-                onValueChange = { apiKeyInput = it },
-                label = { Text(stringResource(R.string.api_key)) },
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-            )
-            NeonButton(
-                text = "Fetch",
-                onClick = { onFetchModels(selectedProvider, apiKeyInput) },
-                enabled = apiKeyInput.isNotBlank() && !state.isLoading,
-                modifier = Modifier.width(100.dp),
-            )
-        }
-
-        if (state.availableModels.isNotEmpty()) {
-            ExposedDropdownMenuBox(
-                expanded = modelExpanded,
-                onExpandedChange = { modelExpanded = !modelExpanded },
-            ) {
-                OutlinedTextField(
-                    value = modelNameInput,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text(stringResource(R.string.model_name)) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelExpanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                )
-                ExposedDropdownMenu(
-                    expanded = modelExpanded,
-                    onDismissRequest = { modelExpanded = false },
-                ) {
-                    state.availableModels.forEach { model ->
-                        DropdownMenuItem(
-                            text = { Text(model) },
-                            onClick = {
-                                modelNameInput = model
-                                modelExpanded = false
-                            },
-                        )
-                    }
-                }
-            }
-        } else {
-            OutlinedTextField(
-                value = modelNameInput,
-                onValueChange = { modelNameInput = it },
-                label = { Text(stringResource(R.string.model_name)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-            )
-        }
-
         NeonButton(
-            text = stringResource(R.string.save_and_activate_provider),
+            text = stringResource(R.string.add_provider),
             onClick = {
-                if (apiKeyInput.isNotBlank()) {
-                    onSaveConfig(selectedProvider, apiKeyInput, modelNameInput)
-                    apiKeyInput = ""
-                }
+                editingId = null
+                apiKeyInput = ""
+                modelNameInput = ""
+                isFormDialogOpen = true
             },
-            enabled = apiKeyInput.isNotBlank(),
-            isLoading = state.isLoading,
         )
 
         if (state.isLoading && state.providers.isEmpty()) {
@@ -211,15 +103,218 @@ fun LLMSettingsScreen(
             }
         }
 
-        if (state.providers.isNotEmpty()) {
-            Text(
-                text = stringResource(R.string.registered_providers),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
+        Text(
+            text = stringResource(R.string.registered_providers),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
 
-            state.providers.forEach { providerModel ->
-                ProviderCard(providerModel = providerModel)
+        state.providers.forEach { providerModel ->
+            ProviderCard(
+                providerModel = providerModel,
+                onActivate = { onActivateConfig(providerModel.id) },
+                onDuplicate = { onDuplicateConfig(providerModel.id) },
+                onDelete = { onDeleteConfig(providerModel.id) },
+                onEdit = {
+                    editingId = providerModel.id
+                    selectedProvider = providerModel.provider
+                    apiKeyInput = ""
+                    modelNameInput = providerModel.modelName
+                    isFormDialogOpen = true
+                },
+            )
+        }
+    }
+
+    if (isFormDialogOpen) {
+        LlmFormDialog(
+            editingId = editingId,
+            selectedProvider = selectedProvider,
+            apiKeyInput = apiKeyInput,
+            modelNameInput = modelNameInput,
+            availableModels = state.availableModels,
+            isLoading = state.isLoading,
+            onProviderSelected = { selectedProvider = it },
+            onApiKeyChange = { apiKeyInput = it },
+            onModelNameChange = { modelNameInput = it },
+            onFetchModels = { p, key -> onFetchModels(p, key) },
+            onSave = {
+                val currentId = editingId
+                if (currentId != null) {
+                    onUpdateConfig(currentId, selectedProvider, apiKeyInput, modelNameInput)
+                } else {
+                    onSaveConfig(selectedProvider, apiKeyInput, modelNameInput)
+                }
+                isFormDialogOpen = false
+            },
+            onDismiss = { isFormDialogOpen = false },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LlmFormDialog(
+    editingId: String?,
+    selectedProvider: LlmProvider,
+    apiKeyInput: String,
+    modelNameInput: String,
+    availableModels: List<String>,
+    isLoading: Boolean,
+    onProviderSelected: (LlmProvider) -> Unit,
+    onApiKeyChange: (String) -> Unit,
+    onModelNameChange: (String) -> Unit,
+    onFetchModels: (LlmProvider, String) -> Unit,
+    onSave: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var providerExpanded by remember { mutableStateOf(false) }
+    var modelExpanded by remember { mutableStateOf(false) }
+
+    val defaultModel =
+        when (selectedProvider) {
+            LlmProvider.GEMINI -> "gemini-1.5-flash"
+            LlmProvider.OPENAI -> "gpt-4o-mini"
+            LlmProvider.ANTHROPIC -> "claude-3-haiku-20240307"
+        }
+
+    androidx.compose.runtime.LaunchedEffect(selectedProvider) {
+        if (availableModels.isEmpty() && modelNameInput.isBlank()) {
+            onModelNameChange(defaultModel)
+        }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(availableModels) {
+        if (availableModels.isNotEmpty()) {
+            onModelNameChange(availableModels.first())
+        }
+    }
+
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        androidx.compose.material3.Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = modifier.fillMaxWidth().padding(MaterialTheme.spacing.small),
+        ) {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.spacing.medium).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
+            ) {
+                Text(
+                    text =
+                        if (editingId != null) {
+                            stringResource(
+                                R.string.update_provider,
+                            )
+                        } else {
+                            stringResource(R.string.configure_credentials)
+                        },
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+
+                ExposedDropdownMenuBox(
+                    expanded = providerExpanded,
+                    onExpandedChange = { providerExpanded = !providerExpanded },
+                ) {
+                    OutlinedTextField(
+                        value = selectedProvider.name,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(stringResource(R.string.llm_provider)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    )
+                    ExposedDropdownMenu(
+                        expanded = providerExpanded,
+                        onDismissRequest = { providerExpanded = false },
+                    ) {
+                        LlmProvider.entries.forEach { p ->
+                            DropdownMenuItem(
+                                text = { Text(p.name) },
+                                onClick = {
+                                    onProviderSelected(p)
+                                    providerExpanded = false
+                                },
+                            )
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+                ) {
+                    OutlinedTextField(
+                        value = apiKeyInput,
+                        onValueChange = onApiKeyChange,
+                        label = { Text(stringResource(R.string.api_key)) },
+                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                    )
+                    NeonButton(
+                        text = "Fetch",
+                        onClick = { onFetchModels(selectedProvider, apiKeyInput) },
+                        enabled = apiKeyInput.isNotBlank() && !isLoading,
+                        modifier = Modifier.width(100.dp),
+                    )
+                }
+
+                if (availableModels.isNotEmpty()) {
+                    ExposedDropdownMenuBox(
+                        expanded = modelExpanded,
+                        onExpandedChange = { modelExpanded = !modelExpanded },
+                    ) {
+                        OutlinedTextField(
+                            value = modelNameInput,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(stringResource(R.string.model_name)) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelExpanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        )
+                        ExposedDropdownMenu(
+                            expanded = modelExpanded,
+                            onDismissRequest = { modelExpanded = false },
+                        ) {
+                            availableModels.forEach { model ->
+                                DropdownMenuItem(
+                                    text = { Text(model) },
+                                    onClick = {
+                                        onModelNameChange(model)
+                                        modelExpanded = false
+                                    },
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    OutlinedTextField(
+                        value = modelNameInput,
+                        onValueChange = onModelNameChange,
+                        label = { Text(stringResource(R.string.model_name)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                }
+
+                NeonButton(
+                    text =
+                        if (editingId != null) {
+                            stringResource(
+                                R.string.update_provider,
+                            )
+                        } else {
+                            stringResource(R.string.save_and_activate_provider)
+                        },
+                    onClick = onSave,
+                    enabled = apiKeyInput.isNotBlank() || editingId != null,
+                    isLoading = isLoading,
+                )
             }
         }
     }
@@ -257,6 +352,10 @@ fun SecurityBadge(modifier: Modifier = Modifier) {
 @Composable
 fun ProviderCard(
     providerModel: LlmProviderUiModel,
+    onActivate: () -> Unit = {},
+    onDuplicate: () -> Unit = {},
+    onDelete: () -> Unit = {},
+    onEdit: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -278,50 +377,74 @@ fun ProviderCard(
                 null
             },
     ) {
-        Row(
-            modifier = Modifier.padding(MaterialTheme.spacing.medium).fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.padding(MaterialTheme.spacing.medium)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = providerModel.provider.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        if (providerModel.isActive) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
                     Text(
-                        text = providerModel.provider.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        text = stringResource(R.string.model_prefix, providerModel.modelName),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    if (providerModel.isActive) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp),
+                    Text(
+                        text = stringResource(R.string.key_prefix, providerModel.apiKeyMasked),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                if (providerModel.isActive) {
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.active_badge),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 4.dp),
                         )
                     }
                 }
-                Text(
-                    text = stringResource(R.string.model_prefix, providerModel.modelName),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = stringResource(R.string.key_prefix, providerModel.apiKeyMasked),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
             }
-            if (providerModel.isActive) {
-                Badge(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                ) {
-                    Text(
-                        text = stringResource(R.string.active_badge),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                    )
+
+            Spacer(modifier = Modifier.size(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+            ) {
+                if (!providerModel.isActive) {
+                    androidx.compose.material3.TextButton(onClick = onActivate) {
+                        Text(stringResource(R.string.activate))
+                    }
+                }
+                androidx.compose.material3.TextButton(onClick = onEdit) {
+                    Text(stringResource(R.string.edit))
+                }
+                androidx.compose.material3.TextButton(onClick = onDuplicate) {
+                    Text(stringResource(R.string.duplicate))
+                }
+                androidx.compose.material3.TextButton(onClick = onDelete) {
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             }
         }
