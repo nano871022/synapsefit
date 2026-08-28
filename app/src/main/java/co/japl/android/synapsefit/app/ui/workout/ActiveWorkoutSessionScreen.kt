@@ -2,12 +2,18 @@
 
 package co.japl.android.synapsefit.app.ui.workout
 
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -18,16 +24,26 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,6 +54,9 @@ import co.japl.android.synapsefit.ui.components.HeartRateGauge
 import co.japl.android.synapsefit.ui.components.KineticCard
 import co.japl.android.synapsefit.ui.components.NeonButton
 import co.japl.android.synapsefit.ui.theme.spacing
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.URL
 
 @Composable
 fun ActiveWorkoutSessionScreen(
@@ -47,8 +66,12 @@ fun ActiveWorkoutSessionScreen(
     onCompleteSet: (setIndex: Int) -> Unit,
     onNextSetOrExercise: () -> Unit = {},
     onFinishSession: () -> Unit,
+    onOpenImagePopup: () -> Unit = {},
+    onCloseImagePopup: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
@@ -95,6 +118,31 @@ fun ActiveWorkoutSessionScreen(
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+            ) {
+                state.exerciseVideoUrl?.let { url ->
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(stringResource(R.string.watch_video))
+                    }
+                }
+                if (state.exerciseImageUrl != null) {
+                    OutlinedButton(
+                        onClick = onOpenImagePopup,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(stringResource(R.string.view_image))
+                    }
+                }
+            }
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -163,6 +211,87 @@ fun ActiveWorkoutSessionScreen(
             summary = state.summary,
             onDismiss = onFinishSession,
         )
+    }
+
+    if (state.isImagePopupVisible && state.exerciseImageUrl != null) {
+        ExerciseImageDialog(
+            imageUrl = state.exerciseImageUrl,
+            onDismiss = onCloseImagePopup,
+        )
+    }
+}
+
+@Composable
+fun ExerciseImageDialog(
+    imageUrl: String,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var imageBitmap by remember(imageUrl) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    var isLoading by remember(imageUrl) { mutableStateOf(true) }
+
+    LaunchedEffect(imageUrl) {
+        isLoading = true
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val connection = URL(imageUrl).openConnection()
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+                val inputStream = connection.getInputStream()
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                bitmap?.asImageBitmap()
+            }.getOrNull()
+        }.also { bitmap ->
+            imageBitmap = bitmap
+            isLoading = false
+        }
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = modifier.fillMaxWidth().padding(MaterialTheme.spacing.small),
+        ) {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.spacing.medium),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
+            ) {
+                Text(
+                    text = stringResource(R.string.view_image),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(220.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator()
+                    } else if (imageBitmap != null) {
+                        Image(
+                            bitmap = imageBitmap!!,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                        )
+                    } else {
+                        Text(
+                            text = imageUrl,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+
+                NeonButton(
+                    text = stringResource(R.string.close),
+                    onClick = onDismiss,
+                )
+            }
+        }
     }
 }
 

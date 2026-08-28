@@ -1,10 +1,12 @@
-@file:Suppress("MagicNumber", "LongParameterList", "UnusedParameter")
+@file:Suppress("MagicNumber", "LongParameterList", "UnusedParameter", "LongMethod", "TooManyFunctions")
 
 package co.japl.android.synapsefit.app.ui.workout
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
+import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
+import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.RecordWorkoutSessionUseCase
 import kotlinx.coroutines.Job
@@ -54,17 +56,24 @@ data class ActiveWorkoutUiState(
     val isCurrentSetCompleted: Boolean = false,
     val isSessionComplete: Boolean = false,
     val summary: WorkoutSummary? = null,
+    val exerciseVideoUrl: String? = null,
+    val exerciseImageUrl: String? = null,
+    val isImagePopupVisible: Boolean = false,
+    val isMediaLoading: Boolean = false,
 )
 
 class ActiveWorkoutSessionViewModel(
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
     private val recordWorkoutSessionUseCase: RecordWorkoutSessionUseCase? = null,
+    private val llmConfigRepositoryPort: LlmConfigRepositoryPort? = null,
+    private val llmClientPort: LlmClientPort? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ActiveWorkoutUiState())
     val uiState: StateFlow<ActiveWorkoutUiState> = _uiState.asStateFlow()
 
     private var timerJob: Job? = null
     private var restTimerJob: Job? = null
+    private var sessionStartTimestamp: Long = 0L
 
     // Track time spent per exercise ID and weights per exercise ID
     private val exerciseStartTime = mutableMapOf<String, Long>()
@@ -73,6 +82,9 @@ class ActiveWorkoutSessionViewModel(
     private val exerciseMaxWeight = mutableMapOf<String, Double>()
 
     fun startSession(planId: String) {
+        if (_uiState.value.planId == planId && _uiState.value.exercises.isNotEmpty()) {
+            return
+        }
         viewModelScope.launch {
             _uiState.update { it.copy(planId = planId) }
 
@@ -98,7 +110,10 @@ class ActiveWorkoutSessionViewModel(
                 val firstExercise = mappedExercises.firstOrNull()
                 if (firstExercise != null) {
                     exerciseStartTime[firstExercise.id] = System.currentTimeMillis()
+                    fetchExerciseMedia(firstExercise.name)
                 }
+
+                sessionStartTimestamp = System.currentTimeMillis()
 
                 _uiState.update {
                     it.copy(
@@ -127,7 +142,8 @@ class ActiveWorkoutSessionViewModel(
             viewModelScope.launch {
                 while (isActive) {
                     delay(1000L)
-                    _uiState.update { it.copy(elapsedTimeSeconds = it.elapsedTimeSeconds + 1) }
+                    val elapsed = (System.currentTimeMillis() - sessionStartTimestamp) / 1000L
+                    _uiState.update { it.copy(elapsedTimeSeconds = elapsed) }
                 }
             }
     }
@@ -169,13 +185,95 @@ class ActiveWorkoutSessionViewModel(
                 exerciseMaxWeight[currentExId] = weight
             }
 
-            _uiState.update { s ->
-                s.copy(isCurrentSetCompleted = true)
-            }
+            val isLastSetForExercise = state.currentSetIndex >= state.totalSetsForCurrentExercise
+            if (isLastSetForExercise) {
+                // Record time spent for finished exercise
+                val startT = exerciseStartTime[currentExId] ?: System.currentTimeMillis()
+                val timeSpent = (System.currentTimeMillis() - startT) / 1000
+                exerciseTimeSpent[currentExId] = (exerciseTimeSpent[currentExId] ?: 0L) + timeSpent
 
-            val currentExercise = state.exercises.getOrNull(state.currentExerciseIndex)
-            startRestTimer(currentExercise?.restSeconds ?: 60)
+                val isLastExercise = state.currentExerciseIndex + 1 >= state.exercises.size
+                if (isLastExercise) {
+                    finishSession()
+                } else {
+                    val nextExIndex = state.currentExerciseIndex + 1
+                    val nextEx = state.exercises[nextExIndex]
+                    exerciseStartTime[nextEx.id] = System.currentTimeMillis()
+                    fetchExerciseMedia(nextEx.name)
+
+                    _uiState.update {
+                        it.copy(
+                            currentExerciseIndex = nextExIndex,
+                            currentExerciseId = nextEx.id,
+                            currentExerciseName = nextEx.name,
+                            currentSetIndex = 1,
+                            totalSetsForCurrentExercise = nextEx.targetSets,
+                            targetRepsForCurrentSet = nextEx.targetReps,
+                            currentSetReps = nextEx.targetReps,
+                            currentSetWeightKg = "",
+                            isCurrentSetCompleted = false,
+                            restTimerSecondsRemaining = null,
+                        )
+                    }
+                }
+            } else {
+                val nextSetIdx = state.currentSetIndex + 1
+                _uiState.update {
+                    it.copy(
+                        currentSetIndex = nextSetIdx,
+                        isCurrentSetCompleted = false,
+                        restTimerSecondsRemaining = null,
+                    )
+                }
+                val currentExercise = state.exercises.getOrNull(state.currentExerciseIndex)
+                startRestTimer(currentExercise?.restSeconds ?: 60)
+            }
         }
+    }
+
+    private fun fetchExerciseMedia(exerciseName: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isMediaLoading = true) }
+            val config = llmConfigRepositoryPort?.getActiveConfig()?.firstOrNull()
+            if (config != null && llmClientPort != null) {
+                val result = llmClientPort.fetchExerciseMedia(exerciseName, config)
+                result.onSuccess { (video, image) ->
+                    _uiState.update {
+                        it.copy(
+                            exerciseVideoUrl = video,
+                            exerciseImageUrl = image,
+                            isMediaLoading = false,
+                        )
+                    }
+                }.onFailure {
+                    val queryFormatted = exerciseName.replace(" ", "+")
+                    _uiState.update {
+                        it.copy(
+                            exerciseVideoUrl = "https://www.youtube.com/results?search_query=$queryFormatted",
+                            exerciseImageUrl = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd",
+                            isMediaLoading = false,
+                        )
+                    }
+                }
+            } else {
+                val queryFormatted = exerciseName.replace(" ", "+")
+                _uiState.update {
+                    it.copy(
+                        exerciseVideoUrl = "https://www.youtube.com/results?search_query=$queryFormatted",
+                        exerciseImageUrl = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd",
+                        isMediaLoading = false,
+                    )
+                }
+            }
+        }
+    }
+
+    fun showImagePopup() {
+        _uiState.update { it.copy(isImagePopupVisible = true) }
+    }
+
+    fun hideImagePopup() {
+        _uiState.update { it.copy(isImagePopupVisible = false) }
     }
 
     fun nextSetOrExercise() {

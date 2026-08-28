@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod", "CyclomaticComplexMethod")
+@file:Suppress("FunctionNaming", "LongMethod", "CyclomaticComplexMethod", "LongParameterList", "MaxLineLength")
 
 package co.japl.android.synapsefit.app.ui.settings
 
@@ -53,8 +53,13 @@ fun LLMSettingsScreen(
     state: LlmSettingsUiState,
     onSaveConfig: (LlmProvider, String, String) -> Unit,
     onFetchModels: (LlmProvider, String) -> Unit,
+    onActivateConfig: (String) -> Unit = {},
+    onDuplicateConfig: (String) -> Unit = {},
+    onDeleteConfig: (String) -> Unit = {},
+    onUpdateConfig: (String, LlmProvider, String, String) -> Unit = { _, _, _, _ -> },
     modifier: Modifier = Modifier,
 ) {
+    var editingId by remember { mutableStateOf<String?>(null) }
     var selectedProvider by remember { mutableStateOf(LlmProvider.GEMINI) }
     var apiKeyInput by remember { mutableStateOf("") }
     var modelNameInput by remember { mutableStateOf("") }
@@ -194,14 +199,19 @@ fun LLMSettingsScreen(
         }
 
         NeonButton(
-            text = stringResource(R.string.save_and_activate_provider),
+            text = if (editingId != null) stringResource(R.string.update_provider) else stringResource(R.string.save_and_activate_provider),
             onClick = {
-                if (apiKeyInput.isNotBlank()) {
+                val currentId = editingId
+                if (currentId != null) {
+                    onUpdateConfig(currentId, selectedProvider, apiKeyInput, modelNameInput)
+                    editingId = null
+                    apiKeyInput = ""
+                } else if (apiKeyInput.isNotBlank()) {
                     onSaveConfig(selectedProvider, apiKeyInput, modelNameInput)
                     apiKeyInput = ""
                 }
             },
-            enabled = apiKeyInput.isNotBlank(),
+            enabled = apiKeyInput.isNotBlank() || editingId != null,
             isLoading = state.isLoading,
         )
 
@@ -219,7 +229,17 @@ fun LLMSettingsScreen(
             )
 
             state.providers.forEach { providerModel ->
-                ProviderCard(providerModel = providerModel)
+                ProviderCard(
+                    providerModel = providerModel,
+                    onActivate = { onActivateConfig(providerModel.id) },
+                    onDuplicate = { onDuplicateConfig(providerModel.id) },
+                    onDelete = { onDeleteConfig(providerModel.id) },
+                    onEdit = {
+                        editingId = providerModel.id
+                        selectedProvider = providerModel.provider
+                        modelNameInput = providerModel.modelName
+                    },
+                )
             }
         }
     }
@@ -257,6 +277,10 @@ fun SecurityBadge(modifier: Modifier = Modifier) {
 @Composable
 fun ProviderCard(
     providerModel: LlmProviderUiModel,
+    onActivate: () -> Unit = {},
+    onDuplicate: () -> Unit = {},
+    onDelete: () -> Unit = {},
+    onEdit: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -278,50 +302,74 @@ fun ProviderCard(
                 null
             },
     ) {
-        Row(
-            modifier = Modifier.padding(MaterialTheme.spacing.medium).fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.padding(MaterialTheme.spacing.medium)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = providerModel.provider.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        if (providerModel.isActive) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
                     Text(
-                        text = providerModel.provider.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        text = stringResource(R.string.model_prefix, providerModel.modelName),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    if (providerModel.isActive) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp),
+                    Text(
+                        text = stringResource(R.string.key_prefix, providerModel.apiKeyMasked),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                if (providerModel.isActive) {
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.active_badge),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 4.dp),
                         )
                     }
                 }
-                Text(
-                    text = stringResource(R.string.model_prefix, providerModel.modelName),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = stringResource(R.string.key_prefix, providerModel.apiKeyMasked),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
             }
-            if (providerModel.isActive) {
-                Badge(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                ) {
-                    Text(
-                        text = stringResource(R.string.active_badge),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                    )
+
+            Spacer(modifier = Modifier.size(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+            ) {
+                if (!providerModel.isActive) {
+                    androidx.compose.material3.TextButton(onClick = onActivate) {
+                        Text(stringResource(R.string.activate))
+                    }
+                }
+                androidx.compose.material3.TextButton(onClick = onEdit) {
+                    Text(stringResource(R.string.edit))
+                }
+                androidx.compose.material3.TextButton(onClick = onDuplicate) {
+                    Text(stringResource(R.string.duplicate))
+                }
+                androidx.compose.material3.TextButton(onClick = onDelete) {
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             }
         }
