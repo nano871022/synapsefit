@@ -147,6 +147,7 @@
     <string name="duplicate">Duplicar</string>
     <string name="delete">Eliminar</string>
     <string name="update_provider">Actualizar Proveedor</string>
+    <string name="add_provider">Agregar Proveedor</string>
 
     <!-- V11: About Developer -->
     <string name="about_synapsefit">Acerca de SynapseFit</string>
