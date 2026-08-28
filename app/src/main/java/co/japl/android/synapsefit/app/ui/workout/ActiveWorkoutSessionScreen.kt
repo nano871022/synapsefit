@@ -1,4 +1,12 @@
-@file:Suppress("FunctionNaming", "LongMethod", "LongParameterList", "MagicNumber", "MaxLineLength", "ImplicitDefaultLocale")
+@file:Suppress(
+    "FunctionNaming",
+    "LongMethod",
+    "LongParameterList",
+    "MagicNumber",
+    "MaxLineLength",
+    "ImplicitDefaultLocale",
+    "CyclomaticComplexMethod",
+)
 
 package co.japl.android.synapsefit.app.ui.workout
 
@@ -114,10 +122,13 @@ fun ActiveWorkoutSessionScreen(
                 RestTimerWidget(secondsRemaining = sec)
             }
 
-            Text(
-                text = stringResource(R.string.exercise_prefix, state.currentExerciseName),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary,
+            val exerciseIndexDisplay = if (state.exercises.isNotEmpty()) state.currentExerciseIndex + 1 else 1
+            val totalExercisesDisplay = if (state.exercises.isNotEmpty()) state.exercises.size else 1
+
+            ExerciseHeader(
+                currentExerciseIndex = exerciseIndexDisplay,
+                totalExercises = totalExercisesDisplay,
+                exerciseName = state.currentExerciseName,
             )
 
             Row(
@@ -169,6 +180,8 @@ fun ActiveWorkoutSessionScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
 
+                    val isResting = state.restTimerSecondsRemaining != null
+
                     OutlinedTextField(
                         value = state.currentSetWeightKg,
                         onValueChange = { onSetWeightChange(state.currentSetIndex, it) },
@@ -176,7 +189,7 @@ fun ActiveWorkoutSessionScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        enabled = !state.isCurrentSetCompleted,
+                        enabled = !state.isCurrentSetCompleted && !isResting,
                     )
 
                     OutlinedTextField(
@@ -186,19 +199,21 @@ fun ActiveWorkoutSessionScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        enabled = !state.isCurrentSetCompleted,
+                        enabled = !state.isCurrentSetCompleted && !isResting,
                     )
 
                     if (!state.isCurrentSetCompleted) {
+                        val restText = "En Descanso (${state.restTimerSecondsRemaining}s)"
                         NeonButton(
-                            text = stringResource(R.string.complete_set),
+                            text = if (isResting) restText else stringResource(R.string.complete_set),
                             onClick = { onCompleteSet(state.currentSetIndex) },
-                            enabled = state.currentSetReps.isNotBlank(),
+                            enabled = state.currentSetReps.isNotBlank() && !isResting,
                         )
                     } else {
                         NeonButton(
                             text = stringResource(R.string.next_set_or_exercise),
                             onClick = onNextSetOrExercise,
+                            enabled = !isResting,
                         )
                     }
                 }
@@ -218,6 +233,53 @@ fun ActiveWorkoutSessionScreen(
             imageUrl = state.exerciseImageUrl,
             onDismiss = onCloseImagePopup,
         )
+    }
+}
+
+@Composable
+fun ExerciseHeader(
+    currentExerciseIndex: Int,
+    totalExercises: Int,
+    exerciseName: String,
+    modifier: Modifier = Modifier,
+) {
+    val rawName = exerciseName.trim()
+    val hasParentheses = rawName.contains("(") && rawName.contains(")")
+    val title = if (hasParentheses) rawName.substringBefore("(").trim() else rawName
+    val description = if (hasParentheses) rawName.substringAfter("(").substringBefore(")").trim() else ""
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ),
+    ) {
+        Column(
+            modifier = Modifier.padding(MaterialTheme.spacing.medium),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
+        ) {
+            Text(
+                text = "EJERCICIO $currentExerciseIndex DE $totalExercises".uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = title.ifBlank { stringResource(R.string.app_name) },
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            if (description.isNotBlank()) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 

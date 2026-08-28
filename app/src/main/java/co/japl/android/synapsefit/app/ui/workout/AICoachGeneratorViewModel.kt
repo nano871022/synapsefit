@@ -32,6 +32,7 @@ data class AICoachGeneratorUiState(
 class AICoachGeneratorViewModel(
     private val generateWorkoutPlanUseCase: GenerateWorkoutPlanUseCase? = null,
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
+    private val getExerciseMediaUseCase: co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase? = null,
     private val appNavigator: AppNavigator? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AICoachGeneratorUiState())
@@ -103,8 +104,24 @@ class AICoachGeneratorViewModel(
 
     fun acceptPlan() {
         val planId = _uiState.value.generatedPlan?.id ?: return
+        val exercises = _uiState.value.generatedExercises
         viewModelScope.launch {
             workoutPlanRepositoryPort?.setActivePlan(planId)
+
+            // Pre-fetch media for all exercises in background so they are stored in DB
+            if (getExerciseMediaUseCase != null) {
+                exercises.forEach { ex ->
+                    runCatching {
+                        getExerciseMediaUseCase(
+                            exerciseId = ex.id,
+                            exerciseName = ex.name,
+                            guideVideoUrl = ex.guideVideoUrl,
+                            guideImageUrl = ex.guideImageUrl,
+                        )
+                    }
+                }
+            }
+
             appNavigator?.navigateTo(Routes.DASHBOARD, popUpToRoute = Routes.WORKOUT_PLANS, inclusive = true)
         }
     }

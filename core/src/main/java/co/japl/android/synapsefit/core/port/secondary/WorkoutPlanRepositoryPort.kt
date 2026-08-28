@@ -25,4 +25,6 @@ interface WorkoutPlanRepositoryPort {
         videoUrl: String?,
         imageUrl: String?,
     )
+
+    suspend fun findMediaByExerciseName(exerciseName: String): Pair<String, String>? = null
 }

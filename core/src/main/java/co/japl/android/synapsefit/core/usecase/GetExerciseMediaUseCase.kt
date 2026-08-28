@@ -12,6 +12,7 @@ class GetExerciseMediaUseCase(
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort? = null,
     private val llmClientPort: LlmClientPort? = null,
 ) {
+    @Suppress("ReturnCount")
     suspend operator fun invoke(
         exerciseId: String,
         exerciseName: String,
@@ -26,6 +27,15 @@ class GetExerciseMediaUseCase(
 
         if (initialVideo != null && initialImage != null) {
             return Pair(initialVideo, initialImage)
+        }
+
+        // Check DB for existing media by exercise name
+        val cachedMedia = workoutPlanRepositoryPort?.findMediaByExerciseName(exerciseName)
+        if (cachedMedia != null && cachedMedia.first.isNotBlank() && cachedMedia.second.isNotBlank()) {
+            if (exerciseId.isNotBlank() && workoutPlanRepositoryPort != null) {
+                workoutPlanRepositoryPort.updateExerciseMedia(exerciseId, cachedMedia.first, cachedMedia.second)
+            }
+            return cachedMedia
         }
 
         val config = llmConfigRepositoryPort?.getActiveConfig()?.firstOrNull()

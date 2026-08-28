@@ -60,4 +60,12 @@ class WorkoutPlanRepositoryAdapter(
     ) {
         dao.updateExerciseMedia(exerciseId, videoUrl, imageUrl)
     }
+
+    @Suppress("ReturnCount")
+    override suspend fun findMediaByExerciseName(exerciseName: String): Pair<String, String>? {
+        val entity = dao.findMediaByExerciseName(exerciseName) ?: return null
+        val video = entity.guideVideoUrl ?: return null
+        val image = entity.guideImageUrl ?: return null
+        return Pair(video, image)
+    }
 }

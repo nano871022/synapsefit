@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod", "LongParameterList")
+@file:Suppress("FunctionNaming", "LongMethod", "LongParameterList", "MaxLineLength")
 
 package co.japl.android.synapsefit.app.ui.workout
 
@@ -181,37 +181,68 @@ fun PlanPreview(
                 color = MaterialTheme.colorScheme.onSurface,
             )
 
-            Text(
-                text = "Ejercicios:",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.secondary,
-            )
-
-            exercises.forEach { exercise ->
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+            val groupedExercises = exercises.groupBy { it.day }
+            groupedExercises.forEach { (dayNumber, dayExercises) ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        ),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(MaterialTheme.spacing.small),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
                     ) {
                         Text(
-                            text = "• ${exercise.name}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.weight(1f),
+                            text = "Día $dayNumber",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.secondary,
                         )
-                        Text(
-                            text = "${exercise.targetSets}x${exercise.targetReps}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
+                        dayExercises.forEach { exercise ->
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    val rawName = exercise.name.trim()
+                                    val hasParentheses = rawName.contains("(") && rawName.contains(")")
+                                    val title = if (hasParentheses) rawName.substringBefore("(").trim() else rawName
+                                    val description = if (hasParentheses) rawName.substringAfter("(").substringBefore(")").trim() else ""
+
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "• $title",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                        if (description.isNotBlank()) {
+                                            Text(
+                                                text = description,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(start = 12.dp),
+                                            )
+                                        }
+                                    }
+                                    Text(
+                                        text = "${exercise.targetSets}x${exercise.targetReps}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                                Text(
+                                    text = "Músculo: ${exercise.muscleGroup} | Descanso: ${exercise.restSeconds}s",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(start = 12.dp),
+                                )
+                            }
+                        }
                     }
-                    Text(
-                        text = "Músculo: ${exercise.muscleGroup} | Descanso: ${exercise.restSeconds}s",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 12.dp),
-                    )
                 }
             }
 

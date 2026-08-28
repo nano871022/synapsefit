@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength", "MagicNumber")
+
 package co.japl.android.synapsefit.app.ui.history
 
 import androidx.lifecycle.ViewModel
@@ -65,10 +67,12 @@ class WorkoutHistoryViewModel(
             }.collect { (logs, exerciseMap) ->
                 val mapped =
                     logs.map { log ->
+                        val nameResolved = exerciseMap[log.exerciseId]?.takeIf { it.isNotBlank() }
+                        val fallbackName = "Ejercicio (${log.exerciseId.take(8)})"
                         SessionHistoryUiModel(
                             id = log.id,
                             exerciseId = log.exerciseId,
-                            exerciseName = exerciseMap[log.exerciseId] ?: "",
+                            exerciseName = nameResolved ?: fallbackName,
                             repsCompleted = log.repsCompleted,
                             weightLiftedKg = log.weightLiftedKg,
                             heartRateBpm = log.heartRateBpm,
