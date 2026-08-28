@@ -108,15 +108,7 @@ class MultiLlmClientAdapter(
     ): String {
         val gymSuffix = if (!gymChainQuery.isNullOrBlankCheck()) " in $gymChainQuery" else ""
         return context?.getString(R.string.llm_workout_plan_prompt, environmentName, gymSuffix, promptContext)
-            ?: "Generate a workout plan split by days of the week for $environmentName$gymSuffix.\n" +
-            "User context (goal, anthropometric measurements, and history): $promptContext.\n" +
-            "Organize the exercises specified by day and include clear execution instructions.\n" +
-            "IMPORTANT: Respond in the language used in the user's context/system locale.\n" +
-            "Respond in plain JSON format with this exact structure:\n" +
-            "{\n  \"title\": \"Plan title\",\n  \"goal\": \"Description of the objective\",\n" +
-            "  \"exercises\": [ {\n    \"day\": 1,\n    \"name\": \"Exercise name\",\n" +
-            "    \"muscleGroup\": \"Muscle Group\",\n    \"sets\": 3,\n    \"reps\": \"10-12\",\n" +
-            "    \"rest\": 60\n  } ]\n}"
+            ?: error("Context is required to load llm_workout_plan_prompt resource")
     }
 
     private fun extractJson(textResponse: String): String {
@@ -252,11 +244,7 @@ class MultiLlmClientAdapter(
             if (config.provider == LlmProvider.GEMINI && config.apiKeyEncrypted.isNotBlank()) {
                 val prompt =
                     context?.getString(R.string.llm_exercise_media_prompt, exerciseName)
-                        ?: (
-                            "Provide a relevant YouTube video URL and image URL for '$exerciseName'.\n" +
-                                "IMPORTANT: Respond in the language of the user context.\n" +
-                                "Respond in plain JSON format: {\"videoUrl\": \"...\", \"imageUrl\": \"...\"}"
-                        )
+                        ?: error("Context is required to load llm_exercise_media_prompt resource")
 
                 val response =
                     geminiApi.generateContent(
