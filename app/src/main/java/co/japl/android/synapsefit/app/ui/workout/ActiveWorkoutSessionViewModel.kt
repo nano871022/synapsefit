@@ -140,7 +140,7 @@ class ActiveWorkoutSessionViewModel(
                 val firstExercise = filteredForActiveDay.firstOrNull()
                 if (firstExercise != null) {
                     exerciseStartTime[firstExercise.id] = System.currentTimeMillis()
-                    fetchExerciseMedia(firstExercise.name)
+                    fetchExerciseMedia(firstExercise)
                 }
 
                 sessionStartTimestamp = System.currentTimeMillis()
@@ -229,7 +229,7 @@ class ActiveWorkoutSessionViewModel(
                     val nextExIndex = state.currentExerciseIndex + 1
                     val nextEx = state.exercises[nextExIndex]
                     exerciseStartTime[nextEx.id] = System.currentTimeMillis()
-                    fetchExerciseMedia(nextEx.name)
+                    fetchExerciseMedia(nextEx)
 
                     _uiState.update {
                         it.copy(
@@ -261,39 +261,51 @@ class ActiveWorkoutSessionViewModel(
         }
     }
 
-    private fun fetchExerciseMedia(exerciseName: String) {
+    private fun fetchExerciseMedia(exercise: ExerciseUiModel) {
         viewModelScope.launch {
             _uiState.update { it.copy(isMediaLoading = true) }
-            val config = llmConfigRepositoryPort?.getActiveConfig()?.firstOrNull()
-            if (config != null && llmClientPort != null) {
-                val result = llmClientPort.fetchExerciseMedia(exerciseName, config)
-                result.onSuccess { (video, image) ->
-                    _uiState.update {
-                        it.copy(
-                            exerciseVideoUrl = video,
-                            exerciseImageUrl = image,
-                            isMediaLoading = false,
-                        )
-                    }
-                }.onFailure {
-                    val queryFormatted = exerciseName.replace(" ", "+")
-                    _uiState.update {
-                        it.copy(
-                            exerciseVideoUrl = "https://www.youtube.com/results?search_query=$queryFormatted",
-                            exerciseImageUrl = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd",
-                            isMediaLoading = false,
-                        )
-                    }
-                }
-            } else {
-                val queryFormatted = exerciseName.replace(" ", "+")
+
+            if (!exercise.guideVideoUrl.isNullOrBlank() || !exercise.guideImageUrl.isNullOrBlank()) {
                 _uiState.update {
                     it.copy(
-                        exerciseVideoUrl = "https://www.youtube.com/results?search_query=$queryFormatted",
-                        exerciseImageUrl = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd",
+                        exerciseVideoUrl = exercise.guideVideoUrl,
+                        exerciseImageUrl = exercise.guideImageUrl,
                         isMediaLoading = false,
                     )
                 }
+                return@launch
+            }
+
+            val config = llmConfigRepositoryPort?.getActiveConfig()?.firstOrNull()
+            var videoUrl: String? = null
+            var imageUrl: String? = null
+
+            if (config != null && llmClientPort != null) {
+                val result = llmClientPort.fetchExerciseMedia(exercise.name, config)
+                result.onSuccess { (v, img) ->
+                    videoUrl = v
+                    imageUrl = img
+                }.onFailure {
+                    val queryFormatted = exercise.name.replace(" ", "+")
+                    videoUrl = "https://www.youtube.com/results?search_query=$queryFormatted"
+                    imageUrl = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
+                }
+            } else {
+                val queryFormatted = exercise.name.replace(" ", "+")
+                videoUrl = "https://www.youtube.com/results?search_query=$queryFormatted"
+                imageUrl = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
+            }
+
+            _uiState.update {
+                it.copy(
+                    exerciseVideoUrl = videoUrl,
+                    exerciseImageUrl = imageUrl,
+                    isMediaLoading = false,
+                )
+            }
+
+            if (exercise.id.isNotBlank()) {
+                workoutPlanRepositoryPort?.updateExerciseMedia(exercise.id, videoUrl, imageUrl)
             }
         }
     }
