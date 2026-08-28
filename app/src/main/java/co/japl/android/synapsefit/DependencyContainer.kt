@@ -9,6 +9,7 @@ import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.GenerateWorkoutPlanUseCase
+import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
 import co.japl.android.synapsefit.core.usecase.PerformDriveSyncUseCase
 import co.japl.android.synapsefit.core.usecase.RecordWorkoutSessionUseCase
 import co.japl.android.synapsefit.core.usecase.SaveBodyMeasurementUseCase
@@ -74,5 +75,9 @@ class DependencyContainer(context: Context) {
 
     val performDriveSyncUseCase: PerformDriveSyncUseCase by lazy {
         PerformDriveSyncUseCase(driveSyncPort)
+    }
+
+    val getExerciseMediaUseCase: GetExerciseMediaUseCase by lazy {
+        GetExerciseMediaUseCase(workoutPlanRepository, llmConfigRepository, llmClient)
     }
 }

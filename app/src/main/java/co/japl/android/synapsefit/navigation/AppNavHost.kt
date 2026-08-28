@@ -233,9 +233,8 @@ fun AppNavHost(
                                 return ActiveWorkoutSessionViewModel(
                                     workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
                                     recordWorkoutSessionUseCase = dependencyContainer.recordWorkoutSessionUseCase,
-                                    llmConfigRepositoryPort = dependencyContainer.llmConfigRepository,
-                                    llmClientPort = dependencyContainer.llmClient,
                                     workoutLogRepositoryPort = dependencyContainer.workoutLogRepository,
+                                    getExerciseMediaUseCase = dependencyContainer.getExerciseMediaUseCase,
                                 ) as T
                             }
                         },

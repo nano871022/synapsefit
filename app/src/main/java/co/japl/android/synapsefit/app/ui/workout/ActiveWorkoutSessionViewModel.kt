@@ -13,11 +13,11 @@ package co.japl.android.synapsefit.app.ui.workout
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
-import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
-import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
+import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
 import co.japl.android.synapsefit.core.usecase.RecordWorkoutSessionUseCase
+import co.japl.android.synapsefit.util.DateTimeUtils
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,9 +74,8 @@ data class ActiveWorkoutUiState(
 class ActiveWorkoutSessionViewModel(
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
     private val recordWorkoutSessionUseCase: RecordWorkoutSessionUseCase? = null,
-    private val llmConfigRepositoryPort: LlmConfigRepositoryPort? = null,
-    private val llmClientPort: LlmClientPort? = null,
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort? = null,
+    private val getExerciseMediaUseCase: GetExerciseMediaUseCase? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ActiveWorkoutUiState())
     val uiState: StateFlow<ActiveWorkoutUiState> = _uiState.asStateFlow()
@@ -183,7 +182,7 @@ class ActiveWorkoutSessionViewModel(
             viewModelScope.launch {
                 while (isActive) {
                     delay(1000L)
-                    val elapsed = (System.currentTimeMillis() - sessionStartTimestamp) / 1000L
+                    val elapsed = DateTimeUtils.calculateElapsedTimeSeconds(sessionStartTimestamp)
                     _uiState.update { it.copy(elapsedTimeSeconds = elapsed) }
                 }
             }
@@ -276,36 +275,17 @@ class ActiveWorkoutSessionViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isMediaLoading = true) }
 
-            if (!exercise.guideVideoUrl.isNullOrBlank() || !exercise.guideImageUrl.isNullOrBlank()) {
-                _uiState.update {
-                    it.copy(
-                        exerciseVideoUrl = exercise.guideVideoUrl,
-                        exerciseImageUrl = exercise.guideImageUrl,
-                        isMediaLoading = false,
+            val (videoUrl, imageUrl) =
+                if (getExerciseMediaUseCase != null) {
+                    getExerciseMediaUseCase(
+                        exerciseId = exercise.id,
+                        exerciseName = exercise.name,
+                        guideVideoUrl = exercise.guideVideoUrl,
+                        guideImageUrl = exercise.guideImageUrl,
                     )
+                } else {
+                    Pair(exercise.guideVideoUrl, exercise.guideImageUrl)
                 }
-                return@launch
-            }
-
-            val config = llmConfigRepositoryPort?.getActiveConfig()?.firstOrNull()
-            var videoUrl: String? = null
-            var imageUrl: String? = null
-
-            if (config != null && llmClientPort != null) {
-                val result = llmClientPort.fetchExerciseMedia(exercise.name, config)
-                result.onSuccess { (v, img) ->
-                    videoUrl = v
-                    imageUrl = img
-                }.onFailure {
-                    val queryFormatted = exercise.name.replace(" ", "+")
-                    videoUrl = "https://www.youtube.com/results?search_query=$queryFormatted"
-                    imageUrl = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
-                }
-            } else {
-                val queryFormatted = exercise.name.replace(" ", "+")
-                videoUrl = "https://www.youtube.com/results?search_query=$queryFormatted"
-                imageUrl = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
-            }
 
             _uiState.update {
                 it.copy(
@@ -313,10 +293,6 @@ class ActiveWorkoutSessionViewModel(
                     exerciseImageUrl = imageUrl,
                     isMediaLoading = false,
                 )
-            }
-
-            if (exercise.id.isNotBlank()) {
-                workoutPlanRepositoryPort?.updateExerciseMedia(exercise.id, videoUrl, imageUrl)
             }
         }
     }

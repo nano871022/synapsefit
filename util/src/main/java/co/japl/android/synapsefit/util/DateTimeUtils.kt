@@ -62,4 +62,13 @@ object DateTimeUtils {
         val formatter = DateTimeFormatter.ofPattern(pattern)
         return yearMonth.format(formatter)
     }
+
+    @Suppress("MagicNumber")
+    fun calculateElapsedTimeSeconds(
+        startTimestamp: Long,
+        currentTimestamp: Long = System.currentTimeMillis(),
+    ): Long {
+        if (startTimestamp <= 0L || currentTimestamp < startTimestamp) return 0L
+        return (currentTimestamp - startTimestamp) / 1000L
+    }
 }
