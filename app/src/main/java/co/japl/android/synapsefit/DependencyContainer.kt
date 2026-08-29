@@ -6,18 +6,22 @@ import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryP
 import co.japl.android.synapsefit.core.port.secondary.DriveSyncPort
 import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
 import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
+import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.GenerateWorkoutPlanUseCase
 import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
+import co.japl.android.synapsefit.core.usecase.GetUserProfileUseCase
 import co.japl.android.synapsefit.core.usecase.PerformDriveSyncUseCase
 import co.japl.android.synapsefit.core.usecase.RecordWorkoutSessionUseCase
 import co.japl.android.synapsefit.core.usecase.SaveBodyMeasurementUseCase
+import co.japl.android.synapsefit.core.usecase.SaveUserProfileUseCase
 import co.japl.android.synapsefit.services.database.SynapseFitDatabase
 import co.japl.android.synapsefit.services.drive.GoogleDriveAppDataAdapter
 import co.japl.android.synapsefit.services.llm.MultiLlmClientAdapter
 import co.japl.android.synapsefit.services.repository.BodyMeasurementRepositoryAdapter
 import co.japl.android.synapsefit.services.repository.LlmConfigRepositoryAdapter
+import co.japl.android.synapsefit.services.repository.UserProfileRepositoryAdapter
 import co.japl.android.synapsefit.services.repository.WorkoutLogRepositoryAdapter
 import co.japl.android.synapsefit.services.repository.WorkoutPlanRepositoryAdapter
 
@@ -28,6 +32,10 @@ class DependencyContainer(context: Context) {
             SynapseFitDatabase::class.java,
             "synapsefit_database.db",
         ).fallbackToDestructiveMigration().build()
+    }
+
+    val userProfileRepository: UserProfileRepositoryPort by lazy {
+        UserProfileRepositoryAdapter(database.userProfileDao())
     }
 
     val bodyMeasurementRepository: BodyMeasurementRepositoryPort by lazy {
@@ -55,6 +63,14 @@ class DependencyContainer(context: Context) {
     }
 
     // UseCases
+    val getUserProfileUseCase: GetUserProfileUseCase by lazy {
+        GetUserProfileUseCase(userProfileRepository)
+    }
+
+    val saveUserProfileUseCase: SaveUserProfileUseCase by lazy {
+        SaveUserProfileUseCase(userProfileRepository)
+    }
+
     val saveBodyMeasurementUseCase: SaveBodyMeasurementUseCase by lazy {
         SaveBodyMeasurementUseCase(bodyMeasurementRepository)
     }
@@ -66,6 +82,7 @@ class DependencyContainer(context: Context) {
             workoutPlanRepository,
             bodyMeasurementRepository,
             workoutLogRepository,
+            userProfileRepository,
         )
     }
 

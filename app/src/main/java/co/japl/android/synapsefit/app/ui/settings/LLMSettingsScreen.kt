@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -31,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +56,7 @@ fun LLMSettingsScreen(
     onSaveConfig: (LlmProvider, String, String) -> Unit,
     onFetchModels: (LlmProvider, String) -> Unit,
     onActivateConfig: (String) -> Unit = {},
+    onDeactivateConfig: (String) -> Unit = {},
     onDuplicateConfig: (String) -> Unit = {},
     onDeleteConfig: (String) -> Unit = {},
     onUpdateConfig: (String, LlmProvider, String, String) -> Unit = { _, _, _, _ -> },
@@ -61,6 +64,7 @@ fun LLMSettingsScreen(
 ) {
     var isFormDialogOpen by remember { mutableStateOf(false) }
     var editingId by remember { mutableStateOf<String?>(null) }
+    var deletingId by remember { mutableStateOf<String?>(null) }
     var selectedProvider by remember { mutableStateOf(LlmProvider.GEMINI) }
     var apiKeyInput by remember { mutableStateOf("") }
     var modelNameInput by remember { mutableStateOf("") }
@@ -113,8 +117,9 @@ fun LLMSettingsScreen(
             ProviderCard(
                 providerModel = providerModel,
                 onActivate = { onActivateConfig(providerModel.id) },
+                onDeactivate = { onDeactivateConfig(providerModel.id) },
                 onDuplicate = { onDuplicateConfig(providerModel.id) },
-                onDelete = { onDeleteConfig(providerModel.id) },
+                onDelete = { deletingId = providerModel.id },
                 onEdit = {
                     editingId = providerModel.id
                     selectedProvider = providerModel.provider
@@ -124,6 +129,29 @@ fun LLMSettingsScreen(
                 },
             )
         }
+    }
+
+    if (deletingId != null) {
+        AlertDialog(
+            onDismissRequest = { deletingId = null },
+            title = { Text(stringResource(R.string.confirm_delete_title)) },
+            text = { Text(stringResource(R.string.confirm_delete_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        deletingId?.let { onDeleteConfig(it) }
+                        deletingId = null
+                    },
+                ) {
+                    Text(stringResource(R.string.confirm), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deletingId = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
     }
 
     if (isFormDialogOpen) {
@@ -353,6 +381,7 @@ fun SecurityBadge(modifier: Modifier = Modifier) {
 fun ProviderCard(
     providerModel: LlmProviderUiModel,
     onActivate: () -> Unit = {},
+    onDeactivate: () -> Unit = {},
     onDuplicate: () -> Unit = {},
     onDelete: () -> Unit = {},
     onEdit: () -> Unit = {},
@@ -432,18 +461,22 @@ fun ProviderCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
             ) {
-                if (!providerModel.isActive) {
-                    androidx.compose.material3.TextButton(onClick = onActivate) {
+                if (providerModel.isActive) {
+                    TextButton(onClick = onDeactivate) {
+                        Text(stringResource(R.string.deactivate))
+                    }
+                } else {
+                    TextButton(onClick = onActivate) {
                         Text(stringResource(R.string.activate))
                     }
                 }
-                androidx.compose.material3.TextButton(onClick = onEdit) {
+                TextButton(onClick = onEdit) {
                     Text(stringResource(R.string.edit))
                 }
-                androidx.compose.material3.TextButton(onClick = onDuplicate) {
+                TextButton(onClick = onDuplicate) {
                     Text(stringResource(R.string.duplicate))
                 }
-                androidx.compose.material3.TextButton(onClick = onDelete) {
+                TextButton(onClick = onDelete) {
                     Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             }

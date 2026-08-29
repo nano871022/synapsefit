@@ -6,6 +6,7 @@ import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
 import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
+import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import kotlinx.coroutines.flow.firstOrNull
@@ -18,6 +19,7 @@ class GenerateWorkoutPlanUseCase(
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort,
     private val bodyMeasurementRepositoryPort: BodyMeasurementRepositoryPort? = null,
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort? = null,
+    private val userProfileRepositoryPort: UserProfileRepositoryPort? = null,
 ) {
     @Suppress("ReturnCount")
     suspend operator fun invoke(
@@ -34,12 +36,23 @@ class GenerateWorkoutPlanUseCase(
             return Result.failure(IllegalArgumentException("Gym chain query is required for chain gym environment"))
         }
 
+        val userProfile =
+            userProfileRepositoryPort?.getUserProfile()?.firstOrNull()
         val latestMeasurements =
             bodyMeasurementRepositoryPort?.getLatestMeasurement()?.firstOrNull()
         val recentLogs =
             workoutLogRepositoryPort?.getLogsForDateRange(0L, Long.MAX_VALUE)?.firstOrNull()?.take(RECENT_LOGS_COUNT)
 
         val enrichedPrompt = StringBuilder(promptContext)
+        userProfile?.let { u ->
+            enrichedPrompt.append(
+                " | Perfil Usuario: Nombre: ${u.fullName}, Género: ${u.gender}, " +
+                    "Fecha Nacimiento: ${u.birthDate}, Altura: ${u.heightCm}cm, Tipo de Sangre: ${u.bloodType}",
+            )
+            if (!u.medicalConditions.isNullOrBlank()) {
+                enrichedPrompt.append(", Condiciones médicas/Observaciones: ${u.medicalConditions}")
+            }
+        }
         daysPerWeek?.let { days ->
             enrichedPrompt.append(" | Días de entrenamiento por semana: $days")
         }

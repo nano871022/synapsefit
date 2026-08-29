@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package co.japl.android.synapsefit.services.database.mapper
 
 import co.japl.android.synapsefit.core.domain.model.BodyMeasurement
@@ -5,13 +7,41 @@ import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.LlmConfig
 import co.japl.android.synapsefit.core.domain.model.LlmProvider
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
+import co.japl.android.synapsefit.core.domain.model.UserProfile
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.services.database.entity.BodyMeasurementEntity
 import co.japl.android.synapsefit.services.database.entity.ExerciseEntity
 import co.japl.android.synapsefit.services.database.entity.LlmConfigEntity
+import co.japl.android.synapsefit.services.database.entity.UserProfileEntity
 import co.japl.android.synapsefit.services.database.entity.WorkoutLogEntity
 import co.japl.android.synapsefit.services.database.entity.WorkoutPlanEntity
+
+fun UserProfileEntity.toDomain(): UserProfile =
+    UserProfile(
+        id = id,
+        fullName = fullName,
+        birthDate = birthDate,
+        gender = gender,
+        heightCm = heightCm,
+        bloodType = bloodType,
+        medicalConditions = medicalConditions,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+    )
+
+fun UserProfile.toEntity(): UserProfileEntity =
+    UserProfileEntity(
+        id = id,
+        fullName = fullName,
+        birthDate = birthDate,
+        gender = gender,
+        heightCm = heightCm,
+        bloodType = bloodType,
+        medicalConditions = medicalConditions,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+    )
 
 fun BodyMeasurementEntity.toDomain(): BodyMeasurement =
     BodyMeasurement(

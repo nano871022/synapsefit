@@ -2,6 +2,7 @@ package co.japl.android.synapsefit.navigation
 
 object Routes {
     const val DASHBOARD = "dashboard"
+    const val USER_PROFILE = "profile"
     const val MEASUREMENTS_ENTRY = "measurements/entry"
     const val MEASUREMENTS_PROGRESS = "measurements/progress"
     const val WORKOUT_PLANS = "workout/plans"

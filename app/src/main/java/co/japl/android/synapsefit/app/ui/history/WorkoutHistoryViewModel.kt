@@ -1,4 +1,4 @@
-@file:Suppress("MaxLineLength", "MagicNumber")
+@file:Suppress("MaxLineLength", "MagicNumber", "LongMethod", "CyclomaticComplexMethod", "TooGenericExceptionCaught")
 
 package co.japl.android.synapsefit.app.ui.history
 
@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
+import co.japl.android.synapsefit.util.DateTimeUtils
 import co.japl.android.synapsefit.util.MathUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +17,36 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+data class ExerciseLogSetUiModel(
+    val setIndex: Int,
+    val repsCompleted: Int,
+    val weightLiftedKg: Double,
+    val heartRateBpm: Int?,
+    val timestamp: Long,
+)
+
+data class ExerciseSessionDetailUiModel(
+    val exerciseId: String,
+    val exerciseName: String,
+    val sets: List<ExerciseLogSetUiModel>,
+    val averageReps: Double,
+    val averageWeightKg: Double,
+)
+
+/**
+ * UI model representing a grouped workout session card.
+ */
+data class WorkoutSessionGroupUiModel(
+    val sessionId: String,
+    val sessionTitle: String,
+    val dateFormatted: String,
+    val timestamp: Long,
+    val totalExercisesCount: Int,
+    val totalVolumeKg: Double,
+    val exercises: List<ExerciseSessionDetailUiModel>,
+)
+
+// Legacy compatibility model kept for tests or flat representations
 data class SessionHistoryUiModel(
     val id: String,
     val exerciseId: String,
@@ -32,6 +63,7 @@ data class WorkoutHistoryUiState(
     val weeklySessionsCount: Int = 0,
     val weeklyTotalVolumeKg: Double = 0.0,
     val recordedSessions: List<SessionHistoryUiModel> = emptyList(),
+    val sessionGroups: List<WorkoutSessionGroupUiModel> = emptyList(),
     val isLoading: Boolean = false,
 )
 
@@ -56,18 +88,21 @@ class WorkoutHistoryViewModel(
                 workoutPlanRepositoryPort?.getAllPlans() ?: flowOf(emptyList())
 
             combine(logsFlow, plansFlow) { logs, plans ->
-                val exerciseMap = mutableMapOf<String, String>()
+                val exerciseNameMap = mutableMapOf<String, String>()
+                val exerciseDayMap = mutableMapOf<String, Int>()
                 plans.forEach { plan ->
                     val pair = workoutPlanRepositoryPort?.getPlanWithExercises(plan.id)?.firstOrNull()
                     pair?.second?.forEach { ex ->
-                        exerciseMap[ex.id] = ex.name
+                        exerciseNameMap[ex.id] = ex.name
+                        exerciseDayMap[ex.id] = ex.day
                     }
                 }
-                Pair(logs, exerciseMap)
-            }.collect { (logs, exerciseMap) ->
+                Triple(logs, exerciseNameMap, exerciseDayMap)
+            }.collect { (logs, exerciseNameMap, exerciseDayMap) ->
+                // Mapped flat logs
                 val mapped =
                     logs.map { log ->
-                        val nameResolved = exerciseMap[log.exerciseId]?.takeIf { it.isNotBlank() }
+                        val nameResolved = exerciseNameMap[log.exerciseId]?.takeIf { it.isNotBlank() }
                         val fallbackName = "Ejercicio (${log.exerciseId.take(8)})"
                         SessionHistoryUiModel(
                             id = log.id,
@@ -81,12 +116,92 @@ class WorkoutHistoryViewModel(
                         )
                     }
 
+                // Group logs into sessions by session key (date + estimated day or session interval)
+                // We consider logs recorded within 2 hours of each other on the same day as part of the same session
+                val sortedLogs = logs.sortedByDescending { it.timestamp }
+                val groups = mutableListOf<WorkoutSessionGroupUiModel>()
+
+                val sessionClusterMap = LinkedHashMap<String, MutableList<co.japl.android.synapsefit.core.domain.model.WorkoutLog>>()
+                var currentClusterKey = ""
+                var lastTimestamp = 0L
+
+                for (log in sortedLogs) {
+                    val dateKey = DateTimeUtils.formatEpoch(log.timestamp, "yyyy-MM-dd")
+                    // If time gap between logs is > 3 hours or date is different, start a new session cluster
+                    if (currentClusterKey.isEmpty() ||
+                        Math.abs(lastTimestamp - log.timestamp) > 3 * 3600 * 1000L ||
+                        !currentClusterKey.startsWith(dateKey)
+                    ) {
+                        currentClusterKey = "${dateKey}_${log.timestamp}"
+                        sessionClusterMap[currentClusterKey] = mutableListOf()
+                    }
+                    sessionClusterMap[currentClusterKey]?.add(log)
+                    lastTimestamp = log.timestamp
+                }
+
+                sessionClusterMap.forEach { (clusterKey, sessionLogs) ->
+                    val dateStr = DateTimeUtils.formatEpoch(sessionLogs.first().timestamp, "yyyy-MM-dd")
+
+                    // Determine exercise details for this session
+                    val exerciseGroupMap = LinkedHashMap<String, MutableList<co.japl.android.synapsefit.core.domain.model.WorkoutLog>>()
+                    sessionLogs.forEach { log ->
+                        exerciseGroupMap.getOrPut(log.exerciseId) { mutableListOf() }.add(log)
+                    }
+
+                    var sessionDayNumber = 1
+                    val exerciseDetails =
+                        exerciseGroupMap.map { (exId, exLogs) ->
+                            val exName = exerciseNameMap[exId]?.takeIf { it.isNotBlank() } ?: "Ejercicio (${exId.take(8)})"
+                            val day = exerciseDayMap[exId] ?: 1
+                            if (day > 1) sessionDayNumber = day
+
+                            val sortedExLogs = exLogs.sortedBy { it.timestamp }
+                            val setModels =
+                                sortedExLogs.mapIndexed { index, l ->
+                                    ExerciseLogSetUiModel(
+                                        setIndex = index + 1,
+                                        repsCompleted = l.repsCompleted,
+                                        weightLiftedKg = l.weightLiftedKg,
+                                        heartRateBpm = l.heartRateBpm,
+                                        timestamp = l.timestamp,
+                                    )
+                                }
+
+                            val avgReps = MathUtils.roundToDecimals(setModels.map { it.repsCompleted }.average(), 1)
+                            val avgWeight = MathUtils.roundToDecimals(setModels.map { it.weightLiftedKg }.average(), 1)
+
+                            ExerciseSessionDetailUiModel(
+                                exerciseId = exId,
+                                exerciseName = exName,
+                                sets = setModels,
+                                averageReps = avgReps,
+                                averageWeightKg = avgWeight,
+                            )
+                        }
+
+                    val sessionVol = sessionLogs.sumOf { it.repsCompleted * it.weightLiftedKg }
+                    val dayTitle = "Día $sessionDayNumber"
+
+                    groups.add(
+                        WorkoutSessionGroupUiModel(
+                            sessionId = clusterKey,
+                            sessionTitle = dayTitle,
+                            dateFormatted = dateStr,
+                            timestamp = sessionLogs.first().timestamp,
+                            totalExercisesCount = exerciseDetails.size,
+                            totalVolumeKg = MathUtils.roundToDecimals(sessionVol, 1),
+                            exercises = exerciseDetails,
+                        ),
+                    )
+                }
+
                 val totalVol = logs.sumOf { it.repsCompleted * it.weightLiftedKg }
 
                 _uiState.update {
                     it.copy(
                         recordedSessions = mapped,
-                        weeklySessionsCount = mapped.size,
+                        sessionGroups = groups,
+                        weeklySessionsCount = groups.size,
                         weeklyTotalVolumeKg = MathUtils.roundToDecimals(totalVol, 1),
                         isLoading = false,
                     )
