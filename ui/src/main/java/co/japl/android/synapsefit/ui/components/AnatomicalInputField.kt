@@ -19,6 +19,7 @@ fun AnatomicalInputField(
     label: String,
     unitLabel: String,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     isError: Boolean = false,
     errorMessage: String? = null,
 ) {
@@ -33,6 +34,7 @@ fun AnatomicalInputField(
                 color = MaterialTheme.colorScheme.primary,
             )
         },
+        enabled = enabled,
         isError = isError,
         supportingText =
             if (isError && errorMessage != null) {

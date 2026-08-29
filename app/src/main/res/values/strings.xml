@@ -81,6 +81,8 @@
     <string name="goal_prompt_placeholder">Ej: Aumento de masa muscular, 4 días a la semana, enfoque en torso</string>
     <string name="generate_plan_ai">Generar Plan con IA</string>
     <string name="training_days_per_week">Días de entrenamiento por semana</string>
+    <string name="fetching_media_title">Procesando información complementaria</string>
+    <string name="fetching_media_warning">Obteniendo videos e imágenes para el plan... Por favor, no cierre la aplicación.</string>
 
     <!-- V6: Workout Plan Detail -->
     <string name="plan_detail">Detalle de Plan</string>

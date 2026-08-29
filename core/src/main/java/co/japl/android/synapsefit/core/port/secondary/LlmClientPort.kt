@@ -22,4 +22,6 @@ interface LlmClientPort {
         exerciseName: String,
         config: LlmConfig,
     ): Result<Pair<String, String>>
+
+    suspend fun testApiConnection(config: LlmConfig): Result<Boolean>
 }

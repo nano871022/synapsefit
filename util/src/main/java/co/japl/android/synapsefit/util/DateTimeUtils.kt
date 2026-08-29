@@ -71,4 +71,17 @@ object DateTimeUtils {
         if (startTimestamp <= 0L || currentTimestamp < startTimestamp) return 0L
         return (currentTimestamp - startTimestamp) / 1000L
     }
+
+    fun calculateAgeYears(
+        birthDateString: String?,
+        currentDate: LocalDate = LocalDate.now(),
+    ): Int? {
+        if (birthDateString.isNullOrBlank()) return null
+        return try {
+            val birthDate = LocalDate.parse(birthDateString.trim())
+            java.time.Period.between(birthDate, currentDate).years
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

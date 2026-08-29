@@ -26,6 +26,8 @@ data class AICoachGeneratorUiState(
     val generationError: String? = null,
     val generatedPlan: WorkoutPlan? = null,
     val generatedExercises: List<Exercise> = emptyList(),
+    val isFetchingMedia: Boolean = false,
+    val mediaProgress: Float = 0f,
     val isLoading: Boolean = false,
 )
 
@@ -106,11 +108,11 @@ class AICoachGeneratorViewModel(
         val planId = _uiState.value.generatedPlan?.id ?: return
         val exercises = _uiState.value.generatedExercises
         viewModelScope.launch {
+            _uiState.update { it.copy(isFetchingMedia = true, mediaProgress = 0f) }
             workoutPlanRepositoryPort?.setActivePlan(planId)
 
-            // Pre-fetch media for all exercises in background so they are stored in DB
-            if (getExerciseMediaUseCase != null) {
-                exercises.forEach { ex ->
+            if (getExerciseMediaUseCase != null && exercises.isNotEmpty()) {
+                exercises.forEachIndexed { index, ex ->
                     runCatching {
                         getExerciseMediaUseCase(
                             exerciseId = ex.id,
@@ -119,9 +121,12 @@ class AICoachGeneratorViewModel(
                             guideImageUrl = ex.guideImageUrl,
                         )
                     }
+                    val progress = (index + 1).toFloat() / exercises.size
+                    _uiState.update { it.copy(mediaProgress = progress) }
                 }
             }
 
+            _uiState.update { it.copy(isFetchingMedia = false) }
             appNavigator?.navigateTo(Routes.DASHBOARD, popUpToRoute = Routes.WORKOUT_PLANS, inclusive = true)
         }
     }

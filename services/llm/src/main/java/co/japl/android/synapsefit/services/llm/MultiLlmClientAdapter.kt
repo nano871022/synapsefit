@@ -290,5 +290,36 @@ class MultiLlmClientAdapter(
         }
     }
 
+    override suspend fun testApiConnection(config: LlmConfig): Result<Boolean> {
+        return try {
+            if (config.apiKeyEncrypted.isBlank()) {
+                return Result.failure(IllegalArgumentException("La API key no puede estar vacía"))
+            }
+            if (config.provider == LlmProvider.GEMINI) {
+                val models = fetchAvailableModels(config.provider, config.apiKeyEncrypted)
+                models.fold(
+                    onSuccess = { modelList ->
+                        val isAvailable =
+                            modelList.isEmpty() ||
+                                modelList.contains(config.modelName) ||
+                                config.modelName.isNotBlank()
+                        if (isAvailable) {
+                            Result.success(true)
+                        } else {
+                            Result.failure(
+                                IllegalStateException("El modelo ${config.modelName} no está disponible"),
+                            )
+                        }
+                    },
+                    onFailure = { err -> Result.failure(err) },
+                )
+            } else {
+                Result.success(true)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private fun String?.isNullOrBlankCheck(): Boolean = this == null || this.trim().isEmpty()
 }
