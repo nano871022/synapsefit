@@ -1,25 +1,39 @@
-@file:Suppress("FunctionNaming", "LongMethod", "MaxLineLength")
+@file:Suppress("FunctionNaming", "LongMethod", "MaxLineLength", "CyclomaticComplexMethod")
 
 package co.japl.android.synapsefit.app.ui.history
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.ui.components.KineticCard
 import co.japl.android.synapsefit.ui.theme.spacing
@@ -30,6 +44,8 @@ fun WorkoutHistoryScreen(
     state: WorkoutHistoryUiState,
     modifier: Modifier = Modifier,
 ) {
+    var selectedGroup by remember { mutableStateOf<WorkoutSessionGroupUiModel?>(null) }
+
     LazyColumn(
         modifier =
             modifier
@@ -60,7 +76,7 @@ fun WorkoutHistoryScreen(
             )
         }
 
-        if (state.recordedSessions.isEmpty()) {
+        if (state.sessionGroups.isEmpty() && state.recordedSessions.isEmpty()) {
             item {
                 KineticCard {
                     Text(
@@ -70,9 +86,159 @@ fun WorkoutHistoryScreen(
                     )
                 }
             }
+        } else if (state.sessionGroups.isNotEmpty()) {
+            items(state.sessionGroups) { group ->
+                WorkoutSessionGroupCard(
+                    group = group,
+                    onClick = { selectedGroup = group },
+                )
+            }
         } else {
             items(state.recordedSessions) { session ->
                 WorkoutSessionHistoryCard(session = session)
+            }
+        }
+    }
+
+    selectedGroup?.let { group ->
+        WorkoutSessionDetailDialog(
+            group = group,
+            onDismiss = { selectedGroup = null },
+        )
+    }
+}
+
+@Composable
+fun WorkoutSessionGroupCard(
+    group: WorkoutSessionGroupUiModel,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            ),
+    ) {
+        Row(
+            modifier = Modifier.padding(MaterialTheme.spacing.medium).fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column {
+                Text(
+                    text = group.sessionTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = stringResource(R.string.date_prefix, group.dateFormatted),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.exercises_completed_count, group.totalExercisesCount),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            Text(
+                text = "${group.totalVolumeKg.toInt()} kg",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+        }
+    }
+}
+
+@Composable
+fun WorkoutSessionDetailDialog(
+    group: WorkoutSessionGroupUiModel,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = modifier.fillMaxWidth().padding(MaterialTheme.spacing.small),
+        ) {
+            Column(
+                modifier =
+                    Modifier
+                        .padding(MaterialTheme.spacing.medium)
+                        .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
+            ) {
+                Text(
+                    text = group.sessionTitle + " — " + group.dateFormatted,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+
+                val exCountStr = stringResource(R.string.exercises_completed_count, group.totalExercisesCount)
+                val totalVolStr = stringResource(R.string.total_volume_stat)
+                Text(
+                    text = "$exCountStr | $totalVolStr: ${group.totalVolumeKg} kg",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                group.exercises.forEach { exercise ->
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = exercise.exerciseName,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+
+                        exercise.sets.forEach { setItem ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(start = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.set_col) + " ${setItem.setIndex}:",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    text = "${setItem.repsCompleted} reps x ${setItem.weightLiftedKg} kg",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = stringResource(R.string.exercise_averages_prefix, exercise.averageReps, exercise.averageWeightKg),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 8.dp, top = 2.dp),
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.close))
+                    }
+                }
             }
         }
     }

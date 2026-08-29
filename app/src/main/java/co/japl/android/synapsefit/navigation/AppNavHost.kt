@@ -23,6 +23,8 @@ import co.japl.android.synapsefit.app.ui.measurements.BodyMeasurementsScreen
 import co.japl.android.synapsefit.app.ui.measurements.BodyMeasurementsViewModel
 import co.japl.android.synapsefit.app.ui.measurements.MeasurementProgressGraphScreen
 import co.japl.android.synapsefit.app.ui.measurements.MeasurementProgressViewModel
+import co.japl.android.synapsefit.app.ui.profile.UserProfileScreen
+import co.japl.android.synapsefit.app.ui.profile.UserProfileViewModel
 import co.japl.android.synapsefit.app.ui.settings.AboutDeveloperScreen
 import co.japl.android.synapsefit.app.ui.settings.AboutDeveloperViewModel
 import co.japl.android.synapsefit.app.ui.settings.BackupSyncScreen
@@ -76,8 +78,36 @@ fun AppNavHost(
                     navController.navigate(Routes.MEASUREMENTS_ENTRY)
                 },
                 onProfileClick = {
-                    navController.navigate(Routes.SETTINGS_ABOUT)
+                    navController.navigate(Routes.USER_PROFILE)
                 },
+            )
+        }
+
+        // User Profile
+        composable(Routes.USER_PROFILE) {
+            val viewModel: UserProfileViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return UserProfileViewModel(
+                                    getUserProfileUseCase = dependencyContainer.getUserProfileUseCase,
+                                    saveUserProfileUseCase = dependencyContainer.saveUserProfileUseCase,
+                                    appNavigator = appNavigator,
+                                ) as T
+                            }
+                        },
+                )
+            val state by viewModel.uiState.collectAsState()
+            UserProfileScreen(
+                state = state,
+                onFullNameChange = viewModel::onFullNameChange,
+                onBirthDateChange = viewModel::onBirthDateChange,
+                onGenderChange = viewModel::onGenderChange,
+                onHeightCmChange = viewModel::onHeightCmChange,
+                onBloodTypeChange = viewModel::onBloodTypeChange,
+                onMedicalConditionsChange = viewModel::onMedicalConditionsChange,
+                onSaveClick = viewModel::saveProfile,
             )
         }
 
@@ -319,6 +349,7 @@ fun AppNavHost(
                 onSaveConfig = viewModel::saveConfig,
                 onFetchModels = viewModel::fetchModels,
                 onActivateConfig = viewModel::setActiveConfig,
+                onDeactivateConfig = viewModel::deactivateConfig,
                 onDuplicateConfig = viewModel::duplicateConfig,
                 onDeleteConfig = viewModel::deleteConfig,
                 onUpdateConfig = viewModel::updateConfig,

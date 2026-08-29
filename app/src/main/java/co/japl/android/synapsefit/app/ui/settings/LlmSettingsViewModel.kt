@@ -86,6 +86,20 @@ class LlmSettingsViewModel(
         }
     }
 
+    fun deactivateConfig(id: String) {
+        viewModelScope.launch {
+            appNavigator?.setLoading(true)
+            val configs = llmConfigRepositoryPort?.getAllConfigs()?.firstOrNull() ?: emptyList()
+            val target = configs.find { it.id == id }
+            if (target != null && target.isActive) {
+                val updated = target.copy(isActive = false, updatedAt = System.currentTimeMillis())
+                llmConfigRepositoryPort?.saveConfig(updated)
+                loadConfigs()
+            }
+            appNavigator?.setLoading(false)
+        }
+    }
+
     fun duplicateConfig(id: String) {
         viewModelScope.launch {
             appNavigator?.setLoading(true)

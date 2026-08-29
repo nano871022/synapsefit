@@ -121,6 +121,8 @@
     <string name="date_prefix">Fecha: %1$s</string>
     <string name="model_prefix">Modelo: %1$s</string>
     <string name="key_prefix">Key: %1$s</string>
+    <string name="exercises_completed_count">%1$d ejercicios realizados</string>
+    <string name="exercise_averages_prefix">Promedio: %1$s reps | %2$s kg</string>
 
     <!-- V9: Backup & Sync -->
     <string name="backup_sync">Respaldo y Sincronización</string>
@@ -143,11 +145,30 @@
     <string name="registered_providers">Proveedores Registrados</string>
     <string name="active_badge">ACTIVO</string>
     <string name="activate">Activar</string>
+    <string name="deactivate">Desactivar</string>
     <string name="edit">Editar</string>
     <string name="duplicate">Duplicar</string>
     <string name="delete">Eliminar</string>
     <string name="update_provider">Actualizar Proveedor</string>
     <string name="add_provider">Agregar Proveedor</string>
+    <string name="confirm_delete_title">Confirmar Eliminación</string>
+    <string name="confirm_delete_message">¿Está seguro de que desea eliminar esta configuración de proveedor LLM?</string>
+    <string name="confirm">Eliminar</string>
+    <string name="cancel">Cancelar</string>
+
+    <!-- User Profile -->
+    <string name="user_profile">Información Adicional del Usuario</string>
+    <string name="user_full_name">Nombres y Apellidos</string>
+    <string name="birth_date">Fecha de Nacimiento</string>
+    <string name="gender">Género</string>
+    <string name="gender_male">Hombre</string>
+    <string name="gender_female">Mujer</string>
+    <string name="gender_other">Otro</string>
+    <string name="height_cm">Altura (cm)</string>
+    <string name="blood_type">Tipo de Sangre</string>
+    <string name="medical_conditions">Enfermedades, fracturas, hernias u observaciones médicas importantes</string>
+    <string name="save_profile">Guardar Perfil</string>
+    <string name="profile_saved">Perfil guardado correctamente</string>
 
     <!-- V11: About Developer -->
     <string name="about_synapsefit">Acerca de SynapseFit</string>

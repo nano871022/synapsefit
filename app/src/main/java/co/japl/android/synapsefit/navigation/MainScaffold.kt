@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Dashboard
@@ -103,6 +104,9 @@ fun MainScaffold(
                 NavigationDrawerItemModel(Routes.DASHBOARD, R.string.nav_dashboard) {
                     Icon(Icons.Default.Dashboard, contentDescription = null)
                 },
+                NavigationDrawerItemModel(Routes.USER_PROFILE, R.string.user_profile) {
+                    Icon(Icons.Default.AccountCircle, contentDescription = null)
+                },
                 NavigationDrawerItemModel(Routes.MEASUREMENTS_ENTRY, R.string.nav_measurements_entry) {
                     Icon(Icons.Default.MonitorWeight, contentDescription = null)
                 },
@@ -166,6 +170,13 @@ fun MainScaffold(
                                 expanded = menuExpanded,
                                 onDismissRequest = { menuExpanded = false },
                             ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.user_profile)) },
+                                    onClick = {
+                                        menuExpanded = false
+                                        scope.launch { appNavigator.navigateTo(Routes.USER_PROFILE) }
+                                    },
+                                )
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.settings_llm)) },
                                     onClick = {
