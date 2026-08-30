@@ -1,3 +1,5 @@
+@file:Suppress("CyclomaticComplexMethod")
+
 package co.japl.android.synapsefit.core.usecase
 
 import co.japl.android.synapsefit.core.domain.model.Exercise
@@ -30,27 +32,54 @@ class GenerateWorkoutPlanUseCase(
     ): Result<Pair<WorkoutPlan, List<Exercise>>> {
         val activeConfig =
             llmConfigRepositoryPort.getActiveConfig().firstOrNull()
-                ?: return Result.failure(IllegalStateException("No active LLM configuration found"))
+                ?: return Result.failure(IllegalStateException("No hay un proveedor LLM activo configurado"))
+
+        val testConnection = llmClientPort.testApiConnection(activeConfig)
+        if (testConnection.isFailure) {
+            val msg = "El servicio de IA o el modelo no está disponible. Verifique las credenciales y conectividad."
+            return Result.failure(IllegalStateException(msg))
+        }
 
         if (environment == TrainingEnvironment.CHAIN_GYM && gymChainQuery.isNullOrBlankCheck()) {
             return Result.failure(IllegalArgumentException("Gym chain query is required for chain gym environment"))
         }
 
-        val userProfile =
-            userProfileRepositoryPort?.getUserProfile()?.firstOrNull()
-        val latestMeasurements =
-            bodyMeasurementRepositoryPort?.getLatestMeasurement()?.firstOrNull()
+        val enrichedPrompt = buildEnrichedPrompt(promptContext, daysPerWeek)
+
+        val generationResult =
+            llmClientPort.generateWorkoutPlan(
+                promptContext = enrichedPrompt,
+                environment = environment,
+                gymChainQuery = gymChainQuery,
+                config = activeConfig,
+            )
+
+        return generationResult.onSuccess { (plan, exercises) ->
+            workoutPlanRepositoryPort.savePlan(plan, exercises)
+        }
+    }
+
+    private suspend fun buildEnrichedPrompt(
+        promptContext: String,
+        daysPerWeek: Int?,
+    ): String {
+        val userProfile = userProfileRepositoryPort?.getUserProfile()?.firstOrNull()
+        val latestMeasurements = bodyMeasurementRepositoryPort?.getLatestMeasurement()?.firstOrNull()
         val recentLogs =
-            workoutLogRepositoryPort?.getLogsForDateRange(0L, Long.MAX_VALUE)?.firstOrNull()?.take(RECENT_LOGS_COUNT)
+            workoutLogRepositoryPort?.getLogsForDateRange(0L, Long.MAX_VALUE)
+                ?.firstOrNull()?.take(RECENT_LOGS_COUNT)
 
         val enrichedPrompt = StringBuilder(promptContext)
         userProfile?.let { u ->
+            val ageYears = calculateAgeYears(u.birthDate)
+            val ageStr = if (ageYears != null) "$ageYears años" else "No especificada"
             enrichedPrompt.append(
                 " | Perfil Usuario: Nombre: ${u.fullName}, Género: ${u.gender}, " +
-                    "Fecha Nacimiento: ${u.birthDate}, Altura: ${u.heightCm}cm, Tipo de Sangre: ${u.bloodType}",
+                    "Edad: $ageStr (Fecha Nacimiento: ${u.birthDate}), " +
+                    "Altura: ${u.heightCm}cm, Tipo de Sangre: ${u.bloodType}",
             )
             if (!u.medicalConditions.isNullOrBlank()) {
-                enrichedPrompt.append(", Condiciones médicas/Observaciones: ${u.medicalConditions}")
+                enrichedPrompt.append(", Enfermedades/Condiciones médicas/Observaciones: ${u.medicalConditions}")
             }
         }
         daysPerWeek?.let { days ->
@@ -68,17 +97,16 @@ class GenerateWorkoutPlanUseCase(
                 enrichedPrompt.append("[Ex: ${log.exerciseId}, ${log.repsCompleted} reps x ${log.weightLiftedKg}kg] ")
             }
         }
+        return enrichedPrompt.toString()
+    }
 
-        val generationResult =
-            llmClientPort.generateWorkoutPlan(
-                promptContext = enrichedPrompt.toString(),
-                environment = environment,
-                gymChainQuery = gymChainQuery,
-                config = activeConfig,
-            )
-
-        return generationResult.onSuccess { (plan, exercises) ->
-            workoutPlanRepositoryPort.savePlan(plan, exercises)
+    private fun calculateAgeYears(birthDateString: String?): Int? {
+        if (birthDateString.isNullOrBlank()) return null
+        return try {
+            val birthDate = java.time.LocalDate.parse(birthDateString.trim())
+            java.time.Period.between(birthDate, java.time.LocalDate.now()).years
+        } catch (_: Exception) {
+            null
         }
     }
 

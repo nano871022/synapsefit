@@ -31,6 +31,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -441,17 +442,32 @@ fun ProviderCard(
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
-                if (providerModel.isActive) {
-                    Badge(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.active_badge),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 4.dp),
-                        )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    if (providerModel.isActive) {
+                        Badge(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.active_badge),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 4.dp),
+                            )
+                        }
                     }
+                    Switch(
+                        checked = providerModel.isActive,
+                        onCheckedChange = { isChecked ->
+                            if (isChecked) {
+                                onActivate()
+                            } else {
+                                onDeactivate()
+                            }
+                        },
+                    )
                 }
             }
 
@@ -461,15 +477,6 @@ fun ProviderCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
             ) {
-                if (providerModel.isActive) {
-                    TextButton(onClick = onDeactivate) {
-                        Text(stringResource(R.string.deactivate))
-                    }
-                } else {
-                    TextButton(onClick = onActivate) {
-                        Text(stringResource(R.string.activate))
-                    }
-                }
                 TextButton(onClick = onEdit) {
                     Text(stringResource(R.string.edit))
                 }

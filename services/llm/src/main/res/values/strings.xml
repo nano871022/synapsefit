@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="llm_workout_plan_prompt">
-        Generate a workout plan split by days of the week for %1$s%2$s.
-        User context (goal, anthropometric measurements, and history): %3$s.
+        Generate a customized, safe workout plan split by days of the week for %1$s%2$s.
+        User context (goal, user profile with age, height, blood type, medical conditions/diseases, anthropometric measurements, and history): %3$s.
+        CRITICAL SAFETY INSTRUCTION: Strictly analyze the user\'s age, physical condition, and medical conditions/diseases/injuries provided in the context. Adapt or avoid any exercises that could compromise the user\'s health or exacerbate existing medical issues.
         Organize the exercises specified by day (e.g., Day 1, Day 2, etc.) and include clear execution instructions.
         IMPORTANT: The user\'s language is %4$s. You MUST generate all text and exercise descriptions in %4$s.
         Respond in plain JSON format with this exact structure:

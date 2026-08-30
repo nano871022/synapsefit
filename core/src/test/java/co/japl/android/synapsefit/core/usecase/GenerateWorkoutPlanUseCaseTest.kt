@@ -48,7 +48,7 @@ class GenerateWorkoutPlanUseCaseTest {
                 )
 
             assertTrue(result.isFailure)
-            assertEquals("No active LLM configuration found", result.exceptionOrNull()?.message)
+            assertEquals("No hay un proveedor LLM activo configurado", result.exceptionOrNull()?.message)
         }
 
     @Test
@@ -56,6 +56,7 @@ class GenerateWorkoutPlanUseCaseTest {
         runTest {
             val config = LlmConfig("1", LlmProvider.GEMINI, "key", "gemini-1.5-flash", true, 0L, 0L)
             every { llmConfigRepositoryPort.getActiveConfig() } returns flowOf(config)
+            coEvery { llmClientPort.testApiConnection(config) } returns Result.success(true)
 
             val result =
                 useCase(
@@ -73,6 +74,7 @@ class GenerateWorkoutPlanUseCaseTest {
         runTest {
             val config = LlmConfig("1", LlmProvider.GEMINI, "key", "gemini-1.5-flash", true, 0L, 0L)
             every { llmConfigRepositoryPort.getActiveConfig() } returns flowOf(config)
+            coEvery { llmClientPort.testApiConnection(config) } returns Result.success(true)
 
             val plan = WorkoutPlan("p1", "Upper Body", "Gain muscle", true, true, 1000L, 1000L)
             val exercises =
