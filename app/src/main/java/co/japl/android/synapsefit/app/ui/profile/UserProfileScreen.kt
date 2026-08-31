@@ -2,6 +2,7 @@
 
 package co.japl.android.synapsefit.app.ui.profile
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,7 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -22,6 +26,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,6 +42,10 @@ import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.ui.components.AnatomicalInputField
 import co.japl.android.synapsefit.ui.components.NeonButton
 import co.japl.android.synapsefit.ui.theme.spacing
+import co.japl.android.synapsefit.util.DateTimeUtils
+import java.util.Calendar
+import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,21 +69,17 @@ fun UserProfileScreen(
     var isHeightCmEditable by remember { mutableStateOf(state.heightCm.isBlank()) }
     var isBloodTypeEditable by remember { mutableStateOf(state.bloodType.isBlank()) }
     var isMedicalConditionsEditable by remember { mutableStateOf(state.medicalConditions.isBlank()) }
+    var showDatePickerDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(
-        state.fullName,
-        state.birthDate,
-        state.gender,
-        state.heightCm,
-        state.bloodType,
-        state.medicalConditions,
-    ) {
-        if (state.fullName.isNotBlank()) isFullNameEditable = false
-        if (state.birthDate.isNotBlank()) isBirthDateEditable = false
-        if (state.gender.isNotBlank()) isGenderEditable = false
-        if (state.heightCm.isNotBlank()) isHeightCmEditable = false
-        if (state.bloodType.isNotBlank()) isBloodTypeEditable = false
-        if (state.medicalConditions.isNotBlank()) isMedicalConditionsEditable = false
+    LaunchedEffect(state.isSavedSuccess) {
+        if (state.isSavedSuccess) {
+            if (state.fullName.isNotBlank()) isFullNameEditable = false
+            if (state.birthDate.isNotBlank()) isBirthDateEditable = false
+            if (state.gender.isNotBlank()) isGenderEditable = false
+            if (state.heightCm.isNotBlank()) isHeightCmEditable = false
+            if (state.bloodType.isNotBlank()) isBloodTypeEditable = false
+            if (state.medicalConditions.isNotBlank()) isMedicalConditionsEditable = false
+        }
     }
 
     Column(
@@ -129,14 +135,75 @@ fun UserProfileScreen(
         ) {
             OutlinedTextField(
                 value = state.birthDate,
-                onValueChange = onBirthDateChange,
+                onValueChange = { },
+                readOnly = true,
                 enabled = isBirthDateEditable,
-                label = { Text(stringResource(R.string.birth_date) + " (YYYY-MM-DD)") },
-                modifier = Modifier.weight(1f),
+                label = { Text(stringResource(R.string.birth_date)) },
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            if (isBirthDateEditable) {
+                                showDatePickerDialog = true
+                            }
+                        },
+                        enabled = isBirthDateEditable,
+                    ) {
+                        Icon(Icons.Default.DateRange, contentDescription = "Select Birth Date")
+                    }
+                },
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .clickable(enabled = isBirthDateEditable) {
+                            showDatePickerDialog = true
+                        },
                 singleLine = true,
             )
             IconButton(onClick = { isBirthDateEditable = !isBirthDateEditable }) {
                 Icon(Icons.Default.Edit, contentDescription = "Edit Birth Date")
+            }
+        }
+
+        if (showDatePickerDialog && isBirthDateEditable) {
+            val initialMillis =
+                remember(state.birthDate) {
+                    val epoch = DateTimeUtils.parseIsoDateToEpoch(state.birthDate)
+                    if (epoch > 0L) epoch else System.currentTimeMillis()
+                }
+            val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
+
+            DatePickerDialog(
+                onDismissRequest = { showDatePickerDialog = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val selectedMillis = datePickerState.selectedDateMillis
+                            if (selectedMillis != null) {
+                                val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                                cal.timeInMillis = selectedMillis
+                                val formatted =
+                                    String.format(
+                                        Locale.US,
+                                        "%04d-%02d-%02d",
+                                        cal.get(Calendar.YEAR),
+                                        cal.get(Calendar.MONTH) + 1,
+                                        cal.get(Calendar.DAY_OF_MONTH),
+                                    )
+                                onBirthDateChange(formatted)
+                            }
+                            showDatePickerDialog = false
+                        },
+                    ) {
+                        Text(stringResource(R.string.save))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePickerDialog = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                },
+            ) {
+                DatePicker(state = datePickerState)
             }
         }
 

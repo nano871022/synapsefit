@@ -4,6 +4,7 @@ import co.japl.android.synapsefit.app.ui.dashboard.DashboardViewModel
 import co.japl.android.synapsefit.app.ui.history.WorkoutHistoryViewModel
 import co.japl.android.synapsefit.app.ui.measurements.BodyMeasurementsViewModel
 import co.japl.android.synapsefit.app.ui.measurements.MeasurementProgressViewModel
+import co.japl.android.synapsefit.app.ui.profile.UserProfileViewModel
 import co.japl.android.synapsefit.app.ui.settings.AboutDeveloperViewModel
 import co.japl.android.synapsefit.app.ui.settings.BackupSyncViewModel
 import co.japl.android.synapsefit.app.ui.settings.LlmSettingsViewModel
@@ -12,9 +13,15 @@ import co.japl.android.synapsefit.app.ui.workout.ActiveWorkoutSessionViewModel
 import co.japl.android.synapsefit.app.ui.workout.WorkoutPlanDetailViewModel
 import co.japl.android.synapsefit.app.ui.workout.WorkoutPlansViewModel
 import co.japl.android.synapsefit.core.domain.model.AnatomicalZone
+import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
+import co.japl.android.synapsefit.core.domain.model.WorkoutLog
+import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -136,5 +143,39 @@ class ViewModelsTest {
             val viewModel = AboutDeveloperViewModel()
             assertEquals("1.0.0", viewModel.uiState.value.versionName)
             assertEquals("co.japl.android.synapsefit", viewModel.uiState.value.applicationId)
+        }
+
+    @Test
+    fun userProfileViewModel_onBirthDateChange_updatesState() =
+        runTest {
+            val viewModel = UserProfileViewModel()
+            viewModel.onBirthDateChange("1995-05-20")
+            assertEquals("1995-05-20", viewModel.uiState.value.birthDate)
+        }
+
+    @Test
+    fun workoutHistoryViewModel_groupsMultipleExercisesOnSameDay() =
+        runTest {
+            val mockLogPort = mockk<WorkoutLogRepositoryPort>()
+            val baseTime = System.currentTimeMillis()
+            val logs =
+                (1..5).map { index ->
+                    WorkoutLog(
+                        id = "log-$index",
+                        exerciseId = "ex-$index",
+                        repsCompleted = 10,
+                        weightLiftedKg = 50.0,
+                        timestamp = baseTime + (index * 3600 * 1000L),
+                        sourceDevice = SourceDevice.MOBILE,
+                    )
+                }
+            every { mockLogPort.getLogsForDateRange(any(), any()) } returns flowOf(logs)
+
+            val viewModel = WorkoutHistoryViewModel(workoutLogRepositoryPort = mockLogPort)
+            val groups = viewModel.uiState.value.sessionGroups
+
+            assertEquals(1, groups.size)
+            assertEquals(5, groups.first().totalExercisesCount)
+            assertEquals(5, groups.first().exercises.size)
         }
 }
