@@ -127,11 +127,9 @@ class WorkoutHistoryViewModel(
 
                 for (log in sortedLogs) {
                     val dateKey = DateTimeUtils.formatEpoch(log.timestamp, "yyyy-MM-dd")
-                    // If time gap between logs is > 3 hours or date is different, start a new session cluster
-                    if (currentClusterKey.isEmpty() ||
-                        Math.abs(lastTimestamp - log.timestamp) > 3 * 3600 * 1000L ||
-                        !currentClusterKey.startsWith(dateKey)
-                    ) {
+                    // Group all logs performed on the same calendar day into the same session cluster.
+                    // If date is different, start a new session cluster.
+                    if (currentClusterKey.isEmpty() || !currentClusterKey.startsWith(dateKey)) {
                         currentClusterKey = "${dateKey}_${log.timestamp}"
                         sessionClusterMap[currentClusterKey] = mutableListOf()
                     }
