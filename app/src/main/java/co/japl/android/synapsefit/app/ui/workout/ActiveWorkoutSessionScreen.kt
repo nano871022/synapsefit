@@ -61,6 +61,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import co.japl.android.synapsefit.R
+import co.japl.android.synapsefit.app.controller.workout.ActiveWorkoutUiState
+import co.japl.android.synapsefit.app.controller.workout.WorkoutSummary
 import co.japl.android.synapsefit.ui.components.HeartRateGauge
 import co.japl.android.synapsefit.ui.components.KineticCard
 import co.japl.android.synapsefit.ui.components.NeonButton

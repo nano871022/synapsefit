@@ -55,6 +55,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.japl.android.synapsefit.R
+import co.japl.android.synapsefit.app.controller.settings.LlmProviderUiModel
+import co.japl.android.synapsefit.app.controller.settings.LlmSettingsUiState
 import co.japl.android.synapsefit.core.domain.model.LlmProvider
 import co.japl.android.synapsefit.ui.components.NeonButton
 import co.japl.android.synapsefit.ui.theme.SynapseFitTheme

@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import co.japl.android.synapsefit.R
+import co.japl.android.synapsefit.app.controller.workout.AICoachGeneratorUiState
 import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan

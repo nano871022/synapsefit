@@ -38,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import co.japl.android.synapsefit.R
+import co.japl.android.synapsefit.app.controller.measurements.BodyMeasurementsUiState
 import co.japl.android.synapsefit.core.domain.model.BodyMeasurement
 import co.japl.android.synapsefit.ui.components.AnatomicalInputField
 import co.japl.android.synapsefit.ui.components.NeonButton

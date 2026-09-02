@@ -1,6 +1,6 @@
 @file:Suppress("MaxLineLength", "MagicNumber", "LongMethod", "CyclomaticComplexMethod", "TooGenericExceptionCaught")
 
-package co.japl.android.synapsefit.app.ui.history
+package co.japl.android.synapsefit.app.controller.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

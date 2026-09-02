@@ -1,4 +1,4 @@
-package co.japl.android.synapsefit.app.ui.profile
+package co.japl.android.synapsefit.app.controller.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

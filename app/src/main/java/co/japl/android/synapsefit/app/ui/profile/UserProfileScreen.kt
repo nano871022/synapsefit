@@ -47,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.japl.android.synapsefit.R
+import co.japl.android.synapsefit.app.controller.profile.UserProfileUiState
 import co.japl.android.synapsefit.ui.components.AnatomicalInputField
 import co.japl.android.synapsefit.ui.components.NeonButton
 import co.japl.android.synapsefit.ui.theme.SynapseFitTheme

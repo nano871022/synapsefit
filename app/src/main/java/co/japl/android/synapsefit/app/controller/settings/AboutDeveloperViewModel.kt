@@ -1,4 +1,4 @@
-package co.japl.android.synapsefit.app.ui.settings
+package co.japl.android.synapsefit.app.controller.settings
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

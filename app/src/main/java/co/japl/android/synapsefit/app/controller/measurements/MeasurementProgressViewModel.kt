@@ -1,6 +1,6 @@
 @file:Suppress("MagicNumber")
 
-package co.japl.android.synapsefit.app.ui.measurements
+package co.japl.android.synapsefit.app.controller.measurements
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
