@@ -83,7 +83,7 @@ class WorkoutHistoryViewModel(
             _uiState.update { it.copy(isLoading = true) }
 
             val logsFlow =
-                workoutLogRepositoryPort?.getLogsForDateRange(0L, Long.MAX_VALUE) ?: flowOf(emptyList())
+                workoutLogRepositoryPort?.getAllLogs() ?: flowOf(emptyList())
             val plansFlow =
                 workoutPlanRepositoryPort?.getAllPlans() ?: flowOf(emptyList())
 

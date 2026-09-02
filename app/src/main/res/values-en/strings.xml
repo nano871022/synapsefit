@@ -116,7 +116,7 @@
     <string name="workout_history">Workout History</string>
     <string name="records_stat">Records</string>
     <string name="total_volume_stat">Total Volume</string>
-    <string name="recent_records">Recent Records</string>
+    <string name="recent_records">All Workout Records</string>
     <string name="no_workout_records">No workout records yet</string>
     <string name="date_prefix">Date: %1$s</string>
     <string name="model_prefix">Model: %1$s</string>

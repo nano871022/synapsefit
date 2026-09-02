@@ -194,7 +194,7 @@ fun UserProfileScreen(
                             showDatePickerDialog = false
                         },
                     ) {
-                        Text(stringResource(R.string.save))
+                        Text(stringResource(R.string.save_profile))
                     }
                 },
                 dismissButton = {

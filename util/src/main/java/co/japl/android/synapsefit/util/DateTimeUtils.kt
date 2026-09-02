@@ -63,6 +63,19 @@ object DateTimeUtils {
         return yearMonth.format(formatter)
     }
 
+    fun parseIsoDateToEpoch(
+        dateString: String?,
+        zoneId: ZoneId = DEFAULT_ZONE_ID,
+    ): Long {
+        if (dateString.isNullOrBlank()) return 0L
+        return try {
+            val localDate = LocalDate.parse(dateString.trim())
+            localDateToEpoch(localDate, zoneId)
+        } catch (_: Exception) {
+            0L
+        }
+    }
+
     @Suppress("MagicNumber")
     fun calculateElapsedTimeSeconds(
         startTimestamp: Long,
