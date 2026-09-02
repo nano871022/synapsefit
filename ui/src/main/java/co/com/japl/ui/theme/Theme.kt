@@ -1,6 +1,6 @@
 @file:Suppress("FunctionNaming")
 
-package co.japl.android.synapsefit.ui.theme
+package co.com.japl.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -46,7 +46,7 @@ private val KineticDarkColorScheme =
     )
 
 @Composable
-fun SynapseFitTheme(content: @Composable () -> Unit) {
+fun MaterialThemeComposeUI(content: @Composable () -> Unit) {
     CompositionLocalProvider(
         LocalSpacing provides Spacing(),
     ) {

@@ -60,14 +60,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import co.com.japl.ui.theme.MaterialThemeComposeUI
+import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.workout.ActiveWorkoutUiState
 import co.japl.android.synapsefit.app.controller.workout.WorkoutSummary
 import co.japl.android.synapsefit.ui.components.HeartRateGauge
 import co.japl.android.synapsefit.ui.components.KineticCard
 import co.japl.android.synapsefit.ui.components.NeonButton
-import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
-import co.japl.android.synapsefit.ui.theme.spacing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
@@ -244,7 +244,7 @@ fun ActiveWorkoutSessionScreen(
 @Preview(showBackground = true)
 @Composable
 private fun ActiveWorkoutSessionScreenPreview() {
-    SynapseFitTheme {
+    MaterialThemeComposeUI {
         ActiveWorkoutSessionScreen(
             state =
                 ActiveWorkoutUiState(

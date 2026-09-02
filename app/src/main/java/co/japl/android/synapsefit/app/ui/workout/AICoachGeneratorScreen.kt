@@ -31,14 +31,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import co.com.japl.ui.theme.MaterialThemeComposeUI
+import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.workout.AICoachGeneratorUiState
 import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.ui.components.NeonButton
-import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
-import co.japl.android.synapsefit.ui.theme.spacing
 
 @Composable
 fun AICoachGeneratorScreen(
@@ -363,7 +363,7 @@ private fun getEnvLabel(env: TrainingEnvironment): String {
 @Preview(showBackground = true)
 @Composable
 private fun AICoachGeneratorScreenPreview() {
-    SynapseFitTheme {
+    MaterialThemeComposeUI {
         AICoachGeneratorScreen(
             state =
                 AICoachGeneratorUiState(

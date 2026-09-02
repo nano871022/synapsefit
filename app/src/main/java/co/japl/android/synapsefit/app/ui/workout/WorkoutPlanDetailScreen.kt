@@ -23,12 +23,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import co.com.japl.ui.theme.MaterialThemeComposeUI
+import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.workout.ExerciseUiModel
 import co.japl.android.synapsefit.app.controller.workout.WorkoutPlanDetailUiState
 import co.japl.android.synapsefit.ui.components.NeonButton
-import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
-import co.japl.android.synapsefit.ui.theme.spacing
 
 @Composable
 fun WorkoutPlanDetailScreen(
@@ -99,7 +99,7 @@ fun WorkoutPlanDetailScreen(
 @Preview(showBackground = true)
 @Composable
 private fun WorkoutPlanDetailScreenPreview() {
-    SynapseFitTheme {
+    MaterialThemeComposeUI {
         WorkoutPlanDetailScreen(
             state =
                 WorkoutPlanDetailUiState(

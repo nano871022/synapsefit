@@ -54,13 +54,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import co.com.japl.ui.theme.MaterialThemeComposeUI
+import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.settings.LlmProviderUiModel
 import co.japl.android.synapsefit.app.controller.settings.LlmSettingsUiState
 import co.japl.android.synapsefit.core.domain.model.LlmProvider
 import co.japl.android.synapsefit.ui.components.NeonButton
-import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
-import co.japl.android.synapsefit.ui.theme.spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -196,7 +196,7 @@ fun LLMSettingsScreen(
 @Preview(showBackground = true)
 @Composable
 private fun LLMSettingsScreenPreview() {
-    SynapseFitTheme {
+    MaterialThemeComposeUI {
         LLMSettingsScreen(
             state =
                 LlmSettingsUiState(

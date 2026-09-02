@@ -1,9 +1,9 @@
 package co.japl.android.synapsefit.ui
 
 import androidx.compose.ui.graphics.Color
-import co.japl.android.synapsefit.ui.theme.BackgroundDark
-import co.japl.android.synapsefit.ui.theme.PrimaryCyan
-import co.japl.android.synapsefit.ui.theme.Spacing
+import co.com.japl.ui.theme.BackgroundDark
+import co.com.japl.ui.theme.PrimaryCyan
+import co.com.japl.ui.theme.Spacing
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

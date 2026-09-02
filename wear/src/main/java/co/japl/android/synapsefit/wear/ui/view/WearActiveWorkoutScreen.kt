@@ -26,12 +26,12 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.curvedText
-import co.japl.android.synapsefit.ui.theme.BackgroundDark
-import co.japl.android.synapsefit.ui.theme.ErrorContainerDark
-import co.japl.android.synapsefit.ui.theme.OnPrimaryDark
-import co.japl.android.synapsefit.ui.theme.OnSurfaceDark
-import co.japl.android.synapsefit.ui.theme.PrimaryCyan
-import co.japl.android.synapsefit.ui.theme.SurfaceContainerHigh
+import co.com.japl.ui.theme.BackgroundDark
+import co.com.japl.ui.theme.ErrorContainerDark
+import co.com.japl.ui.theme.OnPrimaryDark
+import co.com.japl.ui.theme.OnSurfaceDark
+import co.com.japl.ui.theme.PrimaryCyan
+import co.com.japl.ui.theme.SurfaceContainerHigh
 import co.japl.android.synapsefit.wear.R
 import co.japl.android.synapsefit.wear.ui.viewmodel.WearActiveWorkoutUiState
 

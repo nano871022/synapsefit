@@ -15,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
+import co.com.japl.ui.theme.MaterialThemeComposeUI
 
 @Composable
 fun NeonButton(
@@ -59,7 +59,7 @@ fun NeonButton(
 @Preview(showBackground = true)
 @Composable
 private fun NeonButtonPreview() {
-    SynapseFitTheme {
+    MaterialThemeComposeUI {
         NeonButton(
             text = "Iniciar Entrenamiento",
             onClick = {},

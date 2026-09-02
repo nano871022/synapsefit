@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
+import co.com.japl.ui.theme.MaterialThemeComposeUI
 
 @Composable
 fun AnatomicalInputField(
@@ -60,7 +60,7 @@ fun AnatomicalInputField(
 @Preview(showBackground = true)
 @Composable
 private fun AnatomicalInputFieldPreview() {
-    SynapseFitTheme {
+    MaterialThemeComposeUI {
         AnatomicalInputField(
             value = "75.5",
             onValueChange = {},

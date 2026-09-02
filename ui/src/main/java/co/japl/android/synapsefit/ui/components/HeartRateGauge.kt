@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
+import co.com.japl.ui.theme.MaterialThemeComposeUI
 
 private const val START_ANGLE = 135f
 private const val SWEEP_ANGLE = 270f
@@ -76,7 +76,7 @@ fun HeartRateGauge(
 @Preview(showBackground = true)
 @Composable
 private fun HeartRateGaugePreview() {
-    SynapseFitTheme {
+    MaterialThemeComposeUI {
         HeartRateGauge(heartRateBpm = 135)
     }
 }

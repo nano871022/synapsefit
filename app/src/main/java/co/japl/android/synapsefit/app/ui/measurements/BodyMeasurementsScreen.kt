@@ -37,13 +37,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import co.com.japl.ui.theme.MaterialThemeComposeUI
+import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.measurements.BodyMeasurementsUiState
 import co.japl.android.synapsefit.core.domain.model.BodyMeasurement
 import co.japl.android.synapsefit.ui.components.AnatomicalInputField
 import co.japl.android.synapsefit.ui.components.NeonButton
-import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
-import co.japl.android.synapsefit.ui.theme.spacing
 import co.japl.android.synapsefit.util.DateTimeUtils
 
 @Composable
@@ -354,7 +354,7 @@ fun MeasurementSmallStat(
 @Preview(showBackground = true)
 @Composable
 private fun BodyMeasurementsScreenPreview() {
-    SynapseFitTheme {
+    MaterialThemeComposeUI {
         BodyMeasurementsScreen(
             state =
                 BodyMeasurementsUiState(

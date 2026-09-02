@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
+import co.com.japl.ui.theme.MaterialThemeComposeUI
 import co.japl.android.synapsefit.util.MathUtils
 
 data class GraphDataPoint(
@@ -138,7 +138,7 @@ fun CanvasTrendGraph(
 @Preview(showBackground = true)
 @Composable
 private fun CanvasTrendGraphPreview() {
-    SynapseFitTheme {
+    MaterialThemeComposeUI {
         CanvasTrendGraph(
             dataPoints =
                 listOf(

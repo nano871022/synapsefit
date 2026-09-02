@@ -35,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import co.com.japl.ui.theme.MaterialThemeComposeUI
+import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.history.ExerciseLogSetUiModel
 import co.japl.android.synapsefit.app.controller.history.ExerciseSessionDetailUiModel
@@ -42,8 +44,6 @@ import co.japl.android.synapsefit.app.controller.history.SessionHistoryUiModel
 import co.japl.android.synapsefit.app.controller.history.WorkoutHistoryUiState
 import co.japl.android.synapsefit.app.controller.history.WorkoutSessionGroupUiModel
 import co.japl.android.synapsefit.ui.components.KineticCard
-import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
-import co.japl.android.synapsefit.ui.theme.spacing
 import co.japl.android.synapsefit.util.DateTimeUtils
 
 @Composable
@@ -167,7 +167,7 @@ fun WorkoutSessionGroupCard(
 @Preview(showBackground = true)
 @Composable
 private fun WorkoutHistoryScreenPreview() {
-    SynapseFitTheme {
+    MaterialThemeComposeUI {
         WorkoutHistoryScreen(
             state =
                 WorkoutHistoryUiState(

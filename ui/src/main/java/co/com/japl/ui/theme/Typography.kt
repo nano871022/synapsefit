@@ -1,6 +1,6 @@
 @file:Suppress("MagicNumber")
 
-package co.japl.android.synapsefit.ui.theme
+package co.com.japl.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

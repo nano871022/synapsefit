@@ -23,12 +23,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import co.com.japl.ui.theme.MaterialThemeComposeUI
+import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.measurements.MeasurementProgressUiState
 import co.japl.android.synapsefit.core.domain.model.AnatomicalZone
 import co.japl.android.synapsefit.ui.components.CanvasTrendGraph
-import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
-import co.japl.android.synapsefit.ui.theme.spacing
 import co.japl.android.synapsefit.util.MathUtils
 
 private const val DAYS_30 = 30
@@ -189,7 +189,7 @@ private fun getZoneLabel(zone: AnatomicalZone): String {
 @Preview(showBackground = true)
 @Composable
 private fun MeasurementProgressGraphScreenPreview() {
-    SynapseFitTheme {
+    MaterialThemeComposeUI {
         MeasurementProgressGraphScreen(
             state =
                 MeasurementProgressUiState(
