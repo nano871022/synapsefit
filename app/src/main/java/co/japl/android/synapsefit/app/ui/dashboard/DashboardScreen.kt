@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod", "MaxLineLength", "UnusedParameter")
+@file:Suppress("FunctionNaming", "LongMethod", "MaxLineLength", "UnusedParameter", "UnusedPrivateMember", "MagicNumber")
 
 package co.japl.android.synapsefit.app.ui.dashboard
 
@@ -34,10 +34,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import co.com.japl.ui.theme.MaterialThemeComposeUI
+import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
+import co.japl.android.synapsefit.app.controller.dashboard.DashboardUiState
 import co.japl.android.synapsefit.ui.components.NeonButton
-import co.japl.android.synapsefit.ui.theme.spacing
 import co.japl.android.synapsefit.util.MathUtils
 
 @Composable
@@ -144,6 +147,26 @@ fun SyncStatusHeader(
                 tint = MaterialTheme.colorScheme.primary,
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun DashboardScreenPreview() {
+    MaterialThemeComposeUI {
+        DashboardScreen(
+            state =
+                DashboardUiState(
+                    userName = "Atleta SynapseFit",
+                    latestWeightKg = 75.0,
+                    weightTrendDeltaKg = -0.5,
+                    todayWorkoutTitle = "Día 1 - Pecho y Tríceps",
+                    todayWorkoutPlanId = "plan_1",
+                ),
+            onStartWorkoutClick = {},
+            onLogMeasurementClick = {},
+            onProfileClick = {},
+        )
     }
 }
 

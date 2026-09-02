@@ -1,6 +1,6 @@
 @file:Suppress("MaxLineLength")
 
-package co.japl.android.synapsefit.app.ui.dashboard
+package co.japl.android.synapsefit.app.controller.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -8,7 +8,7 @@
     "MaxLineLength",
 )
 
-package co.japl.android.synapsefit.app.ui.workout
+package co.japl.android.synapsefit.app.controller.workout
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -1,4 +1,11 @@
-@file:Suppress("FunctionNaming", "LongMethod", "CyclomaticComplexMethod", "LongParameterList")
+@file:Suppress(
+    "FunctionNaming",
+    "LongMethod",
+    "CyclomaticComplexMethod",
+    "LongParameterList",
+    "UnusedPrivateMember",
+    "MagicNumber",
+)
 
 package co.japl.android.synapsefit.app.ui.profile
 
@@ -37,11 +44,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import co.com.japl.ui.theme.MaterialThemeComposeUI
+import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
+import co.japl.android.synapsefit.app.controller.profile.UserProfileUiState
 import co.japl.android.synapsefit.ui.components.AnatomicalInputField
 import co.japl.android.synapsefit.ui.components.NeonButton
-import co.japl.android.synapsefit.ui.theme.spacing
 import co.japl.android.synapsefit.util.DateTimeUtils
 import java.util.Calendar
 import java.util.Locale
@@ -194,7 +204,7 @@ fun UserProfileScreen(
                             showDatePickerDialog = false
                         },
                     ) {
-                        Text(stringResource(R.string.save))
+                        Text(stringResource(R.string.save_profile))
                     }
                 },
                 dismissButton = {
@@ -329,6 +339,31 @@ fun UserProfileScreen(
             text = stringResource(R.string.save_profile),
             onClick = onSaveClick,
             isLoading = state.isLoading,
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun UserProfileScreenPreview() {
+    MaterialThemeComposeUI {
+        UserProfileScreen(
+            state =
+                UserProfileUiState(
+                    fullName = "Atleta SynapseFit",
+                    birthDate = "1995-05-20",
+                    gender = "HOMBRE",
+                    heightCm = "175",
+                    bloodType = "O+",
+                    medicalConditions = "Ninguna",
+                ),
+            onFullNameChange = {},
+            onBirthDateChange = {},
+            onGenderChange = {},
+            onHeightCmChange = {},
+            onBloodTypeChange = {},
+            onMedicalConditionsChange = {},
+            onSaveClick = {},
         )
     }
 }

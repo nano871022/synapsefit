@@ -1,17 +1,17 @@
 package co.japl.android.synapsefit.ui
 
-import co.japl.android.synapsefit.app.ui.dashboard.DashboardViewModel
-import co.japl.android.synapsefit.app.ui.history.WorkoutHistoryViewModel
-import co.japl.android.synapsefit.app.ui.measurements.BodyMeasurementsViewModel
-import co.japl.android.synapsefit.app.ui.measurements.MeasurementProgressViewModel
-import co.japl.android.synapsefit.app.ui.profile.UserProfileViewModel
-import co.japl.android.synapsefit.app.ui.settings.AboutDeveloperViewModel
-import co.japl.android.synapsefit.app.ui.settings.BackupSyncViewModel
-import co.japl.android.synapsefit.app.ui.settings.LlmSettingsViewModel
-import co.japl.android.synapsefit.app.ui.workout.AICoachGeneratorViewModel
-import co.japl.android.synapsefit.app.ui.workout.ActiveWorkoutSessionViewModel
-import co.japl.android.synapsefit.app.ui.workout.WorkoutPlanDetailViewModel
-import co.japl.android.synapsefit.app.ui.workout.WorkoutPlansViewModel
+import co.japl.android.synapsefit.app.controller.dashboard.DashboardViewModel
+import co.japl.android.synapsefit.app.controller.history.WorkoutHistoryViewModel
+import co.japl.android.synapsefit.app.controller.measurements.BodyMeasurementsViewModel
+import co.japl.android.synapsefit.app.controller.measurements.MeasurementProgressViewModel
+import co.japl.android.synapsefit.app.controller.profile.UserProfileViewModel
+import co.japl.android.synapsefit.app.controller.settings.AboutDeveloperViewModel
+import co.japl.android.synapsefit.app.controller.settings.BackupSyncViewModel
+import co.japl.android.synapsefit.app.controller.settings.LlmSettingsViewModel
+import co.japl.android.synapsefit.app.controller.workout.AICoachGeneratorViewModel
+import co.japl.android.synapsefit.app.controller.workout.ActiveWorkoutSessionViewModel
+import co.japl.android.synapsefit.app.controller.workout.WorkoutPlanDetailViewModel
+import co.japl.android.synapsefit.app.controller.workout.WorkoutPlansViewModel
 import co.japl.android.synapsefit.core.domain.model.AnatomicalZone
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
@@ -167,9 +167,11 @@ class ViewModelsTest {
                         weightLiftedKg = 50.0,
                         timestamp = baseTime + (index * 3600 * 1000L),
                         sourceDevice = SourceDevice.MOBILE,
+                        createdAt = baseTime,
+                        updatedAt = baseTime,
                     )
                 }
-            every { mockLogPort.getLogsForDateRange(any(), any()) } returns flowOf(logs)
+            every { mockLogPort.getAllLogs() } returns flowOf(logs)
 
             val viewModel = WorkoutHistoryViewModel(workoutLogRepositoryPort = mockLogPort)
             val groups = viewModel.uiState.value.sessionGroups
@@ -177,5 +179,34 @@ class ViewModelsTest {
             assertEquals(1, groups.size)
             assertEquals(5, groups.first().totalExercisesCount)
             assertEquals(5, groups.first().exercises.size)
+        }
+
+    @Test
+    fun workoutHistoryViewModel_loadsAllWorkoutSessionsAcrossMultipleDays() =
+        runTest {
+            val mockLogPort = mockk<WorkoutLogRepositoryPort>()
+            val baseTime = System.currentTimeMillis()
+            val dayMillis = 86400000L
+            val logs =
+                (1..10).map { index ->
+                    WorkoutLog(
+                        id = "log-$index",
+                        exerciseId = "ex-$index",
+                        repsCompleted = 10,
+                        weightLiftedKg = 50.0,
+                        timestamp = baseTime - (index * dayMillis),
+                        sourceDevice = SourceDevice.MOBILE,
+                        createdAt = baseTime,
+                        updatedAt = baseTime,
+                    )
+                }
+            every { mockLogPort.getAllLogs() } returns flowOf(logs)
+
+            val viewModel = WorkoutHistoryViewModel(workoutLogRepositoryPort = mockLogPort)
+            val state = viewModel.uiState.value
+
+            assertEquals(10, state.recordedSessions.size)
+            assertEquals(10, state.sessionGroups.size)
+            assertEquals(10, state.weeklySessionsCount)
         }
 }

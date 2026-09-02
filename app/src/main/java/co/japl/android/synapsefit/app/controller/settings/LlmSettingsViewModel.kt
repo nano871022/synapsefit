@@ -1,6 +1,6 @@
 @file:Suppress("MagicNumber")
 
-package co.japl.android.synapsefit.app.ui.settings
+package co.japl.android.synapsefit.app.controller.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

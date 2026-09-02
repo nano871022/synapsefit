@@ -118,7 +118,7 @@
     <string name="workout_history">Historial de Entrenamiento</string>
     <string name="records_stat">Registros</string>
     <string name="total_volume_stat">Volumen Total</string>
-    <string name="recent_records">Registros Recientes</string>
+    <string name="recent_records">Todos los Registros</string>
     <string name="no_workout_records">Aún no hay registros de entrenamiento</string>
     <string name="date_prefix">Fecha: %1$s</string>
     <string name="model_prefix">Modelo: %1$s</string>

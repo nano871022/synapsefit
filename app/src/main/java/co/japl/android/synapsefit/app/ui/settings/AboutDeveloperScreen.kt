@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod")
+@file:Suppress("FunctionNaming", "LongMethod", "UnusedPrivateMember", "MagicNumber")
 
 package co.japl.android.synapsefit.app.ui.settings
 
@@ -13,10 +13,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import co.com.japl.ui.theme.MaterialThemeComposeUI
+import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
+import co.japl.android.synapsefit.app.controller.settings.AboutDeveloperUiState
 import co.japl.android.synapsefit.ui.components.KineticCard
-import co.japl.android.synapsefit.ui.theme.spacing
 
 @Composable
 fun AboutDeveloperScreen(
@@ -44,6 +47,21 @@ fun AboutDeveloperScreen(
         )
 
         ModuleArchitectureSummary()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AboutDeveloperScreenPreview() {
+    MaterialThemeComposeUI {
+        AboutDeveloperScreen(
+            state =
+                AboutDeveloperUiState(
+                    versionName = "1.0.0",
+                    versionCode = 1,
+                    applicationId = "co.japl.android.synapsefit",
+                ),
+        )
     }
 }
 

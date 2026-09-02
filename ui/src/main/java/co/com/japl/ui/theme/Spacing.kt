@@ -1,4 +1,4 @@
-package co.japl.android.synapsefit.ui.theme
+package co.com.japl.ui.theme
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf

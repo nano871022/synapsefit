@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod", "MaxLineLength", "CyclomaticComplexMethod")
+@file:Suppress("FunctionNaming", "LongMethod", "MaxLineLength", "CyclomaticComplexMethod", "UnusedPrivateMember", "MagicNumber")
 
 package co.japl.android.synapsefit.app.ui.history
 
@@ -32,11 +32,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import co.com.japl.ui.theme.MaterialThemeComposeUI
+import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
+import co.japl.android.synapsefit.app.controller.history.ExerciseLogSetUiModel
+import co.japl.android.synapsefit.app.controller.history.ExerciseSessionDetailUiModel
+import co.japl.android.synapsefit.app.controller.history.SessionHistoryUiModel
+import co.japl.android.synapsefit.app.controller.history.WorkoutHistoryUiState
+import co.japl.android.synapsefit.app.controller.history.WorkoutSessionGroupUiModel
 import co.japl.android.synapsefit.ui.components.KineticCard
-import co.japl.android.synapsefit.ui.theme.spacing
 import co.japl.android.synapsefit.util.DateTimeUtils
 
 @Composable
@@ -154,6 +161,45 @@ fun WorkoutSessionGroupCard(
                 color = MaterialTheme.colorScheme.secondary,
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WorkoutHistoryScreenPreview() {
+    MaterialThemeComposeUI {
+        WorkoutHistoryScreen(
+            state =
+                WorkoutHistoryUiState(
+                    weeklySessionsCount = 3,
+                    weeklyTotalVolumeKg = 1250.0,
+                    sessionGroups =
+                        listOf(
+                            WorkoutSessionGroupUiModel(
+                                sessionId = "group_1",
+                                sessionTitle = "Día 1",
+                                dateFormatted = "2026-08-30",
+                                timestamp = System.currentTimeMillis(),
+                                totalExercisesCount = 2,
+                                totalVolumeKg = 1250.0,
+                                exercises =
+                                    listOf(
+                                        ExerciseSessionDetailUiModel(
+                                            exerciseId = "ex_1",
+                                            exerciseName = "Press de Banca",
+                                            sets =
+                                                listOf(
+                                                    ExerciseLogSetUiModel(1, 10, 60.0, 120, System.currentTimeMillis()),
+                                                    ExerciseLogSetUiModel(2, 10, 65.0, 125, System.currentTimeMillis()),
+                                                ),
+                                            averageReps = 10.0,
+                                            averageWeightKg = 62.5,
+                                        ),
+                                    ),
+                            ),
+                        ),
+                ),
+        )
     }
 }
 

@@ -1,6 +1,6 @@
 @file:Suppress("MaxLineLength", "MagicNumber", "LongMethod", "CyclomaticComplexMethod", "TooGenericExceptionCaught")
 
-package co.japl.android.synapsefit.app.ui.history
+package co.japl.android.synapsefit.app.controller.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -83,7 +83,7 @@ class WorkoutHistoryViewModel(
             _uiState.update { it.copy(isLoading = true) }
 
             val logsFlow =
-                workoutLogRepositoryPort?.getLogsForDateRange(0L, Long.MAX_VALUE) ?: flowOf(emptyList())
+                workoutLogRepositoryPort?.getAllLogs() ?: flowOf(emptyList())
             val plansFlow =
                 workoutPlanRepositoryPort?.getAllPlans() ?: flowOf(emptyList())
 

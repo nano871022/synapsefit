@@ -22,6 +22,9 @@ interface WorkoutLogDao {
         endTimestamp: Long,
     ): Flow<List<WorkoutLogEntity>>
 
+    @Query("SELECT * FROM workout_logs ORDER BY timestamp DESC")
+    fun getAllLogs(): Flow<List<WorkoutLogEntity>>
+
     @Query(
         "SELECT l.* FROM workout_logs l " +
             "INNER JOIN exercises e ON l.exercise_id = e.id " +

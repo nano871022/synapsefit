@@ -1,4 +1,4 @@
-@file:Suppress("LongParameterList", "FunctionNaming")
+@file:Suppress("LongParameterList", "FunctionNaming", "UnusedPrivateMember", "MagicNumber")
 
 package co.japl.android.synapsefit.ui.components
 
@@ -11,6 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import co.com.japl.ui.theme.MaterialThemeComposeUI
 
 @Composable
 fun AnatomicalInputField(
@@ -53,4 +55,17 @@ fun AnatomicalInputField(
             ),
         modifier = modifier.fillMaxWidth(),
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AnatomicalInputFieldPreview() {
+    MaterialThemeComposeUI {
+        AnatomicalInputField(
+            value = "75.5",
+            onValueChange = {},
+            label = "Peso",
+            unitLabel = "kg",
+        )
+    }
 }

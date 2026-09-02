@@ -1,6 +1,6 @@
 @file:Suppress("MagicNumber", "MatchingDeclarationName")
 
-package co.japl.android.synapsefit.ui.theme
+package co.com.japl.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

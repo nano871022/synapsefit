@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod", "UnusedParameter", "MagicNumber", "MaxLineLength")
+@file:Suppress("FunctionNaming", "LongMethod", "UnusedParameter", "MagicNumber", "MaxLineLength", "UnusedPrivateMember")
 
 package co.japl.android.synapsefit.app.ui.measurements
 
@@ -21,11 +21,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import co.com.japl.ui.theme.MaterialThemeComposeUI
+import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
+import co.japl.android.synapsefit.app.controller.measurements.MeasurementProgressUiState
 import co.japl.android.synapsefit.core.domain.model.AnatomicalZone
 import co.japl.android.synapsefit.ui.components.CanvasTrendGraph
-import co.japl.android.synapsefit.ui.theme.spacing
 import co.japl.android.synapsefit.util.MathUtils
 
 private const val DAYS_30 = 30
@@ -180,5 +183,21 @@ private fun getZoneLabel(zone: AnatomicalZone): String {
         AnatomicalZone.BICEP_RIGHT -> stringResource(R.string.zone_bicep_right)
         AnatomicalZone.THIGH_LEFT -> stringResource(R.string.zone_thigh_left)
         AnatomicalZone.THIGH_RIGHT -> stringResource(R.string.zone_thigh_right)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun MeasurementProgressGraphScreenPreview() {
+    MaterialThemeComposeUI {
+        MeasurementProgressGraphScreen(
+            state =
+                MeasurementProgressUiState(
+                    selectedMetric = AnatomicalZone.WEIGHT,
+                    averageValue = 74.5,
+                ),
+            onMetricSelected = {},
+            onTimeRangeSelected = {},
+        )
     }
 }
