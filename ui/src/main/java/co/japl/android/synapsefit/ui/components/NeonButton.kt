@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming")
+@file:Suppress("FunctionNaming", "UnusedPrivateMember", "MagicNumber")
 
 package co.japl.android.synapsefit.ui.components
 
@@ -13,7 +13,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
 
 @Composable
 fun NeonButton(
@@ -51,5 +53,16 @@ fun NeonButton(
                 style = MaterialTheme.typography.titleMedium,
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NeonButtonPreview() {
+    SynapseFitTheme {
+        NeonButton(
+            text = "Iniciar Entrenamiento",
+            onClick = {},
+        )
     }
 }

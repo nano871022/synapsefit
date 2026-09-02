@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod", "LongParameterList", "MaxLineLength")
+@file:Suppress("FunctionNaming", "LongMethod", "LongParameterList", "MaxLineLength", "UnusedPrivateMember", "MagicNumber")
 
 package co.japl.android.synapsefit.app.ui.measurements
 
@@ -34,12 +34,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.core.domain.model.BodyMeasurement
 import co.japl.android.synapsefit.ui.components.AnatomicalInputField
 import co.japl.android.synapsefit.ui.components.NeonButton
+import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
 import co.japl.android.synapsefit.ui.theme.spacing
 import co.japl.android.synapsefit.util.DateTimeUtils
 
@@ -345,5 +347,39 @@ fun MeasurementSmallStat(
     Column {
         Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(text = value, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BodyMeasurementsScreenPreview() {
+    SynapseFitTheme {
+        BodyMeasurementsScreen(
+            state =
+                BodyMeasurementsUiState(
+                    history =
+                        listOf(
+                            BodyMeasurement(
+                                id = "1",
+                                weightKg = 75.0,
+                                chestCm = 100.0,
+                                waistCm = 80.0,
+                                createdAt = System.currentTimeMillis(),
+                                updatedAt = System.currentTimeMillis(),
+                            ),
+                        ),
+                ),
+            onWeightChange = {},
+            onChestChange = {},
+            onWaistChange = {},
+            onHipChange = {},
+            onBicepLeftChange = {},
+            onBicepRightChange = {},
+            onThighLeftChange = {},
+            onThighRightChange = {},
+            onNotesChange = {},
+            onSaveClick = {},
+            onViewGraphClick = {},
+        )
     }
 }

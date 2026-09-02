@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod", "MaxLineLength")
+@file:Suppress("FunctionNaming", "LongMethod", "MaxLineLength", "UnusedPrivateMember", "MagicNumber")
 
 package co.japl.android.synapsefit.app.ui.workout
 
@@ -21,9 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.ui.components.NeonButton
+import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
 import co.japl.android.synapsefit.ui.theme.spacing
 
 @Composable
@@ -89,6 +91,35 @@ fun WorkoutPlanDetailScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WorkoutPlanDetailScreenPreview() {
+    SynapseFitTheme {
+        WorkoutPlanDetailScreen(
+            state =
+                WorkoutPlanDetailUiState(
+                    planId = "plan_1",
+                    planTitle = "Rutina Hipertrofia",
+                    goalDescription = "4 Días por semana",
+                    totalExercises = 4,
+                    exercises =
+                        listOf(
+                            ExerciseUiModel(
+                                id = "ex_1",
+                                name = "Press de Banca (Barra)",
+                                muscleGroup = "Pecho",
+                                targetSets = 4,
+                                targetReps = "10-12",
+                                restSeconds = 90,
+                                day = 1,
+                            ),
+                        ),
+                ),
+            onStartSessionClick = {},
+        )
     }
 }
 

@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod", "LongParameterList", "MaxLineLength")
+@file:Suppress("FunctionNaming", "LongMethod", "LongParameterList", "MaxLineLength", "UnusedPrivateMember", "MagicNumber")
 
 package co.japl.android.synapsefit.app.ui.workout
 
@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -35,6 +36,7 @@ import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.ui.components.NeonButton
+import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
 import co.japl.android.synapsefit.ui.theme.spacing
 
 @Composable
@@ -354,5 +356,26 @@ private fun getEnvLabel(env: TrainingEnvironment): String {
         TrainingEnvironment.BODYWEIGHT -> stringResource(R.string.env_bodyweight)
         TrainingEnvironment.DUMBBELLS -> stringResource(R.string.env_dumbbells)
         TrainingEnvironment.CHAIN_GYM -> stringResource(R.string.env_chain_gym)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AICoachGeneratorScreenPreview() {
+    SynapseFitTheme {
+        AICoachGeneratorScreen(
+            state =
+                AICoachGeneratorUiState(
+                    selectedEnvironment = TrainingEnvironment.DUMBBELLS,
+                    daysPerWeek = "4",
+                    promptContext = "Ganar masa muscular en brazos y pecho",
+                ),
+            onEnvironmentSelected = {},
+            onGymChainQueryChange = {},
+            onPromptContextChange = {},
+            onGenerateClick = {},
+            onAcceptClick = {},
+            onDiscardClick = {},
+        )
     }
 }

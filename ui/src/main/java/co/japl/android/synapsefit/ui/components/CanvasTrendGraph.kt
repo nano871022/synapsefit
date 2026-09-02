@@ -1,4 +1,4 @@
-@file:Suppress("MagicNumber", "FunctionNaming", "MatchingDeclarationName", "LongParameterList")
+@file:Suppress("MagicNumber", "FunctionNaming", "MatchingDeclarationName", "LongParameterList", "UnusedPrivateMember")
 
 package co.japl.android.synapsefit.ui.components
 
@@ -15,8 +15,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
 import co.japl.android.synapsefit.util.MathUtils
 
 data class GraphDataPoint(
@@ -130,5 +132,21 @@ fun CanvasTrendGraph(
                 center = point,
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CanvasTrendGraphPreview() {
+    SynapseFitTheme {
+        CanvasTrendGraph(
+            dataPoints =
+                listOf(
+                    GraphDataPoint("01/08", 75.0f),
+                    GraphDataPoint("08/08", 74.5f),
+                    GraphDataPoint("15/08", 74.2f),
+                    GraphDataPoint("22/08", 73.8f),
+                ),
+        )
     }
 }

@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod")
+@file:Suppress("FunctionNaming", "LongMethod", "UnusedPrivateMember", "MagicNumber")
 
 package co.japl.android.synapsefit.app.ui.workout
 
@@ -31,9 +31,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.ui.components.KineticCard
+import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
 import co.japl.android.synapsefit.ui.theme.spacing
 
 @Composable
@@ -120,6 +122,29 @@ fun WorkoutPlansScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WorkoutPlansScreenPreview() {
+    SynapseFitTheme {
+        WorkoutPlansScreen(
+            state =
+                WorkoutPlansUiState(
+                    activePlan =
+                        WorkoutPlanSummary(
+                            id = "plan_1",
+                            title = "Rutina Hipertrofia",
+                            goalDescription = "4 Días / Semana",
+                            totalExercises = 16,
+                            generatedByLlm = true,
+                            isActive = true,
+                        ),
+                ),
+            onPlanClick = {},
+            onGeneratePlanClick = {},
+        )
     }
 }
 
