@@ -297,12 +297,13 @@ fun MainScaffold(
                         color = MaterialTheme.colorScheme.onSurface,
                     )
 
+                    val tutorialUrl = stringResource(R.string.llm_tutorial_video_url)
                     OutlinedButton(
                         onClick = {
                             val intent =
                                 Intent(
                                     Intent.ACTION_VIEW,
-                                    Uri.parse("https://www.youtube.com/watch?v=vkX6XTxZBbk"),
+                                    Uri.parse(tutorialUrl),
                                 )
                             context.startActivity(intent)
                         },
