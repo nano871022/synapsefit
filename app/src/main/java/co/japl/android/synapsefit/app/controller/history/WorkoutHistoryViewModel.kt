@@ -88,18 +88,23 @@ class WorkoutHistoryViewModel(
                 workoutPlanRepositoryPort?.getAllPlans() ?: flowOf(emptyList())
 
             combine(logsFlow, plansFlow) { logs, plans ->
+                Pair(logs, plans)
+            }.collect { (logs, plans) ->
                 val exerciseNameMap = mutableMapOf<String, String>()
                 val exerciseDayMap = mutableMapOf<String, Int>()
-                plans.forEach { plan ->
-                    val pair = workoutPlanRepositoryPort?.getPlanWithExercises(plan.id)?.firstOrNull()
-                    pair?.second?.forEach { ex ->
-                        exerciseNameMap[ex.id] = ex.name
-                        exerciseDayMap[ex.id] = ex.day
+
+                if (workoutPlanRepositoryPort != null) {
+                    plans.forEach { plan ->
+                        runCatching {
+                            val pair = workoutPlanRepositoryPort.getPlanWithExercises(plan.id).firstOrNull()
+                            pair?.second?.forEach { ex ->
+                                exerciseNameMap[ex.id] = ex.name
+                                exerciseDayMap[ex.id] = ex.day
+                            }
+                        }
                     }
                 }
-                Triple(logs, exerciseNameMap, exerciseDayMap)
-            }.collect { (logs, exerciseNameMap, exerciseDayMap) ->
-                // Mapped flat logs
+
                 val mapped =
                     logs.map { log ->
                         val nameResolved = exerciseNameMap[log.exerciseId]?.takeIf { it.isNotBlank() }
@@ -116,31 +121,24 @@ class WorkoutHistoryViewModel(
                         )
                     }
 
-                // Group logs into sessions by session key (date + estimated day or session interval)
-                // We consider logs recorded within 2 hours of each other on the same day as part of the same session
                 val sortedLogs = logs.sortedByDescending { it.timestamp }
                 val groups = mutableListOf<WorkoutSessionGroupUiModel>()
 
                 val sessionClusterMap = LinkedHashMap<String, MutableList<co.japl.android.synapsefit.core.domain.model.WorkoutLog>>()
                 var currentClusterKey = ""
-                var lastTimestamp = 0L
 
                 for (log in sortedLogs) {
                     val dateKey = DateTimeUtils.formatEpoch(log.timestamp, "yyyy-MM-dd")
-                    // Group all logs performed on the same calendar day into the same session cluster.
-                    // If date is different, start a new session cluster.
                     if (currentClusterKey.isEmpty() || !currentClusterKey.startsWith(dateKey)) {
                         currentClusterKey = "${dateKey}_${log.timestamp}"
                         sessionClusterMap[currentClusterKey] = mutableListOf()
                     }
                     sessionClusterMap[currentClusterKey]?.add(log)
-                    lastTimestamp = log.timestamp
                 }
 
                 sessionClusterMap.forEach { (clusterKey, sessionLogs) ->
                     val dateStr = DateTimeUtils.formatEpoch(sessionLogs.first().timestamp, "yyyy-MM-dd")
 
-                    // Determine exercise details for this session
                     val exerciseGroupMap = LinkedHashMap<String, MutableList<co.japl.android.synapsefit.core.domain.model.WorkoutLog>>()
                     sessionLogs.forEach { log ->
                         exerciseGroupMap.getOrPut(log.exerciseId) { mutableListOf() }.add(log)

@@ -6,6 +6,7 @@ data class WorkoutPlan(
     val goalDescription: String,
     val isActive: Boolean = true,
     val generatedByLlm: Boolean = false,
+    val totalSessions: Int = 12,
     val createdAt: Long,
     val updatedAt: Long,
 )

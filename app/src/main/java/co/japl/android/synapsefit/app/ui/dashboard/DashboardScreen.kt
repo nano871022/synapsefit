@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.com.japl.ui.theme.MaterialThemeComposeUI
@@ -66,6 +67,29 @@ fun DashboardScreen(
         )
 
         WelcomeHeader(userName = state.userName)
+
+        if (state.isPlanCompletedAlertVisible) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
+            ) {
+                Column(
+                    modifier = Modifier.padding(MaterialTheme.spacing.medium),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+                ) {
+                    Text(
+                        text = stringResource(R.string.plan_completed_sessions_alert, state.activePlanTotalSessions),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+        }
 
         LatestMeasurementCard(
             latestWeightKg = state.latestWeightKg,
@@ -162,6 +186,8 @@ private fun DashboardScreenPreview() {
                     weightTrendDeltaKg = -0.5,
                     todayWorkoutTitle = "Día 1 - Pecho y Tríceps",
                     todayWorkoutPlanId = "plan_1",
+                    isPlanCompletedAlertVisible = true,
+                    activePlanTotalSessions = 12,
                 ),
             onStartWorkoutClick = {},
             onLogMeasurementClick = {},
