@@ -154,6 +154,34 @@ class ViewModelsTest {
         }
 
     @Test
+    fun userProfileViewModel_evaluateMedicalConditions_showsDialogAndHandlesRetry() =
+        runTest {
+            val mockEvalUseCase = mockk<co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase>()
+            io.mockk.coEvery {
+                mockEvalUseCase(any(), any(), any(), any())
+            } returns Result.failure(RuntimeException("Error de conexión con LLM"))
+
+            val viewModel =
+                UserProfileViewModel(
+                    evaluateMedicalConditionsUseCase = mockEvalUseCase,
+                )
+
+            viewModel.onFullNameChange("Juan Perez")
+            viewModel.onHeightCmChange("175")
+            viewModel.onMedicalConditionsChange("Hernia lumbar")
+
+            viewModel.saveProfile()
+
+            val state = viewModel.uiState.value
+            assertTrue(state.showMedicalDialog)
+            assertTrue(state.medicalEvaluationFailed)
+            assertEquals("Error de conexión con LLM", state.medicalEvaluationError)
+
+            viewModel.dismissMedicalDialog()
+            assertEquals(false, viewModel.uiState.value.showMedicalDialog)
+        }
+
+    @Test
     fun workoutHistoryViewModel_groupsMultipleExercisesOnSameDay() =
         runTest {
             val mockLogPort = mockk<WorkoutLogRepositoryPort>()

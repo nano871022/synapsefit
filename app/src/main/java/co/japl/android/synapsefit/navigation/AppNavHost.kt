@@ -110,6 +110,8 @@ fun AppNavHost(
                 onBloodTypeChange = viewModel::onBloodTypeChange,
                 onMedicalConditionsChange = viewModel::onMedicalConditionsChange,
                 onSaveClick = viewModel::saveProfile,
+                onRetryMedicalConditions = viewModel::retryMedicalEvaluation,
+                onDismissMedicalDialog = viewModel::dismissMedicalDialog,
             )
         }
 
@@ -331,7 +333,17 @@ fun AppNavHost(
         }
 
         // V10: LLM Settings
-        composable(Routes.SETTINGS_LLM) {
+        composable(
+            route = "settings/llm?openForm={openForm}",
+            arguments =
+                listOf(
+                    navArgument("openForm") {
+                        type = NavType.BoolType
+                        defaultValue = false
+                    },
+                ),
+        ) { backStackEntry ->
+            val openForm = backStackEntry.arguments?.getBoolean("openForm") ?: false
             val viewModel: LlmSettingsViewModel =
                 viewModel(
                     factory =
@@ -348,6 +360,7 @@ fun AppNavHost(
             val state by viewModel.uiState.collectAsState()
             LLMSettingsScreen(
                 state = state,
+                initialOpenFormDialog = openForm,
                 onSaveConfig = viewModel::saveConfig,
                 onFetchModels = viewModel::fetchModels,
                 onActivateConfig = viewModel::setActiveConfig,

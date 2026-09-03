@@ -1,4 +1,4 @@
-@file:Suppress("MaxLineLength", "LongMethod")
+@file:Suppress("MaxLineLength", "LongMethod", "TooManyFunctions")
 
 package co.japl.android.synapsefit.app.controller.profile
 
@@ -24,6 +24,9 @@ data class UserProfileUiState(
     val medicalConditions: String = "",
     val isLoading: Boolean = false,
     val isEvaluatingMedical: Boolean = false,
+    val showMedicalDialog: Boolean = false,
+    val medicalEvaluationFailed: Boolean = false,
+    val medicalEvaluationError: String? = null,
     val isSavedSuccess: Boolean = false,
     val errorMessage: String? = null,
 )
@@ -107,50 +110,149 @@ class UserProfileViewModel(
 
         viewModelScope.launch {
             val hasMedicalConditions = state.medicalConditions.trim().isNotBlank()
-            _uiState.update { it.copy(isLoading = true, isEvaluatingMedical = hasMedicalConditions) }
             appNavigator?.setLoading(true)
 
             if (hasMedicalConditions && evaluateMedicalConditionsUseCase != null) {
-                evaluateMedicalConditionsUseCase(
+                _uiState.update {
+                    it.copy(
+                        isLoading = true,
+                        isEvaluatingMedical = true,
+                        showMedicalDialog = true,
+                        medicalEvaluationFailed = false,
+                        medicalEvaluationError = null,
+                    )
+                }
+
+                val evalResult =
+                    evaluateMedicalConditionsUseCase(
+                        gender = state.gender,
+                        heightCm = height,
+                        bloodType = state.bloodType.trim(),
+                        medicalConditions = state.medicalConditions.trim(),
+                    )
+
+                val recommendation = evalResult.getOrNull()
+                if (evalResult.isFailure || recommendation == null) {
+                    val errorMsg = evalResult.exceptionOrNull()?.message ?: "No se obtuvieron recomendaciones médicas"
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isEvaluatingMedical = false,
+                            medicalEvaluationFailed = true,
+                            medicalEvaluationError = errorMsg,
+                        )
+                    }
+                    appNavigator?.setLoading(false)
+                    return@launch
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isEvaluatingMedical = false,
+                            showMedicalDialog = false,
+                            medicalEvaluationFailed = false,
+                        )
+                    }
+                }
+            }
+
+            saveProfileInternal(name, height, state)
+            appNavigator?.setLoading(false)
+        }
+    }
+
+    fun retryMedicalEvaluation() {
+        val state = _uiState.value
+        val name = state.fullName.trim()
+        val height = state.heightCm.toDoubleOrNull() ?: 0.0
+        if (state.medicalConditions.trim().isBlank() || height <= 0 || name.isEmpty()) return
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    isEvaluatingMedical = true,
+                    medicalEvaluationFailed = false,
+                    medicalEvaluationError = null,
+                )
+            }
+            appNavigator?.setLoading(true)
+
+            val evalResult =
+                evaluateMedicalConditionsUseCase?.invoke(
                     gender = state.gender,
                     heightCm = height,
                     bloodType = state.bloodType.trim(),
                     medicalConditions = state.medicalConditions.trim(),
                 )
-            }
 
-            val profile =
-                UserProfile(
-                    fullName = name,
-                    birthDate = state.birthDate.trim(),
-                    gender = state.gender,
-                    heightCm = height,
-                    bloodType = state.bloodType.trim(),
-                    medicalConditions = state.medicalConditions.trim().ifEmpty { null },
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis(),
-                )
-
-            val result = saveUserProfileUseCase?.invoke(profile)
-            if (result == null || result.isSuccess) {
+            val recommendation = evalResult?.getOrNull()
+            if (evalResult == null || evalResult.isFailure || recommendation == null) {
+                val errorMsg = evalResult?.exceptionOrNull()?.message ?: "No se obtuvieron recomendaciones médicas"
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         isEvaluatingMedical = false,
-                        isSavedSuccess = true,
-                        errorMessage = null,
+                        medicalEvaluationFailed = true,
+                        medicalEvaluationError = errorMsg,
                     )
                 }
             } else {
                 _uiState.update {
                     it.copy(
-                        isLoading = false,
                         isEvaluatingMedical = false,
-                        errorMessage = result.exceptionOrNull()?.message ?: "Error al guardar perfil",
+                        showMedicalDialog = false,
+                        medicalEvaluationFailed = false,
                     )
                 }
+                saveProfileInternal(name, height, state)
             }
             appNavigator?.setLoading(false)
+        }
+    }
+
+    fun dismissMedicalDialog() {
+        _uiState.update {
+            it.copy(
+                showMedicalDialog = false,
+                isEvaluatingMedical = false,
+                medicalEvaluationFailed = false,
+            )
+        }
+    }
+
+    private suspend fun saveProfileInternal(
+        name: String,
+        height: Double,
+        state: UserProfileUiState,
+    ) {
+        val profile =
+            UserProfile(
+                fullName = name,
+                birthDate = state.birthDate.trim(),
+                gender = state.gender,
+                heightCm = height,
+                bloodType = state.bloodType.trim(),
+                medicalConditions = state.medicalConditions.trim().ifEmpty { null },
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
+            )
+
+        val result = saveUserProfileUseCase?.invoke(profile)
+        if (result == null || result.isSuccess) {
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    isSavedSuccess = true,
+                    errorMessage = null,
+                )
+            }
+        } else {
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    errorMessage = result.exceptionOrNull()?.message ?: "Error al guardar perfil",
+                )
+            }
         }
     }
 }

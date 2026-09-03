@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
                 MainScaffold(
                     navController = navController,
                     appNavigator = appNavigator,
+                    dependencyContainer = dependencyContainer,
                     widthSizeClass = windowSize.widthSizeClass,
                 ) {
                     AppNavHost(
