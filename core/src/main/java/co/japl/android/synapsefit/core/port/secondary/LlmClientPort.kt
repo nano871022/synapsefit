@@ -2,6 +2,7 @@ package co.japl.android.synapsefit.core.port.secondary
 
 import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.LlmConfig
+import co.japl.android.synapsefit.core.domain.model.LlmProvider
 import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 
@@ -14,7 +15,7 @@ interface LlmClientPort {
     ): Result<Pair<WorkoutPlan, List<Exercise>>>
 
     suspend fun fetchAvailableModels(
-        provider: co.japl.android.synapsefit.core.domain.model.LlmProvider,
+        provider: LlmProvider,
         apiKey: String,
     ): Result<List<String>>
 
@@ -24,4 +25,12 @@ interface LlmClientPort {
     ): Result<Pair<String, String>>
 
     suspend fun testApiConnection(config: LlmConfig): Result<Boolean>
+
+    suspend fun generateMedicalRecommendation(
+        gender: String,
+        heightCm: Double,
+        bloodType: String,
+        medicalConditions: String,
+        config: LlmConfig,
+    ): Result<String>
 }

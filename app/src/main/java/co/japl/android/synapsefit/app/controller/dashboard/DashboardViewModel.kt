@@ -1,4 +1,4 @@
-@file:Suppress("MaxLineLength")
+@file:Suppress("MaxLineLength", "LongMethod")
 
 package co.japl.android.synapsefit.app.controller.dashboard
 
@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
+import co.japl.android.synapsefit.core.usecase.ValidateActivePlanSessionsUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +23,8 @@ data class DashboardUiState(
     val weightTrendDeltaKg: Double? = null,
     val todayWorkoutTitle: String? = null,
     val todayWorkoutPlanId: String? = null,
+    val isPlanCompletedAlertVisible: Boolean = false,
+    val activePlanTotalSessions: Int = 12,
     val isSyncing: Boolean = false,
     val isLoading: Boolean = false,
 )
@@ -29,11 +33,12 @@ class DashboardViewModel(
     private val bodyMeasurementRepositoryPort: BodyMeasurementRepositoryPort? = null,
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort? = null,
+    private val validateActivePlanSessionsUseCase: ValidateActivePlanSessionsUseCase? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
-    private var dashboardJob: kotlinx.coroutines.Job? = null
+    private var dashboardJob: Job? = null
 
     init {
         loadDashboardData()
@@ -71,7 +76,12 @@ class DashboardViewModel(
 
                 launch {
                     workoutPlanRepositoryPort?.getActivePlan()?.collect { activePlan ->
-                        val targetPlan = activePlan ?: workoutPlanRepositoryPort.getAllPlans().firstOrNull()?.maxByOrNull { it.updatedAt }
+                        val validation = validateActivePlanSessionsUseCase?.invoke(activePlan?.id)
+                        val targetPlan =
+                            validation?.plan
+                                ?: activePlan
+                                ?: workoutPlanRepositoryPort.getAllPlans().firstOrNull()?.maxByOrNull { it.updatedAt }
+
                         if (targetPlan != null) {
                             val planPair = workoutPlanRepositoryPort.getPlanWithExercises(targetPlan.id).firstOrNull()
                             val exercises = planPair?.second ?: emptyList()
@@ -83,11 +93,15 @@ class DashboardViewModel(
                             val lastDay = lastEx?.day ?: 0
 
                             val activeDayNumber = if (lastDay == 0) 1 else (lastDay % totalPlanDays) + 1
+                            val isLimitReached = validation?.isLimitReached ?: false
+                            val totalSessions = validation?.totalSessions ?: targetPlan.totalSessions
 
                             _uiState.update {
                                 it.copy(
                                     todayWorkoutTitle = "Día $activeDayNumber - ${targetPlan.title}",
                                     todayWorkoutPlanId = targetPlan.id,
+                                    isPlanCompletedAlertVisible = isLimitReached,
+                                    activePlanTotalSessions = totalSessions,
                                     isLoading = false,
                                 )
                             }
@@ -96,6 +110,7 @@ class DashboardViewModel(
                                 it.copy(
                                     todayWorkoutTitle = "Sin rutina activa",
                                     todayWorkoutPlanId = null,
+                                    isPlanCompletedAlertVisible = false,
                                     isLoading = false,
                                 )
                             }

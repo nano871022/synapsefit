@@ -27,6 +27,7 @@
     <string name="log_weight">Registrar Peso</string>
     <string name="live_session">Sesión en Vivo</string>
     <string name="no_active_routine">Sin rutina activa</string>
+    <string name="plan_completed_sessions_alert">¡Has completado las %1$d sesiones prescritas de tu plan activo! Es momento de tomar nuevas medidas antropométricas y generar un nuevo plan.</string>
 
     <!-- V2: Body Measurements -->
     <string name="anthropometric_record">Registro Antropométrico</string>
@@ -83,6 +84,8 @@
     <string name="training_days_per_week">Días de entrenamiento por semana</string>
     <string name="fetching_media_title">Procesando información complementaria</string>
     <string name="fetching_media_warning">Obteniendo videos e imágenes para el plan... Por favor, no cierre la aplicación.</string>
+    <string name="generating_plan_title">Creando plan de entrenamiento</string>
+    <string name="generating_plan_wait">Generando rutina personalizada con IA... Por favor espere.</string>
 
     <!-- V6: Workout Plan Detail -->
     <string name="plan_detail">Detalle de Plan</string>
@@ -171,6 +174,8 @@
     <string name="medical_conditions">Enfermedades, fracturas, hernias u observaciones médicas importantes</string>
     <string name="save_profile">Guardar Perfil</string>
     <string name="profile_saved">Perfil guardado correctamente</string>
+    <string name="processing_medical_title">Analizando información médica</string>
+    <string name="processing_medical_message">Evaluando restricciones de entrenamiento con IA especializada... Por favor espere.</string>
 
     <!-- V11: About Developer -->
     <string name="about_synapsefit">Acerca de SynapseFit</string>
@@ -179,5 +184,5 @@
     <string name="id_label">ID: %1$s</string>
     <string name="hexagonal_architecture">Arquitectura Hexagonal Multi-módulo</string>
     <string name="hexagonal_desc">Módulos: :app, :core (Kotlin puro), :services (Room/Drive/LLM), :ui (Kinetic Pulse), :util, :wear (Wear OS Companion).</string>
-    <string name="data_sovereignty">Soberanía de datos local primero con respaldo cifrado SHA-256.</string>
+    <string name="data_sovereignty">Soberanía de datos local primero with respaldo cifrado SHA-256.</string>
 </resources>

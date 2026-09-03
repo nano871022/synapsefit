@@ -15,6 +15,8 @@ data class WorkoutPlanEntity(
     val isActive: Boolean,
     @ColumnInfo(name = "generated_by_llm", defaultValue = "0")
     val generatedByLlm: Boolean,
+    @ColumnInfo(name = "total_sessions", defaultValue = "12")
+    val totalSessions: Int = 12,
     @ColumnInfo(name = "created_at")
     val createdAt: Long,
     @ColumnInfo(name = "updated_at")

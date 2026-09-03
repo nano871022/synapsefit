@@ -6,6 +6,7 @@ import co.japl.android.synapsefit.core.domain.model.BodyMeasurement
 import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.LlmConfig
 import co.japl.android.synapsefit.core.domain.model.LlmProvider
+import co.japl.android.synapsefit.core.domain.model.MedicalRecommendation
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.UserProfile
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
@@ -13,6 +14,7 @@ import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.services.database.entity.BodyMeasurementEntity
 import co.japl.android.synapsefit.services.database.entity.ExerciseEntity
 import co.japl.android.synapsefit.services.database.entity.LlmConfigEntity
+import co.japl.android.synapsefit.services.database.entity.MedicalRecommendationEntity
 import co.japl.android.synapsefit.services.database.entity.UserProfileEntity
 import co.japl.android.synapsefit.services.database.entity.WorkoutLogEntity
 import co.japl.android.synapsefit.services.database.entity.WorkoutPlanEntity
@@ -41,6 +43,22 @@ fun UserProfile.toEntity(): UserProfileEntity =
         medicalConditions = medicalConditions,
         createdAt = createdAt,
         updatedAt = updatedAt,
+    )
+
+fun MedicalRecommendationEntity.toDomain(): MedicalRecommendation =
+    MedicalRecommendation(
+        id = id,
+        profileCode = profileCode,
+        result = result,
+        createdAt = createdAt,
+    )
+
+fun MedicalRecommendation.toEntity(): MedicalRecommendationEntity =
+    MedicalRecommendationEntity(
+        id = id,
+        profileCode = profileCode,
+        result = result,
+        createdAt = createdAt,
     )
 
 fun BodyMeasurementEntity.toDomain(): BodyMeasurement =
@@ -82,6 +100,7 @@ fun WorkoutPlanEntity.toDomain(): WorkoutPlan =
         goalDescription = goalDescription,
         isActive = isActive,
         generatedByLlm = generatedByLlm,
+        totalSessions = totalSessions,
         createdAt = createdAt,
         updatedAt = updatedAt,
     )
@@ -93,6 +112,7 @@ fun WorkoutPlan.toEntity(): WorkoutPlanEntity =
         goalDescription = goalDescription,
         isActive = isActive,
         generatedByLlm = generatedByLlm,
+        totalSessions = totalSessions,
         createdAt = createdAt,
         updatedAt = updatedAt,
     )

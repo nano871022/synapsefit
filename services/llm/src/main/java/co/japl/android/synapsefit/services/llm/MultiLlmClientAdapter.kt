@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength", "TooGenericExceptionCaught", "TooManyFunctions", "SwallowedException", "MagicNumber")
+
 package co.japl.android.synapsefit.services.llm
 
 import android.content.Context
@@ -16,8 +18,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.UUID
 
 private const val TIMEOUT_SECONDS = 300L
+private const val DEFAULT_TOTAL_SESSIONS = 12
 
-@Suppress("TooGenericExceptionCaught", "TooManyFunctions", "SwallowedException")
 class MultiLlmClientAdapter(
     private val context: Context? = null,
 ) : LlmClientPort {
@@ -73,6 +75,7 @@ class MultiLlmClientAdapter(
                 goalDescription = "Generated for context: $promptContext",
                 isActive = true,
                 generatedByLlm = true,
+                totalSessions = DEFAULT_TOTAL_SESSIONS,
                 createdAt = now,
                 updatedAt = now,
             )
@@ -144,6 +147,7 @@ class MultiLlmClientAdapter(
             val jsonObject = JsonParser.parseString(cleanedJson).asJsonObject
             val title = jsonObject.get("title")?.asString ?: "Gemini: $environmentName"
             val goal = jsonObject.get("goal")?.asString ?: promptContext
+            val totalSessions = jsonObject.get("totalSessions")?.asInt ?: DEFAULT_TOTAL_SESSIONS
 
             val workoutPlan =
                 WorkoutPlan(
@@ -152,6 +156,7 @@ class MultiLlmClientAdapter(
                     goalDescription = goal,
                     isActive = true,
                     generatedByLlm = true,
+                    totalSessions = totalSessions,
                     createdAt = now,
                     updatedAt = now,
                 )
@@ -208,6 +213,7 @@ class MultiLlmClientAdapter(
                         "Intenta de nuevo con un prompt más específico.",
                 isActive = true,
                 generatedByLlm = true,
+                totalSessions = DEFAULT_TOTAL_SESSIONS,
                 createdAt = now,
                 updatedAt = now,
             )
@@ -287,6 +293,47 @@ class MultiLlmClientAdapter(
             val videoUrl = "https://www.youtube.com/results?search_query=$queryFormatted"
             val imageUrl = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
             Result.success(Pair(videoUrl, imageUrl))
+        }
+    }
+
+    override suspend fun generateMedicalRecommendation(
+        gender: String,
+        heightCm: Double,
+        bloodType: String,
+        medicalConditions: String,
+        config: LlmConfig,
+    ): Result<String> {
+        if (medicalConditions.isBlank()) return Result.success("")
+        return try {
+            if (config.provider == LlmProvider.GEMINI && config.apiKeyEncrypted.isNotBlank()) {
+                val userLanguage = getUserLanguage()
+                val prompt =
+                    context?.getString(
+                        R.string.llm_medical_recommendation_prompt,
+                        gender,
+                        heightCm.toString(),
+                        bloodType,
+                        medicalConditions,
+                        userLanguage,
+                    ) ?: error("Context is required to load llm_medical_recommendation_prompt resource")
+
+                val response =
+                    geminiApi.generateContent(
+                        model = config.modelName,
+                        apiKey = config.apiKeyEncrypted.trim(),
+                        request = GeminiRequest(contents = listOf(Content(parts = listOf(Part(text = prompt))))),
+                    )
+
+                val textResponse = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: ""
+                Result.success(textResponse.trim())
+            } else {
+                val mockRecommendation =
+                    "Recomendaciones Médicas: Realizar ejercicios con control postural, evitar cargas excesivas sobre columna " +
+                        "y mantener hidratación adecuada según condiciones reportadas ($medicalConditions)."
+                Result.success(mockRecommendation)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 

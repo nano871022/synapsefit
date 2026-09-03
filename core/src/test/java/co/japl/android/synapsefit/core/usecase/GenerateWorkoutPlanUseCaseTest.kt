@@ -76,7 +76,17 @@ class GenerateWorkoutPlanUseCaseTest {
             every { llmConfigRepositoryPort.getActiveConfig() } returns flowOf(config)
             coEvery { llmClientPort.testApiConnection(config) } returns Result.success(true)
 
-            val plan = WorkoutPlan("p1", "Upper Body", "Gain muscle", true, true, 1000L, 1000L)
+            val plan =
+                WorkoutPlan(
+                    id = "p1",
+                    title = "Upper Body",
+                    goalDescription = "Gain muscle",
+                    isActive = true,
+                    generatedByLlm = true,
+                    totalSessions = 12,
+                    createdAt = 1000L,
+                    updatedAt = 1000L,
+                )
             val exercises =
                 listOf(
                     Exercise(

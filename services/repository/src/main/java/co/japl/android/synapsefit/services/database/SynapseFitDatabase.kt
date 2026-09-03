@@ -10,6 +10,7 @@ import co.japl.android.synapsefit.services.database.dao.WorkoutPlanDao
 import co.japl.android.synapsefit.services.database.entity.BodyMeasurementEntity
 import co.japl.android.synapsefit.services.database.entity.ExerciseEntity
 import co.japl.android.synapsefit.services.database.entity.LlmConfigEntity
+import co.japl.android.synapsefit.services.database.entity.MedicalRecommendationEntity
 import co.japl.android.synapsefit.services.database.entity.UserProfileEntity
 import co.japl.android.synapsefit.services.database.entity.WorkoutLogEntity
 import co.japl.android.synapsefit.services.database.entity.WorkoutPlanEntity
@@ -17,13 +18,14 @@ import co.japl.android.synapsefit.services.database.entity.WorkoutPlanEntity
 @Database(
     entities = [
         UserProfileEntity::class,
+        MedicalRecommendationEntity::class,
         BodyMeasurementEntity::class,
         WorkoutPlanEntity::class,
         ExerciseEntity::class,
         WorkoutLogEntity::class,
         LlmConfigEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 abstract class SynapseFitDatabase : RoomDatabase() {

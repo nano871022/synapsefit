@@ -9,6 +9,7 @@ import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
+import co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase
 import co.japl.android.synapsefit.core.usecase.GenerateWorkoutPlanUseCase
 import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
 import co.japl.android.synapsefit.core.usecase.GetUserProfileUseCase
@@ -16,6 +17,7 @@ import co.japl.android.synapsefit.core.usecase.PerformDriveSyncUseCase
 import co.japl.android.synapsefit.core.usecase.RecordWorkoutSessionUseCase
 import co.japl.android.synapsefit.core.usecase.SaveBodyMeasurementUseCase
 import co.japl.android.synapsefit.core.usecase.SaveUserProfileUseCase
+import co.japl.android.synapsefit.core.usecase.ValidateActivePlanSessionsUseCase
 import co.japl.android.synapsefit.services.database.SynapseFitDatabase
 import co.japl.android.synapsefit.services.drive.GoogleDriveAppDataAdapter
 import co.japl.android.synapsefit.services.llm.MultiLlmClientAdapter
@@ -96,5 +98,13 @@ class DependencyContainer(context: Context) {
 
     val getExerciseMediaUseCase: GetExerciseMediaUseCase by lazy {
         GetExerciseMediaUseCase(workoutPlanRepository, llmConfigRepository, llmClient)
+    }
+
+    val validateActivePlanSessionsUseCase: ValidateActivePlanSessionsUseCase by lazy {
+        ValidateActivePlanSessionsUseCase(workoutPlanRepository, workoutLogRepository)
+    }
+
+    val evaluateMedicalConditionsUseCase: EvaluateMedicalConditionsUseCase by lazy {
+        EvaluateMedicalConditionsUseCase(userProfileRepository, llmConfigRepository, llmClient)
     }
 }
