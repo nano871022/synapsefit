@@ -1,8 +1,11 @@
+@file:Suppress("MaxLineLength", "LongMethod")
+
 package co.japl.android.synapsefit.app.controller.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.UserProfile
+import co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase
 import co.japl.android.synapsefit.core.usecase.GetUserProfileUseCase
 import co.japl.android.synapsefit.core.usecase.SaveUserProfileUseCase
 import co.japl.android.synapsefit.navigation.AppNavigator
@@ -20,6 +23,7 @@ data class UserProfileUiState(
     val bloodType: String = "",
     val medicalConditions: String = "",
     val isLoading: Boolean = false,
+    val isEvaluatingMedical: Boolean = false,
     val isSavedSuccess: Boolean = false,
     val errorMessage: String? = null,
 )
@@ -27,6 +31,7 @@ data class UserProfileUiState(
 class UserProfileViewModel(
     private val getUserProfileUseCase: GetUserProfileUseCase? = null,
     private val saveUserProfileUseCase: SaveUserProfileUseCase? = null,
+    private val evaluateMedicalConditionsUseCase: EvaluateMedicalConditionsUseCase? = null,
     private val appNavigator: AppNavigator? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UserProfileUiState())
@@ -84,6 +89,7 @@ class UserProfileViewModel(
         _uiState.update { it.copy(medicalConditions = value, errorMessage = null, isSavedSuccess = false) }
     }
 
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     fun saveProfile() {
         val state = _uiState.value
         val name = state.fullName.trim()
@@ -100,8 +106,18 @@ class UserProfileViewModel(
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            val hasMedicalConditions = state.medicalConditions.trim().isNotBlank()
+            _uiState.update { it.copy(isLoading = true, isEvaluatingMedical = hasMedicalConditions) }
             appNavigator?.setLoading(true)
+
+            if (hasMedicalConditions && evaluateMedicalConditionsUseCase != null) {
+                evaluateMedicalConditionsUseCase(
+                    gender = state.gender,
+                    heightCm = height,
+                    bloodType = state.bloodType.trim(),
+                    medicalConditions = state.medicalConditions.trim(),
+                )
+            }
 
             val profile =
                 UserProfile(
@@ -117,11 +133,19 @@ class UserProfileViewModel(
 
             val result = saveUserProfileUseCase?.invoke(profile)
             if (result == null || result.isSuccess) {
-                _uiState.update { it.copy(isLoading = false, isSavedSuccess = true, errorMessage = null) }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isEvaluatingMedical = false,
+                        isSavedSuccess = true,
+                        errorMessage = null,
+                    )
+                }
             } else {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
+                        isEvaluatingMedical = false,
                         errorMessage = result.exceptionOrNull()?.message ?: "Error al guardar perfil",
                     )
                 }

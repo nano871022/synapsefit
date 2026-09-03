@@ -2,14 +2,16 @@
 <resources>
     <string name="llm_workout_plan_prompt">
         Generate a customized, safe workout plan split by days of the week for %1$s%2$s.
-        User context (goal, user profile with age, height, blood type, medical conditions/diseases, anthropometric measurements, and history): %3$s.
-        CRITICAL SAFETY INSTRUCTION: Strictly analyze the user\'s age, physical condition, and medical conditions/diseases/injuries provided in the context. Adapt or avoid any exercises that could compromise the user\'s health or exacerbate existing medical issues.
+        User context (goal, user profile with age, height, medical restrictions/recommendations from sports physician, anthropometric measurements, and history): %3$s.
+        CRITICAL SAFETY INSTRUCTION: Strictly adhere to the sports physician medical recommendations, user age, and physical condition provided in the context. Adapt or avoid any exercises that could compromise the user\'s health or exacerbate existing medical issues.
         Organize the exercises specified by day (e.g., Day 1, Day 2, etc.) and include clear execution instructions.
-        IMPORTANT: The user\'s language is %4$s. You MUST generate all text and exercise descriptions in %4$s.
+        IMPORTANT: Include "totalSessions" in the JSON indicating how many total training sessions this plan should last before requiring re-evaluation (e.g. 12, 16, or 24 sessions).
+        The user\'s language is %4$s. You MUST generate all text and exercise descriptions in %4$s.
         Respond in plain JSON format with this exact structure:
         {
           "title": "Plan title in %4$s",
           "goal": "Description of the objective and split by days in %4$s",
+          "totalSessions": 12,
           "exercises": [
             {
               "day": 1,
@@ -25,11 +27,19 @@
 
     <string name="llm_exercise_media_prompt">
         Provide a relevant YouTube video URL and an image URL for performing the exercise \'%1$s\'.
+        The image URL MUST point to an anatomical illustration or diagram drawing showing the specific targeted muscles being trained in this exercise.
         IMPORTANT: The user\'s language is %2$s. You MUST respond in %2$s.
         Respond in plain JSON format with this exact structure without any other text:
         {
           "videoUrl": "https://www.youtube.com/results?search_query=...",
           "imageUrl": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
         }
+    </string>
+
+    <string name="llm_medical_recommendation_prompt">
+        Act as an expert sports physician / doctor. Analyze the following user health data:
+        Gender: %1$s, Height: %2$s cm, Blood Type: %3$s, Medical Conditions/Diseases/Injuries/Observations: %4$s.
+        Provide detailed training restrictions, precautions, and exercise recommendations tailored specifically to this user\'s health conditions.
+        IMPORTANT: The response language MUST be %5$s. Respond with a clear, direct, professional medical summary without any greetings or markdown decoration.
     </string>
 </resources>

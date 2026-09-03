@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import co.japl.android.synapsefit.services.database.entity.MedicalRecommendationEntity
 import co.japl.android.synapsefit.services.database.entity.UserProfileEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -14,4 +15,10 @@ interface UserProfileDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveUserProfile(entity: UserProfileEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveMedicalRecommendation(entity: MedicalRecommendationEntity)
+
+    @Query("SELECT * FROM tbl_medical_result ORDER BY create_dt DESC LIMIT 1")
+    fun getLatestMedicalRecommendation(): Flow<MedicalRecommendationEntity?>
 }

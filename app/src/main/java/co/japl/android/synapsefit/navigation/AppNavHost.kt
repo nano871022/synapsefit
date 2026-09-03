@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod", "UnusedParameter")
+@file:Suppress("MaxLineLength", "FunctionNaming", "LongMethod", "UnusedParameter")
 
 package co.japl.android.synapsefit.navigation
 
@@ -64,6 +64,7 @@ fun AppNavHost(
                                     bodyMeasurementRepositoryPort = dependencyContainer.bodyMeasurementRepository,
                                     workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
                                     workoutLogRepositoryPort = dependencyContainer.workoutLogRepository,
+                                    validateActivePlanSessionsUseCase = dependencyContainer.validateActivePlanSessionsUseCase,
                                 ) as T
                             }
                         },
@@ -93,6 +94,7 @@ fun AppNavHost(
                                 return UserProfileViewModel(
                                     getUserProfileUseCase = dependencyContainer.getUserProfileUseCase,
                                     saveUserProfileUseCase = dependencyContainer.saveUserProfileUseCase,
+                                    evaluateMedicalConditionsUseCase = dependencyContainer.evaluateMedicalConditionsUseCase,
                                     appNavigator = appNavigator,
                                 ) as T
                             }
