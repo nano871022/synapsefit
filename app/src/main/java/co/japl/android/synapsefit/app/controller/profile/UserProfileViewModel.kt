@@ -250,7 +250,7 @@ class UserProfileViewModel(
             _uiState.update {
                 it.copy(
                     isLoading = false,
-                    errorMessage = result.exceptionOrNull()?.message ?: "Error al guardar perfil",
+                    errorMessage = result.exceptionOrNull()?.message,
                 )
             }
         }
