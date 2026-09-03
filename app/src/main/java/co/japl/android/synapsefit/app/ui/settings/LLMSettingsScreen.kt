@@ -66,6 +66,7 @@ import co.japl.android.synapsefit.ui.components.NeonButton
 @Composable
 fun LLMSettingsScreen(
     state: LlmSettingsUiState,
+    initialOpenFormDialog: Boolean = false,
     onSaveConfig: (LlmProvider, String, String) -> Unit,
     onFetchModels: (LlmProvider, String) -> Unit,
     onActivateConfig: (String) -> Unit = {},
@@ -75,7 +76,7 @@ fun LLMSettingsScreen(
     onUpdateConfig: (String, LlmProvider, String, String) -> Unit = { _, _, _, _ -> },
     modifier: Modifier = Modifier,
 ) {
-    var isFormDialogOpen by remember { mutableStateOf(false) }
+    var isFormDialogOpen by remember { mutableStateOf(initialOpenFormDialog) }
     var editingId by remember { mutableStateOf<String?>(null) }
     var deletingId by remember { mutableStateOf<String?>(null) }
     var selectedProvider by remember { mutableStateOf(LlmProvider.GEMINI) }

@@ -68,6 +68,8 @@ fun UserProfileScreen(
     onBloodTypeChange: (String) -> Unit,
     onMedicalConditionsChange: (String) -> Unit,
     onSaveClick: () -> Unit,
+    onRetryMedicalConditions: () -> Unit = {},
+    onDismissMedicalDialog: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var bloodTypeExpanded by remember { mutableStateOf(false) }
@@ -338,8 +340,63 @@ fun UserProfileScreen(
         NeonButton(
             text = stringResource(R.string.save_profile),
             onClick = onSaveClick,
-            isLoading = state.isLoading,
+            isLoading = state.isLoading && !state.showMedicalDialog,
         )
+    }
+
+    if (state.showMedicalDialog) {
+        androidx.compose.ui.window.Dialog(onDismissRequest = onDismissMedicalDialog) {
+            androidx.compose.material3.Surface(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.small),
+            ) {
+                Column(
+                    modifier = Modifier.padding(MaterialTheme.spacing.medium),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        text = stringResource(R.string.processing_medical_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+
+                    Text(
+                        text = stringResource(R.string.processing_medical_message),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+
+                    if (state.isEvaluatingMedical) {
+                        androidx.compose.material3.LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+
+                    if (state.medicalEvaluationFailed) {
+                        Text(
+                            text =
+                                state.medicalEvaluationError
+                                    ?: stringResource(R.string.medical_evaluation_failed),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+
+                        NeonButton(
+                            text = stringResource(R.string.retry_medical_recommendations),
+                            onClick = onRetryMedicalConditions,
+                            isLoading = state.isEvaluatingMedical,
+                        )
+                    }
+
+                    TextButton(onClick = onDismissMedicalDialog) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            }
+        }
     }
 }
 

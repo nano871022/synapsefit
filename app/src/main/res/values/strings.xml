@@ -175,7 +175,16 @@
     <string name="save_profile">Guardar Perfil</string>
     <string name="profile_saved">Perfil guardado correctamente</string>
     <string name="processing_medical_title">Analizando información médica</string>
-    <string name="processing_medical_message">Evaluando restricciones de entrenamiento con IA especializada... Por favor espere.</string>
+    <string name="processing_medical_message">Evaluando restricciones de entrenamiento para sus problemas físicos reportados con IA especializada...</string>
+    <string name="retry_medical_recommendations">Reintentar recomendaciones médicas</string>
+    <string name="medical_evaluation_failed">No se pudieron obtener las recomendaciones médicas. Intente nuevamente.</string>
+
+    <!-- Startup LLM Configuration Prompt -->
+    <string name="configure_llm_required_title">Configuración LLM Requerida</string>
+    <string name="configure_llm_required_message">Para usar las funciones con Inteligencia Artificial (recomendaciones médicas y generación de rutinas), debe configurar una API Key de LLM.</string>
+    <string name="llm_tutorial_video_url">https://www.youtube.com/watch?v=vkX6XTxZBbk</string>
+    <string name="watch_tutorial_video">Ver video tutorial para obtener API Key</string>
+    <string name="want_to_configure">Quiero configurarla</string>
 
     <!-- V11: About Developer -->
     <string name="about_synapsefit">Acerca de SynapseFit</string>
