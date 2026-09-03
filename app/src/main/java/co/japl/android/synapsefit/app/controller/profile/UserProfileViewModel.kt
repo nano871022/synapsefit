@@ -133,7 +133,7 @@ class UserProfileViewModel(
 
                 val recommendation = evalResult.getOrNull()
                 if (evalResult.isFailure || recommendation == null) {
-                    val errorMsg = evalResult.exceptionOrNull()?.message ?: "No se obtuvieron recomendaciones médicas"
+                    val errorMsg = evalResult.exceptionOrNull()?.message
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -187,7 +187,7 @@ class UserProfileViewModel(
 
             val recommendation = evalResult?.getOrNull()
             if (evalResult == null || evalResult.isFailure || recommendation == null) {
-                val errorMsg = evalResult?.exceptionOrNull()?.message ?: "No se obtuvieron recomendaciones médicas"
+                val errorMsg = evalResult?.exceptionOrNull()?.message
                 _uiState.update {
                     it.copy(
                         isLoading = false,
