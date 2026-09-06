@@ -2,6 +2,7 @@
 <resources>
     <!-- App & General Navigation -->
     <string name="app_name">SynapseFit</string>
+    <string name="splash_cover_description">Portada de inicio SynapseFit</string>
     <string name="menu_drawer">Menú</string>
     <string name="menu_options">Opciones</string>
     <string name="nav_dashboard">Dashboard</string>

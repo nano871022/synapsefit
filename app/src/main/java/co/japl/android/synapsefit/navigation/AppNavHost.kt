@@ -23,6 +23,7 @@ import co.japl.android.synapsefit.app.controller.profile.UserProfileViewModel
 import co.japl.android.synapsefit.app.controller.settings.AboutDeveloperViewModel
 import co.japl.android.synapsefit.app.controller.settings.BackupSyncViewModel
 import co.japl.android.synapsefit.app.controller.settings.LlmSettingsViewModel
+import co.japl.android.synapsefit.app.controller.splash.SplashViewModel
 import co.japl.android.synapsefit.app.controller.workout.AICoachGeneratorViewModel
 import co.japl.android.synapsefit.app.controller.workout.ActiveWorkoutSessionViewModel
 import co.japl.android.synapsefit.app.controller.workout.WorkoutPlanDetailViewModel
@@ -35,6 +36,7 @@ import co.japl.android.synapsefit.app.ui.profile.UserProfileScreen
 import co.japl.android.synapsefit.app.ui.settings.AboutDeveloperScreen
 import co.japl.android.synapsefit.app.ui.settings.BackupSyncScreen
 import co.japl.android.synapsefit.app.ui.settings.LLMSettingsScreen
+import co.japl.android.synapsefit.app.ui.splash.SplashScreen
 import co.japl.android.synapsefit.app.ui.workout.AICoachGeneratorScreen
 import co.japl.android.synapsefit.app.ui.workout.ActiveWorkoutSessionScreen
 import co.japl.android.synapsefit.app.ui.workout.WorkoutPlanDetailScreen
@@ -46,13 +48,40 @@ fun AppNavHost(
     appNavigator: AppNavigator,
     dependencyContainer: DependencyContainer,
     modifier: Modifier = Modifier,
-    startDestination: String = Routes.DASHBOARD,
+    startDestination: String = Routes.SPLASH,
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier,
     ) {
+        // Splash Screen
+        composable(Routes.SPLASH) {
+            val viewModel: SplashViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return SplashViewModel(
+                                    userProfileRepositoryPort = dependencyContainer.userProfileRepository,
+                                    bodyMeasurementRepositoryPort = dependencyContainer.bodyMeasurementRepository,
+                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
+                                    llmConfigRepositoryPort = dependencyContainer.llmConfigRepository,
+                                ) as T
+                            }
+                        },
+                )
+            val state by viewModel.uiState.collectAsState()
+            androidx.compose.runtime.LaunchedEffect(state.isReady) {
+                if (state.isReady) {
+                    navController.navigate(Routes.DASHBOARD) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
+                    }
+                }
+            }
+            SplashScreen()
+        }
+
         // V1: Dashboard
         composable(Routes.DASHBOARD) {
             val viewModel: DashboardViewModel =
