@@ -179,4 +179,12 @@
     <string name="hexagonal_architecture">Multi-module Hexagonal Architecture</string>
     <string name="hexagonal_desc">Modules: :app, :core (Pure Kotlin), :services (Room/Drive/LLM), :ui (Kinetic Pulse), :util, :wear (Wear OS Companion).</string>
     <string name="data_sovereignty">Local-first data sovereignty with SHA-256 encrypted backup.</string>
+
+    <!-- Foreground Service Notifications -->
+    <string name="notification_channel_name">SynapseFit Foreground Service</string>
+    <string name="notification_channel_desc">Notifications to keep workout or AI tasks running in background</string>
+    <string name="fgs_workout_title">Active Workout Session</string>
+    <string name="fgs_workout_desc">Session: %1$s — Tap to return to application</string>
+    <string name="fgs_llm_title">Processing AI Task</string>
+    <string name="fgs_llm_desc">Generating data in background... Tap to open</string>
 </resources>

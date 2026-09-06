@@ -1,7 +1,8 @@
-@file:Suppress("MaxLineLength", "LongMethod", "TooManyFunctions")
+@file:Suppress("MaxLineLength", "LongMethod", "TooManyFunctions", "LongParameterList")
 
 package co.japl.android.synapsefit.app.controller.profile
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.UserProfile
@@ -9,6 +10,7 @@ import co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase
 import co.japl.android.synapsefit.core.usecase.GetUserProfileUseCase
 import co.japl.android.synapsefit.core.usecase.SaveUserProfileUseCase
 import co.japl.android.synapsefit.navigation.AppNavigator
+import co.japl.android.synapsefit.service.SynapseFitForegroundService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,6 +38,7 @@ class UserProfileViewModel(
     private val saveUserProfileUseCase: SaveUserProfileUseCase? = null,
     private val evaluateMedicalConditionsUseCase: EvaluateMedicalConditionsUseCase? = null,
     private val appNavigator: AppNavigator? = null,
+    private val context: Context? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UserProfileUiState())
     val uiState: StateFlow<UserProfileUiState> = _uiState.asStateFlow()
@@ -122,6 +125,7 @@ class UserProfileViewModel(
                         medicalEvaluationError = null,
                     )
                 }
+                context?.let { SynapseFitForegroundService.startLlmService(it, "Evaluando perfil médico") }
 
                 val evalResult =
                     evaluateMedicalConditionsUseCase(
@@ -132,6 +136,8 @@ class UserProfileViewModel(
                     )
 
                 val recommendation = evalResult.getOrNull()
+                context?.let { SynapseFitForegroundService.stopService(it) }
+
                 if (evalResult.isFailure || recommendation == null) {
                     val errorMsg = evalResult.exceptionOrNull()?.message
                     _uiState.update {
@@ -176,6 +182,7 @@ class UserProfileViewModel(
                 )
             }
             appNavigator?.setLoading(true)
+            context?.let { SynapseFitForegroundService.startLlmService(it, "Evaluando perfil médico") }
 
             val evalResult =
                 evaluateMedicalConditionsUseCase?.invoke(
@@ -186,6 +193,8 @@ class UserProfileViewModel(
                 )
 
             val recommendation = evalResult?.getOrNull()
+            context?.let { SynapseFitForegroundService.stopService(it) }
+
             if (evalResult == null || evalResult.isFailure || recommendation == null) {
                 val errorMsg = evalResult?.exceptionOrNull()?.message
                 _uiState.update {

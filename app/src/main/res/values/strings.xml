@@ -195,4 +195,12 @@
     <string name="hexagonal_architecture">Arquitectura Hexagonal Multi-módulo</string>
     <string name="hexagonal_desc">Módulos: :app, :core (Kotlin puro), :services (Room/Drive/LLM), :ui (Kinetic Pulse), :util, :wear (Wear OS Companion).</string>
     <string name="data_sovereignty">Soberanía de datos local primero with respaldo cifrado SHA-256.</string>
+
+    <!-- Foreground Service Notifications -->
+    <string name="notification_channel_name">Servicio en Segundo Plano SynapseFit</string>
+    <string name="notification_channel_desc">Notificaciones para mantener el entrenamiento o tareas de IA ejecutándose en segundo plano</string>
+    <string name="fgs_workout_title">Entrenamiento Activo en Ejecución</string>
+    <string name="fgs_workout_desc">Sesión: %1$s — Toca para volver a la aplicación</string>
+    <string name="fgs_llm_title">Procesando Consulta IA</string>
+    <string name="fgs_llm_desc">Generando datos en segundo plano... Toca para abrir</string>
 </resources>

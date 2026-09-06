@@ -10,6 +10,7 @@
 
 package co.japl.android.synapsefit.app.controller.workout
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
@@ -17,6 +18,7 @@ import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
 import co.japl.android.synapsefit.core.usecase.RecordWorkoutSessionUseCase
+import co.japl.android.synapsefit.service.SynapseFitForegroundService
 import co.japl.android.synapsefit.util.DateTimeUtils
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -76,6 +78,7 @@ class ActiveWorkoutSessionViewModel(
     private val recordWorkoutSessionUseCase: RecordWorkoutSessionUseCase? = null,
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort? = null,
     private val getExerciseMediaUseCase: GetExerciseMediaUseCase? = null,
+    private val context: Context? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ActiveWorkoutUiState())
     val uiState: StateFlow<ActiveWorkoutUiState> = _uiState.asStateFlow()
@@ -94,6 +97,32 @@ class ActiveWorkoutSessionViewModel(
         if (_uiState.value.planId == planId && _uiState.value.exercises.isNotEmpty()) {
             return
         }
+
+        if (context != null && WorkoutSessionStateManager.hasActiveSession(context)) {
+            val restored = WorkoutSessionStateManager.loadSession(context)
+            if (restored != null && (planId.isBlank() || restored.uiState.planId == planId)) {
+                sessionStartTimestamp = restored.sessionStartTimestamp
+                exerciseTimeSpent.clear()
+                exerciseTimeSpent.putAll(restored.exerciseTimeSpent)
+                exerciseCompletedSetsCount.clear()
+                exerciseCompletedSetsCount.putAll(restored.exerciseCompletedSets)
+                exerciseMaxWeight.clear()
+                exerciseMaxWeight.putAll(restored.exerciseMaxWeight)
+
+                _uiState.update { restored.uiState }
+
+                val currentEx = restored.uiState.exercises.getOrNull(restored.uiState.currentExerciseIndex)
+                if (currentEx != null) {
+                    exerciseStartTime[currentEx.id] = System.currentTimeMillis()
+                    fetchExerciseMedia(currentEx)
+                }
+
+                startChronometer()
+                SynapseFitForegroundService.startWorkoutService(context, restored.uiState.planTitle)
+                return
+            }
+        }
+
         viewModelScope.launch {
             _uiState.update { it.copy(planId = planId) }
 
@@ -143,10 +172,11 @@ class ActiveWorkoutSessionViewModel(
                 }
 
                 sessionStartTimestamp = System.currentTimeMillis()
+                val title = "${plan.title} (Día $activeDayNumber)"
 
                 _uiState.update {
                     it.copy(
-                        planTitle = "${plan.title} (Día $activeDayNumber)",
+                        planTitle = title,
                         exercises = filteredForActiveDay,
                         currentExerciseIndex = 0,
                         currentExerciseId = firstExercise?.id ?: "",
@@ -159,6 +189,9 @@ class ActiveWorkoutSessionViewModel(
                         isCurrentSetCompleted = false,
                     )
                 }
+
+                context?.let { SynapseFitForegroundService.startWorkoutService(it, title) }
+                saveStateToPrefs()
             }
 
             startChronometer()
@@ -173,6 +206,7 @@ class ActiveWorkoutSessionViewModel(
                     delay(1000L)
                     val elapsed = DateTimeUtils.calculateElapsedTimeSeconds(sessionStartTimestamp)
                     _uiState.update { it.copy(elapsedTimeSeconds = elapsed) }
+                    saveStateToPrefs()
                 }
             }
     }
@@ -182,6 +216,7 @@ class ActiveWorkoutSessionViewModel(
         reps: String,
     ) {
         _uiState.update { it.copy(currentSetReps = reps) }
+        saveStateToPrefs()
     }
 
     fun onSetWeightChange(
@@ -189,6 +224,7 @@ class ActiveWorkoutSessionViewModel(
         weight: String,
     ) {
         _uiState.update { it.copy(currentSetWeightKg = weight) }
+        saveStateToPrefs()
     }
 
     fun completeSet(setIndex: Int) {
@@ -216,7 +252,6 @@ class ActiveWorkoutSessionViewModel(
 
             val isLastSetForExercise = state.currentSetIndex >= state.totalSetsForCurrentExercise
             if (isLastSetForExercise) {
-                // Record time spent for finished exercise
                 val startT = exerciseStartTime[currentExId] ?: System.currentTimeMillis()
                 val timeSpent = (System.currentTimeMillis() - startT) / 1000
                 exerciseTimeSpent[currentExId] = (exerciseTimeSpent[currentExId] ?: 0L) + timeSpent
@@ -257,6 +292,7 @@ class ActiveWorkoutSessionViewModel(
                 val currentExercise = state.exercises.getOrNull(state.currentExerciseIndex)
                 startRestTimer(currentExercise?.restSeconds ?: 60)
             }
+            saveStateToPrefs()
         }
     }
 
@@ -290,6 +326,7 @@ class ActiveWorkoutSessionViewModel(
                     isMediaLoading = false,
                 )
             }
+            saveStateToPrefs()
         }
     }
 
@@ -306,7 +343,6 @@ class ActiveWorkoutSessionViewModel(
         val currentExId = state.currentExerciseId
 
         if (state.currentSetIndex < state.totalSetsForCurrentExercise) {
-            // Next set in the same exercise
             val nextSetIdx = state.currentSetIndex + 1
             _uiState.update {
                 it.copy(
@@ -316,7 +352,6 @@ class ActiveWorkoutSessionViewModel(
                 )
             }
         } else {
-            // Current exercise complete, record time spent
             val startT = exerciseStartTime[currentExId] ?: System.currentTimeMillis()
             val timeSpent = (System.currentTimeMillis() - startT) / 1000
             exerciseTimeSpent[currentExId] = (exerciseTimeSpent[currentExId] ?: 0L) + timeSpent
@@ -344,6 +379,7 @@ class ActiveWorkoutSessionViewModel(
                 finishSession()
             }
         }
+        saveStateToPrefs()
     }
 
     private fun startRestTimer(restSeconds: Int) {
@@ -395,6 +431,24 @@ class ActiveWorkoutSessionViewModel(
             it.copy(
                 isSessionComplete = true,
                 summary = workoutSummary,
+            )
+        }
+
+        context?.let {
+            WorkoutSessionStateManager.clearSession(it)
+            SynapseFitForegroundService.stopService(it)
+        }
+    }
+
+    private fun saveStateToPrefs() {
+        context?.let {
+            WorkoutSessionStateManager.saveSession(
+                context = it,
+                uiState = _uiState.value,
+                sessionStartTimestamp = sessionStartTimestamp,
+                exerciseTimeSpent = exerciseTimeSpent,
+                exerciseCompletedSets = exerciseCompletedSetsCount,
+                exerciseMaxWeight = exerciseMaxWeight,
             )
         }
     }
