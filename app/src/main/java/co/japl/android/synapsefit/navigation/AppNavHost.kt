@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,6 +51,8 @@ fun AppNavHost(
     modifier: Modifier = Modifier,
     startDestination: String = Routes.SPLASH,
 ) {
+    val appContext = LocalContext.current.applicationContext
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -125,6 +128,7 @@ fun AppNavHost(
                                     saveUserProfileUseCase = dependencyContainer.saveUserProfileUseCase,
                                     evaluateMedicalConditionsUseCase = dependencyContainer.evaluateMedicalConditionsUseCase,
                                     appNavigator = appNavigator,
+                                    context = appContext,
                                 ) as T
                             }
                         },
@@ -240,6 +244,7 @@ fun AppNavHost(
                                     workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
                                     getExerciseMediaUseCase = dependencyContainer.getExerciseMediaUseCase,
                                     appNavigator = appNavigator,
+                                    context = appContext,
                                 ) as T
                             }
                         },
@@ -300,6 +305,7 @@ fun AppNavHost(
                                     recordWorkoutSessionUseCase = dependencyContainer.recordWorkoutSessionUseCase,
                                     workoutLogRepositoryPort = dependencyContainer.workoutLogRepository,
                                     getExerciseMediaUseCase = dependencyContainer.getExerciseMediaUseCase,
+                                    context = appContext,
                                 ) as T
                             }
                         },

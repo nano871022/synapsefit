@@ -1,7 +1,8 @@
-@file:Suppress("MaxLineLength")
+@file:Suppress("MaxLineLength", "LongParameterList")
 
 package co.japl.android.synapsefit.app.controller.workout
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.Exercise
@@ -9,8 +10,10 @@ import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.GenerateWorkoutPlanUseCase
+import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
 import co.japl.android.synapsefit.navigation.AppNavigator
 import co.japl.android.synapsefit.navigation.Routes
+import co.japl.android.synapsefit.service.SynapseFitForegroundService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,8 +37,9 @@ data class AICoachGeneratorUiState(
 class AICoachGeneratorViewModel(
     private val generateWorkoutPlanUseCase: GenerateWorkoutPlanUseCase? = null,
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
-    private val getExerciseMediaUseCase: co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase? = null,
+    private val getExerciseMediaUseCase: GetExerciseMediaUseCase? = null,
     private val appNavigator: AppNavigator? = null,
+    private val context: Context? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AICoachGeneratorUiState())
     val uiState: StateFlow<AICoachGeneratorUiState> = _uiState.asStateFlow()
@@ -61,6 +65,7 @@ class AICoachGeneratorViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isGenerating = true, generationError = null) }
             appNavigator?.setLoading(true)
+            context?.let { SynapseFitForegroundService.startLlmService(it, "Generando plan de entrenamiento con IA") }
 
             if (generateWorkoutPlanUseCase != null) {
                 val daysInt = state.daysPerWeek.toIntOrNull()
@@ -81,6 +86,7 @@ class AICoachGeneratorViewModel(
                             )
                         }
                         appNavigator?.setLoading(false)
+                        context?.let { SynapseFitForegroundService.stopService(it) }
                     },
                     onFailure = { error ->
                         _uiState.update {
@@ -90,6 +96,7 @@ class AICoachGeneratorViewModel(
                             )
                         }
                         appNavigator?.setLoading(false)
+                        context?.let { SynapseFitForegroundService.stopService(it) }
                     },
                 )
             } else {
@@ -100,6 +107,7 @@ class AICoachGeneratorViewModel(
                     )
                 }
                 appNavigator?.setLoading(false)
+                context?.let { SynapseFitForegroundService.stopService(it) }
             }
         }
     }
@@ -109,6 +117,7 @@ class AICoachGeneratorViewModel(
         val exercises = _uiState.value.generatedExercises
         viewModelScope.launch {
             _uiState.update { it.copy(isFetchingMedia = true, mediaProgress = 0f) }
+            context?.let { SynapseFitForegroundService.startLlmService(it, "Obteniendo recursos multimedia") }
             workoutPlanRepositoryPort?.setActivePlan(planId)
 
             if (getExerciseMediaUseCase != null && exercises.isNotEmpty()) {
@@ -127,6 +136,7 @@ class AICoachGeneratorViewModel(
             }
 
             _uiState.update { it.copy(isFetchingMedia = false) }
+            context?.let { SynapseFitForegroundService.stopService(it) }
             appNavigator?.navigateTo(Routes.DASHBOARD, popUpToRoute = Routes.WORKOUT_PLANS, inclusive = true)
         }
     }
