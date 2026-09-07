@@ -27,3 +27,15 @@ enum class TrainingEnvironment {
     DUMBBELLS,
     CHAIN_GYM,
 }
+
+enum class TrainingLocation {
+    HOME,
+    GYM
+}
+
+enum class EquipmentPreference {
+    DUMBBELLS,
+    CALISTHENICS,
+    MACHINES,
+    NO_PREFERENCE
+}

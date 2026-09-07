@@ -178,7 +178,7 @@ fun RoutineSummaryModule(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "EJERCICIOS",
+                    text = stringResource(R.string.prescribed_exercises),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

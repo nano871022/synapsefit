@@ -368,5 +368,44 @@ class MultiLlmClientAdapter(
         }
     }
 
+    override suspend fun optimizePrompt(
+        userPrompt: String,
+        location: String,
+        equipment: String,
+        config: LlmConfig,
+    ): Result<String> {
+        return try {
+            if (config.provider == LlmProvider.GEMINI && config.apiKeyEncrypted.isNotBlank()) {
+                val userLanguage = getUserLanguage()
+                val prompt =
+                    context?.getString(
+                        R.string.llm_optimize_prompt,
+                        userPrompt,
+                        location,
+                        equipment,
+                        userLanguage,
+                    ) ?: error("Context is required to load llm_optimize_prompt resource")
+
+                val response =
+                    geminiApi.generateContent(
+                        model = config.modelName,
+                        apiKey = config.apiKeyEncrypted.trim(),
+                        request = GeminiRequest(contents = listOf(Content(parts = listOf(Part(text = prompt))))),
+                    )
+
+                val textResponse = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: ""
+                if (textResponse.startsWith("REJECTED")) {
+                    Result.failure(SecurityException(textResponse.removePrefix("REJECTED").trim()))
+                } else {
+                    Result.success(textResponse.trim())
+                }
+            } else {
+                Result.success(userPrompt)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private fun String?.isNullOrBlankCheck(): Boolean = this == null || this.trim().isEmpty()
 }

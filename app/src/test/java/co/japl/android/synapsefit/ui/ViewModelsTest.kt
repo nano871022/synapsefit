@@ -14,7 +14,7 @@ import co.japl.android.synapsefit.app.controller.workout.WorkoutPlanDetailViewMo
 import co.japl.android.synapsefit.app.controller.workout.WorkoutPlansViewModel
 import co.japl.android.synapsefit.core.domain.model.AnatomicalZone
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
-import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
+import co.japl.android.synapsefit.core.domain.model.TrainingLocation
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import io.mockk.every
@@ -93,11 +93,11 @@ class ViewModelsTest {
         }
 
     @Test
-    fun aiCoachGeneratorViewModel_environmentSelection_updatesState() =
+    fun aiCoachGeneratorViewModel_locationSelection_updatesState() =
         runTest {
             val viewModel = AICoachGeneratorViewModel()
-            viewModel.onEnvironmentSelected(TrainingEnvironment.CHAIN_GYM)
-            assertEquals(TrainingEnvironment.CHAIN_GYM, viewModel.uiState.value.selectedEnvironment)
+            viewModel.onLocationSelected(TrainingLocation.GYM)
+            assertEquals(TrainingLocation.GYM, viewModel.uiState.value.selectedLocation)
         }
 
     @Test

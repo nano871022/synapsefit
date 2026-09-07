@@ -127,6 +127,7 @@ fun AppNavHost(
                                     getUserProfileUseCase = dependencyContainer.getUserProfileUseCase,
                                     saveUserProfileUseCase = dependencyContainer.saveUserProfileUseCase,
                                     evaluateMedicalConditionsUseCase = dependencyContainer.evaluateMedicalConditionsUseCase,
+                                    getMedicalRecommendationsUseCase = dependencyContainer.getMedicalRecommendationsUseCase,
                                     appNavigator = appNavigator,
                                     context = appContext,
                                 ) as T
@@ -143,6 +144,7 @@ fun AppNavHost(
                 onBloodTypeChange = viewModel::onBloodTypeChange,
                 onMedicalConditionsChange = viewModel::onMedicalConditionsChange,
                 onSaveClick = viewModel::saveProfile,
+                onRecalculateMedicalEvaluation = viewModel::recalculateMedicalEvaluation,
                 onRetryMedicalConditions = viewModel::retryMedicalEvaluation,
                 onDismissMedicalDialog = viewModel::dismissMedicalDialog,
             )
@@ -241,6 +243,7 @@ fun AppNavHost(
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return AICoachGeneratorViewModel(
                                     generateWorkoutPlanUseCase = dependencyContainer.generateWorkoutPlanUseCase,
+                                    optimizeWorkoutPromptUseCase = dependencyContainer.optimizeWorkoutPromptUseCase,
                                     workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
                                     getExerciseMediaUseCase = dependencyContainer.getExerciseMediaUseCase,
                                     appNavigator = appNavigator,
@@ -252,10 +255,12 @@ fun AppNavHost(
             val state by viewModel.uiState.collectAsState()
             AICoachGeneratorScreen(
                 state = state,
-                onEnvironmentSelected = viewModel::onEnvironmentSelected,
+                onLocationSelected = viewModel::onLocationSelected,
+                onEquipmentSelected = viewModel::onEquipmentSelected,
                 onGymChainQueryChange = viewModel::onGymChainQueryChange,
                 onDaysPerWeekChange = viewModel::onDaysPerWeekChange,
                 onPromptContextChange = viewModel::onPromptContextChange,
+                onOptimizeClick = viewModel::optimizePrompt,
                 onGenerateClick = viewModel::generatePlan,
                 onAcceptClick = viewModel::acceptPlan,
                 onDiscardClick = viewModel::discardPlan,

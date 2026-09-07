@@ -12,4 +12,6 @@ interface UserProfileRepositoryPort {
     suspend fun saveMedicalRecommendation(recommendation: MedicalRecommendation)
 
     fun getLatestMedicalRecommendation(): Flow<MedicalRecommendation?>
+
+    fun getAllMedicalRecommendations(): Flow<List<MedicalRecommendation>>
 }

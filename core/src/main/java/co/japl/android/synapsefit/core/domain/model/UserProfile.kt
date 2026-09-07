@@ -11,6 +11,7 @@ data class UserProfile(
     val heightCm: Double,
     val bloodType: String,
     val medicalConditions: String? = null,
+    val needsMedicalEvaluation: Boolean = false,
     val createdAt: Long,
     val updatedAt: Long,
 )

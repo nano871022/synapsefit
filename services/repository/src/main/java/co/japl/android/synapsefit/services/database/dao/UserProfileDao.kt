@@ -21,4 +21,7 @@ interface UserProfileDao {
 
     @Query("SELECT * FROM tbl_medical_result ORDER BY create_dt DESC LIMIT 1")
     fun getLatestMedicalRecommendation(): Flow<MedicalRecommendationEntity?>
+
+    @Query("SELECT * FROM tbl_medical_result ORDER BY create_dt DESC")
+    fun getAllMedicalRecommendations(): Flow<List<MedicalRecommendationEntity>>
 }

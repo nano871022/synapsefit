@@ -26,7 +26,8 @@ class GenerateWorkoutPlanUseCase(
     @Suppress("ReturnCount")
     suspend operator fun invoke(
         promptContext: String,
-        environment: TrainingEnvironment,
+        location: co.japl.android.synapsefit.core.domain.model.TrainingLocation,
+        equipment: co.japl.android.synapsefit.core.domain.model.EquipmentPreference,
         gymChainQuery: String? = null,
         daysPerWeek: Int? = null,
     ): Result<Pair<WorkoutPlan, List<Exercise>>> {
@@ -40,11 +41,13 @@ class GenerateWorkoutPlanUseCase(
             return Result.failure(IllegalStateException(msg))
         }
 
-        if (environment == TrainingEnvironment.CHAIN_GYM && gymChainQuery.isNullOrBlankCheck()) {
-            return Result.failure(IllegalArgumentException("Gym chain query is required for chain gym environment"))
+        if (location == co.japl.android.synapsefit.core.domain.model.TrainingLocation.GYM && gymChainQuery.isNullOrBlankCheck()) {
+            return Result.failure(IllegalArgumentException("Gym chain query is required for gym location"))
         }
 
         val enrichedPrompt = buildEnrichedPrompt(promptContext, daysPerWeek)
+
+        val environment = mapToEnvironment(location, equipment)
 
         val generationResult =
             llmClientPort.generateWorkoutPlan(
@@ -56,6 +59,17 @@ class GenerateWorkoutPlanUseCase(
 
         return generationResult.onSuccess { (plan, exercises) ->
             workoutPlanRepositoryPort.savePlan(plan, exercises)
+        }
+    }
+
+    private fun mapToEnvironment(
+        location: co.japl.android.synapsefit.core.domain.model.TrainingLocation,
+        equipment: co.japl.android.synapsefit.core.domain.model.EquipmentPreference
+    ): TrainingEnvironment {
+        return when {
+            location == co.japl.android.synapsefit.core.domain.model.TrainingLocation.GYM -> TrainingEnvironment.CHAIN_GYM
+            equipment == co.japl.android.synapsefit.core.domain.model.EquipmentPreference.DUMBBELLS -> TrainingEnvironment.DUMBBELLS
+            else -> TrainingEnvironment.BODYWEIGHT
         }
     }
 

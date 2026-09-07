@@ -3,11 +3,16 @@
 package co.japl.android.synapsefit.app.ui.workout
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -36,17 +41,20 @@ import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.workout.AICoachGeneratorUiState
 import co.japl.android.synapsefit.core.domain.model.Exercise
-import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
+import co.japl.android.synapsefit.core.domain.model.TrainingLocation
+import co.japl.android.synapsefit.core.domain.model.EquipmentPreference
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.ui.components.NeonButton
 
 @Composable
 fun AICoachGeneratorScreen(
     state: AICoachGeneratorUiState,
-    onEnvironmentSelected: (TrainingEnvironment) -> Unit,
+    onLocationSelected: (TrainingLocation) -> Unit = {},
+    onEquipmentSelected: (EquipmentPreference) -> Unit = {},
     onGymChainQueryChange: (String) -> Unit,
     onDaysPerWeekChange: (String) -> Unit = {},
     onPromptContextChange: (String) -> Unit,
+    onOptimizeClick: () -> Unit = {},
     onGenerateClick: () -> Unit,
     onAcceptClick: () -> Unit,
     onDiscardClick: () -> Unit,
@@ -110,17 +118,28 @@ fun AICoachGeneratorScreen(
         }
 
         Text(
-            text = stringResource(R.string.training_environment),
+            text = stringResource(R.string.training_location),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
         )
 
-        EnvironmentSelector(
-            selectedEnvironment = state.selectedEnvironment,
-            onEnvironmentSelected = onEnvironmentSelected,
+        LocationSelector(
+            selectedLocation = state.selectedLocation,
+            onLocationSelected = onLocationSelected,
         )
 
-        if (state.selectedEnvironment == TrainingEnvironment.CHAIN_GYM) {
+         Text(
+            text = stringResource(R.string.equipment_preference),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
+
+        EquipmentSelector(
+            selectedEquipment = state.selectedEquipment,
+            onEquipmentSelected = onEquipmentSelected,
+        )
+
+        if (state.selectedLocation == TrainingLocation.GYM) {
             GymChainSearchInput(
                 query = state.gymChainQuery,
                 onQueryChange = onGymChainQueryChange,
@@ -142,19 +161,32 @@ fun AICoachGeneratorScreen(
             color = MaterialTheme.colorScheme.primary,
         )
 
-        OutlinedTextField(
-            value = state.promptContext,
-            onValueChange = onPromptContextChange,
-            label = { Text(stringResource(R.string.goal_prompt_placeholder)) },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3,
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = state.promptContext,
+                onValueChange = onPromptContextChange,
+                label = { Text(stringResource(R.string.goal_prompt_placeholder)) },
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                minLines = 3,
+            )
+            androidx.compose.material3.TextButton(
+                onClick = onOptimizeClick,
+                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp, top = 24.dp),
+                enabled = state.promptContext.isNotBlank() && !state.isOptimizing
+            ) {
+                if (state.isOptimizing) {
+                    androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                } else {
+                    Text(stringResource(R.string.optimize_prompt), style = MaterialTheme.typography.labelMedium)
+                }
+            }
+        }
 
         NeonButton(
             text = if (state.generatedPlan == null) stringResource(R.string.generate_plan_ai) else "Generar Otra",
             onClick = onGenerateClick,
             isLoading = state.isGenerating,
-            enabled = !state.isGenerating,
+            enabled = !state.isGenerating && !state.isOptimizing,
         )
 
         if (state.generatedPlan != null) {
@@ -310,21 +342,48 @@ fun PlanPreview(
 }
 
 @Composable
-fun EnvironmentSelector(
-    selectedEnvironment: TrainingEnvironment,
-    onEnvironmentSelected: (TrainingEnvironment) -> Unit,
+fun LocationSelector(
+    selectedLocation: TrainingLocation,
+    onLocationSelected: (TrainingLocation) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
     ) {
-        TrainingEnvironment.entries.forEach { env ->
+        TrainingLocation.entries.forEach { loc ->
             FilterChip(
-                selected = env == selectedEnvironment,
-                onClick = { onEnvironmentSelected(env) },
-                label = { Text(getEnvLabel(env), style = MaterialTheme.typography.labelSmall) },
+                selected = loc == selectedLocation,
+                onClick = { onLocationSelected(loc) },
+                label = { Text(getLocationLabel(loc), style = MaterialTheme.typography.labelSmall) },
                 modifier = Modifier.weight(1f),
+                colors =
+                    FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun EquipmentSelector(
+    selectedEquipment: EquipmentPreference,
+    onEquipmentSelected: (EquipmentPreference) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FlowRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
+        maxItemsInEachRow = 2
+    ) {
+        EquipmentPreference.entries.forEach { equip ->
+            FilterChip(
+                selected = equip == selectedEquipment,
+                onClick = { onEquipmentSelected(equip) },
+                label = { Text(getEquipmentLabel(equip), style = MaterialTheme.typography.labelSmall) },
                 colors =
                     FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -352,11 +411,20 @@ fun GymChainSearchInput(
 }
 
 @Composable
-private fun getEnvLabel(env: TrainingEnvironment): String {
-    return when (env) {
-        TrainingEnvironment.BODYWEIGHT -> stringResource(R.string.env_bodyweight)
-        TrainingEnvironment.DUMBBELLS -> stringResource(R.string.env_dumbbells)
-        TrainingEnvironment.CHAIN_GYM -> stringResource(R.string.env_chain_gym)
+private fun getLocationLabel(loc: TrainingLocation): String {
+    return when (loc) {
+        TrainingLocation.HOME -> stringResource(R.string.loc_home)
+        TrainingLocation.GYM -> stringResource(R.string.loc_gym)
+    }
+}
+
+@Composable
+private fun getEquipmentLabel(equip: EquipmentPreference): String {
+    return when (equip) {
+        EquipmentPreference.DUMBBELLS -> stringResource(R.string.equip_dumbbells)
+        EquipmentPreference.CALISTHENICS -> stringResource(R.string.equip_calisthenics)
+        EquipmentPreference.MACHINES -> stringResource(R.string.equip_machines)
+        EquipmentPreference.NO_PREFERENCE -> stringResource(R.string.equip_none)
     }
 }
 
@@ -367,11 +435,13 @@ private fun AICoachGeneratorScreenPreview() {
         AICoachGeneratorScreen(
             state =
                 AICoachGeneratorUiState(
-                    selectedEnvironment = TrainingEnvironment.DUMBBELLS,
+                    selectedLocation = TrainingLocation.HOME,
+                    selectedEquipment = EquipmentPreference.DUMBBELLS,
                     daysPerWeek = "4",
                     promptContext = "Ganar masa muscular en brazos y pecho",
                 ),
-            onEnvironmentSelected = {},
+            onLocationSelected = {},
+            onEquipmentSelected = {},
             onGymChainQueryChange = {},
             onPromptContextChange = {},
             onGenerateClick = {},

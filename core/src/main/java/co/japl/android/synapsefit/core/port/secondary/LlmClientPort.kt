@@ -33,4 +33,11 @@ interface LlmClientPort {
         medicalConditions: String,
         config: LlmConfig,
     ): Result<String>
+
+    suspend fun optimizePrompt(
+        userPrompt: String,
+        location: String,
+        equipment: String,
+        config: LlmConfig,
+    ): Result<String>
 }

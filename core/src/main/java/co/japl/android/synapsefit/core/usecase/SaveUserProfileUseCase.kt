@@ -20,6 +20,7 @@ class SaveUserProfileUseCase(
             profile.copy(
                 updatedAt = now,
                 createdAt = if (profile.createdAt <= 0) now else profile.createdAt,
+                needsMedicalEvaluation = profile.needsMedicalEvaluation
             )
 
         return try {

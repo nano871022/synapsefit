@@ -87,6 +87,17 @@
     <string name="fetching_media_warning">Obteniendo videos e imágenes para el plan... Por favor, no cierre la aplicación.</string>
     <string name="generating_plan_title">Creando plan de entrenamiento</string>
     <string name="generating_plan_wait">Generando rutina personalizada con IA... Por favor espere.</string>
+    <string name="optimizing_prompt_title">Optimizando Solicitud</string>
+    <string name="optimizing_prompt_wait">Analizando seguridad y mejorando tu solicitud... Por favor espere.</string>
+    <string name="optimize_prompt">Optimizar y Sugerir</string>
+    <string name="training_location">Ubicación de Entrenamiento</string>
+    <string name="equipment_preference">Preferencia de Equipamiento</string>
+    <string name="loc_home">En Casa</string>
+    <string name="loc_gym">En Gimnasio</string>
+    <string name="equip_dumbbells">Mancuernas</string>
+    <string name="equip_calisthenics">Calistenia</string>
+    <string name="equip_machines">Máquinas</string>
+    <string name="equip_none">Sin preferencia</string>
 
     <!-- V6: Workout Plan Detail -->
     <string name="plan_detail">Detalle de Plan</string>
@@ -101,7 +112,9 @@
     <string name="finish_workout">Finalizar Entrenamiento</string>
     <string name="elapsed_time">Tiempo Transcurrido</string>
     <string name="rest_between_sets">Descanso entre series</string>
+    <string name="rest_timer_label">En Descanso (%1$ds)</string>
     <string name="exercise_prefix">Ejercicio: %1$s</string>
+    <string name="exercise_label">Ejercicio %1$d de %2$d</string>
     <string name="set_col">Serie</string>
     <string name="reps_col">Reps</string>
     <string name="weight_col">Peso (kg)</string>
@@ -129,6 +142,7 @@
     <string name="key_prefix">Key: %1$s</string>
     <string name="exercises_completed_count">%1$d ejercicios realizados</string>
     <string name="exercise_averages_prefix">Promedio: %1$s reps | %2$s kg</string>
+    <string name="exercises">Ejercicios</string>
 
     <!-- V9: Backup & Sync -->
     <string name="backup_sync">Respaldo y Sincronización</string>
@@ -175,10 +189,22 @@
     <string name="medical_conditions">Enfermedades, fracturas, hernias u observaciones médicas importantes</string>
     <string name="save_profile">Guardar Perfil</string>
     <string name="profile_saved">Perfil guardado correctamente</string>
+    <string name="recalculate_medical_recommendations">Médico</string>
     <string name="processing_medical_title">Analizando información médica</string>
     <string name="processing_medical_message">Evaluando restricciones de entrenamiento para sus problemas físicos reportados con IA especializada...</string>
     <string name="retry_medical_recommendations">Reintentar recomendaciones médicas</string>
     <string name="medical_evaluation_failed">No se pudieron obtener las recomendaciones médicas. Intente nuevamente.</string>
+    <string name="http_error_400">Solicitud Incorrecta</string>
+    <string name="http_error_401">No Autorizado (API Key Inválida)</string>
+    <string name="http_error_403">Acceso Denegado (Cuota o Región)</string>
+    <string name="http_error_429">Demasiadas Solicitudes (Límite de Tasa)</string>
+    <string name="http_error_500">Error Interno del Servidor</string>
+    <string name="http_error_502">Puerta de Enlace Incorrecta (Bad Gateway)</string>
+    <string name="http_error_503">Servicio No Disponible</string>
+    <string name="http_error_unknown">Error de Conexión o Desconocido</string>
+    <string name="latest_medical_recommendation">Última Recomendación Médica</string>
+    <string name="view_all_recommendations">Ver todas las recomendaciones</string>
+    <string name="all_recommendations_title">Historial de Recomendaciones</string>
 
     <!-- Startup LLM Configuration Prompt -->
     <string name="configure_llm_required_title">Configuración LLM Requerida</string>

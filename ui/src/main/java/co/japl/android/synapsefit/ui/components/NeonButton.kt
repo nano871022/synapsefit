@@ -24,6 +24,7 @@ fun NeonButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isLoading: Boolean = false,
+    icon: @Composable (() -> Unit)? = null,
 ) {
     Button(
         onClick = onClick,
@@ -48,10 +49,19 @@ fun NeonButton(
                 strokeWidth = 2.dp,
             )
         } else {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.titleMedium,
-            )
+            androidx.compose.foundation.layout.Row(
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+            ) {
+                if (icon != null) {
+                    icon()
+                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.size(8.dp))
+                }
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
         }
     }
 }

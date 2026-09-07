@@ -25,7 +25,7 @@ import co.japl.android.synapsefit.services.database.entity.WorkoutPlanEntity
         WorkoutLogEntity::class,
         LlmConfigEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class SynapseFitDatabase : RoomDatabase() {

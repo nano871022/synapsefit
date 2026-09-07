@@ -12,6 +12,7 @@ import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase
 import co.japl.android.synapsefit.core.usecase.GenerateWorkoutPlanUseCase
 import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
+import co.japl.android.synapsefit.core.usecase.GetMedicalRecommendationsUseCase
 import co.japl.android.synapsefit.core.usecase.GetUserProfileUseCase
 import co.japl.android.synapsefit.core.usecase.PerformDriveSyncUseCase
 import co.japl.android.synapsefit.core.usecase.RecordWorkoutSessionUseCase
@@ -106,5 +107,13 @@ class DependencyContainer(context: Context) {
 
     val evaluateMedicalConditionsUseCase: EvaluateMedicalConditionsUseCase by lazy {
         EvaluateMedicalConditionsUseCase(userProfileRepository, llmConfigRepository, llmClient)
+    }
+
+    val getMedicalRecommendationsUseCase: GetMedicalRecommendationsUseCase by lazy {
+        GetMedicalRecommendationsUseCase(userProfileRepository)
+    }
+
+    val optimizeWorkoutPromptUseCase: co.japl.android.synapsefit.core.usecase.OptimizeWorkoutPromptUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.OptimizeWorkoutPromptUseCase(llmConfigRepository, llmClient)
     }
 }

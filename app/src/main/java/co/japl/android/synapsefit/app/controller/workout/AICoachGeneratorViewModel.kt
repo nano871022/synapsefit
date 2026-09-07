@@ -5,12 +5,14 @@ package co.japl.android.synapsefit.app.controller.workout
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.japl.android.synapsefit.core.domain.model.EquipmentPreference
 import co.japl.android.synapsefit.core.domain.model.Exercise
-import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
+import co.japl.android.synapsefit.core.domain.model.TrainingLocation
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.GenerateWorkoutPlanUseCase
 import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
+import co.japl.android.synapsefit.core.usecase.OptimizeWorkoutPromptUseCase
 import co.japl.android.synapsefit.navigation.AppNavigator
 import co.japl.android.synapsefit.navigation.Routes
 import co.japl.android.synapsefit.service.SynapseFitForegroundService
@@ -21,11 +23,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class AICoachGeneratorUiState(
-    val selectedEnvironment: TrainingEnvironment = TrainingEnvironment.BODYWEIGHT,
+    val selectedLocation: TrainingLocation = TrainingLocation.HOME,
+    val selectedEquipment: EquipmentPreference = EquipmentPreference.NO_PREFERENCE,
     val gymChainQuery: String = "",
     val daysPerWeek: String = "4",
     val promptContext: String = "",
     val isGenerating: Boolean = false,
+    val isOptimizing: Boolean = false,
     val generationError: String? = null,
     val generatedPlan: WorkoutPlan? = null,
     val generatedExercises: List<Exercise> = emptyList(),
@@ -36,6 +40,7 @@ data class AICoachGeneratorUiState(
 
 class AICoachGeneratorViewModel(
     private val generateWorkoutPlanUseCase: GenerateWorkoutPlanUseCase? = null,
+    private val optimizeWorkoutPromptUseCase: OptimizeWorkoutPromptUseCase? = null,
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
     private val getExerciseMediaUseCase: GetExerciseMediaUseCase? = null,
     private val appNavigator: AppNavigator? = null,
@@ -44,12 +49,43 @@ class AICoachGeneratorViewModel(
     private val _uiState = MutableStateFlow(AICoachGeneratorUiState())
     val uiState: StateFlow<AICoachGeneratorUiState> = _uiState.asStateFlow()
 
-    fun onEnvironmentSelected(env: TrainingEnvironment) {
-        _uiState.update { it.copy(selectedEnvironment = env, generationError = null) }
-    }
-
     fun onGymChainQueryChange(query: String) {
         _uiState.update { it.copy(gymChainQuery = query) }
+    }
+
+    fun onLocationSelected(loc: TrainingLocation) {
+        _uiState.update { it.copy(selectedLocation = loc, generationError = null) }
+    }
+
+    fun onEquipmentSelected(equip: EquipmentPreference) {
+        _uiState.update { it.copy(selectedEquipment = equip) }
+    }
+
+    fun optimizePrompt() {
+        val state = _uiState.value
+        if (state.promptContext.isBlank()) return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isOptimizing = true, generationError = null) }
+            context?.let { SynapseFitForegroundService.startLlmService(it, "Optimizando solicitud") }
+
+            val result = optimizeWorkoutPromptUseCase?.invoke(
+                userPrompt = state.promptContext,
+                location = state.selectedLocation,
+                equipment = state.selectedEquipment
+            )
+
+            result?.fold(
+                onSuccess = { optimized ->
+                    _uiState.update { it.copy(promptContext = optimized, isOptimizing = false) }
+                    context?.let { SynapseFitForegroundService.stopService(it) }
+                },
+                onFailure = { error ->
+                    _uiState.update { it.copy(isOptimizing = false, generationError = "Error de seguridad u optimización: ${error.message}") }
+                    context?.let { SynapseFitForegroundService.stopService(it) }
+                }
+            )
+        }
     }
 
     fun onDaysPerWeekChange(days: String) {
@@ -72,8 +108,9 @@ class AICoachGeneratorViewModel(
                 val result =
                     generateWorkoutPlanUseCase(
                         promptContext = state.promptContext.ifBlank { "Plan de entrenamiento general de hipertrofia y fuerza" },
-                        environment = state.selectedEnvironment,
-                        gymChainQuery = if (state.selectedEnvironment == TrainingEnvironment.CHAIN_GYM) state.gymChainQuery else null,
+                        location = state.selectedLocation,
+                        equipment = state.selectedEquipment,
+                        gymChainQuery = if (state.selectedLocation == co.japl.android.synapsefit.core.domain.model.TrainingLocation.GYM) state.gymChainQuery else null,
                         daysPerWeek = daysInt,
                     )
                 result.fold(

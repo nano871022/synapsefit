@@ -27,4 +27,10 @@ class UserProfileRepositoryAdapter(
     override fun getLatestMedicalRecommendation(): Flow<MedicalRecommendation?> {
         return userProfileDao.getLatestMedicalRecommendation().map { it?.toDomain() }
     }
+
+    override fun getAllMedicalRecommendations(): Flow<List<MedicalRecommendation>> {
+        return userProfileDao.getAllMedicalRecommendations().map { list ->
+            list.map { it.toDomain() }
+        }
+    }
 }

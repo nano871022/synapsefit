@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.UserProfile
 import co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase
+import co.japl.android.synapsefit.core.usecase.GetMedicalRecommendationsUseCase
 import co.japl.android.synapsefit.core.usecase.GetUserProfileUseCase
 import co.japl.android.synapsefit.core.usecase.SaveUserProfileUseCase
 import co.japl.android.synapsefit.navigation.AppNavigator
@@ -31,12 +32,16 @@ data class UserProfileUiState(
     val medicalEvaluationError: String? = null,
     val isSavedSuccess: Boolean = false,
     val errorMessage: String? = null,
+    val needsMedicalEvaluation: Boolean = false,
+    val latestRecommendation: String? = null,
+    val allRecommendations: List<co.japl.android.synapsefit.core.domain.model.MedicalRecommendation> = emptyList(),
 )
 
 class UserProfileViewModel(
     private val getUserProfileUseCase: GetUserProfileUseCase? = null,
     private val saveUserProfileUseCase: SaveUserProfileUseCase? = null,
     private val evaluateMedicalConditionsUseCase: EvaluateMedicalConditionsUseCase? = null,
+    private val getMedicalRecommendationsUseCase: GetMedicalRecommendationsUseCase? = null,
     private val appNavigator: AppNavigator? = null,
     private val context: Context? = null,
 ) : ViewModel() {
@@ -61,11 +66,25 @@ class UserProfileViewModel(
                             heightCm = if (profile.heightCm > 0) profile.heightCm.toString() else "",
                             bloodType = profile.bloodType,
                             medicalConditions = profile.medicalConditions ?: "",
+                            needsMedicalEvaluation = profile.needsMedicalEvaluation,
                             isLoading = false,
                         )
                     }
                 } else {
                     _uiState.update { it.copy(isLoading = false) }
+                }
+            }
+        }
+
+        getMedicalRecommendationsUseCase?.let { useCase ->
+            viewModelScope.launch {
+                useCase().collect { list ->
+                    _uiState.update {
+                        it.copy(
+                            allRecommendations = list,
+                            latestRecommendation = list.firstOrNull()?.result
+                        )
+                    }
                 }
             }
         }
@@ -148,6 +167,7 @@ class UserProfileViewModel(
                             medicalEvaluationError = errorMsg,
                         )
                     }
+                    saveProfileInternal(name, height, state, needsEval = true)
                     appNavigator?.setLoading(false)
                     return@launch
                 } else {
@@ -156,12 +176,13 @@ class UserProfileViewModel(
                             isEvaluatingMedical = false,
                             showMedicalDialog = false,
                             medicalEvaluationFailed = false,
+                            needsMedicalEvaluation = false,
                         )
                     }
                 }
             }
 
-            saveProfileInternal(name, height, state)
+            saveProfileInternal(name, height, state, needsEval = false)
             appNavigator?.setLoading(false)
         }
     }
@@ -229,10 +250,15 @@ class UserProfileViewModel(
         }
     }
 
+    fun recalculateMedicalEvaluation() {
+        saveProfile()
+    }
+
     private suspend fun saveProfileInternal(
         name: String,
         height: Double,
         state: UserProfileUiState,
+        needsEval: Boolean = false,
     ) {
         val profile =
             UserProfile(
@@ -242,6 +268,7 @@ class UserProfileViewModel(
                 heightCm = height,
                 bloodType = state.bloodType.trim(),
                 medicalConditions = state.medicalConditions.trim().ifEmpty { null },
+                needsMedicalEvaluation = needsEval,
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis(),
             )

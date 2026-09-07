@@ -28,6 +28,7 @@
     <string name="log_weight">Log Weight</string>
     <string name="live_session">Live Session</string>
     <string name="no_active_routine">No active routine</string>
+    <string name="plan_completed_sessions_alert">You have completed the %1$d prescribed sessions of your active plan! It\'s time to take new anthropometric measurements and generate a new plan.</string>
 
     <!-- V2: Body Measurements -->
     <string name="anthropometric_record">Anthropometric Record</string>
@@ -82,6 +83,21 @@
     <string name="goal_prompt_placeholder">Ex: Muscle gain, 4 days a week, upper body focus</string>
     <string name="generate_plan_ai">Generate Plan with AI</string>
     <string name="training_days_per_week">Training days per week</string>
+    <string name="fetching_media_title">Processing complementary information</string>
+    <string name="fetching_media_warning">Fetching videos and images for the plan... Please do not close the app.</string>
+    <string name="generating_plan_title">Creating training plan</string>
+    <string name="generating_plan_wait">Generating custom routine with AI... Please wait.</string>
+    <string name="optimizing_prompt_title">Optimizing Request</string>
+    <string name="optimizing_prompt_wait">Analyzing security and improving your request... Please wait.</string>
+    <string name="optimize_prompt">Optimize and Suggest</string>
+    <string name="training_location">Training Location</string>
+    <string name="equipment_preference">Equipment Preference</string>
+    <string name="loc_home">At Home</string>
+    <string name="loc_gym">In Gym</string>
+    <string name="equip_dumbbells">Dumbbells</string>
+    <string name="equip_calisthenics">Calisthenics</string>
+    <string name="equip_machines">Machines</string>
+    <string name="equip_none">No preference</string>
 
     <!-- V6: Workout Plan Detail -->
     <string name="plan_detail">Plan Detail</string>
@@ -96,7 +112,9 @@
     <string name="finish_workout">Finish Workout</string>
     <string name="elapsed_time">Elapsed Time</string>
     <string name="rest_between_sets">Rest between sets</string>
+    <string name="rest_timer_label">Resting (%1$ds)</string>
     <string name="exercise_prefix">Exercise: %1$s</string>
+    <string name="exercise_label">Exercise %1$d of %2$d</string>
     <string name="set_col">Set</string>
     <string name="reps_col">Reps</string>
     <string name="weight_col">Weight (kg)</string>
@@ -112,6 +130,8 @@
     <string name="total_workout_time">Total Time</string>
     <string name="exercise_summary_item">%1$s — %2$d sets | Max: %3$s kg | Time: %4$s</string>
     <string name="accept_and_close">Accept &amp; Close</string>
+    <string name="exercises">Exercises</string>
+
 
     <!-- V8: Workout History -->
     <string name="workout_history">Workout History</string>
@@ -170,6 +190,29 @@
     <string name="medical_conditions">Medical conditions, injuries, hernias or important notes</string>
     <string name="save_profile">Save Profile</string>
     <string name="profile_saved">Profile saved successfully</string>
+    <string name="recalculate_medical_recommendations">Medical</string>
+    <string name="processing_medical_title">Analyzing medical information</string>
+    <string name="processing_medical_message">Evaluating training restrictions for your reported physical issues with specialized AI...</string>
+    <string name="retry_medical_recommendations">Retry medical recommendations</string>
+    <string name="medical_evaluation_failed">Could not obtain medical recommendations. Please try again.</string>
+    <string name="http_error_400">Bad Request</string>
+    <string name="http_error_401">Unauthorized (Invalid API Key)</string>
+    <string name="http_error_403">Forbidden (Quota or Region)</string>
+    <string name="http_error_429">Too Many Requests (Rate Limit)</string>
+    <string name="http_error_500">Internal Server Error</string>
+    <string name="http_error_502">Bad Gateway</string>
+    <string name="http_error_503">Service Unavailable</string>
+    <string name="http_error_unknown">Connection or Unknown Error</string>
+    <string name="latest_medical_recommendation">Latest Medical Recommendation</string>
+    <string name="view_all_recommendations">View all recommendations</string>
+    <string name="all_recommendations_title">Recommendation History</string>
+
+    <!-- Startup LLM Configuration Prompt -->
+    <string name="configure_llm_required_title">LLM Configuration Required</string>
+    <string name="configure_llm_required_message">To use AI functions (medical recommendations and routine generation), you must configure an LLM API Key.</string>
+    <string name="llm_tutorial_video_url">https://www.youtube.com/watch?v=vkX6XTxZBbk</string>
+    <string name="watch_tutorial_video">Watch tutorial video to get API Key</string>
+    <string name="want_to_configure">I want to configure it</string>
 
     <!-- V11: About Developer -->
     <string name="about_synapsefit">About SynapseFit</string>

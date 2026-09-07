@@ -31,7 +31,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -111,20 +110,10 @@ fun ActiveWorkoutSessionScreen(
                 color = MaterialTheme.colorScheme.onBackground,
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                WorkoutChronometer(elapsedTimeSeconds = state.elapsedTimeSeconds)
-
-                state.heartRateBpm?.let { bpm ->
+            state.heartRateBpm?.let { bpm ->
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     HeartRateGauge(heartRateBpm = bpm)
                 }
-            }
-
-            state.restTimerSecondsRemaining?.let { sec ->
-                RestTimerWidget(secondsRemaining = sec)
             }
 
             val exerciseIndexDisplay = if (state.exercises.isNotEmpty()) state.currentExerciseIndex + 1 else 1
@@ -201,6 +190,7 @@ fun ActiveWorkoutSessionScreen(
                         value = state.currentSetReps,
                         onValueChange = { onSetRepsChange(state.currentSetIndex, it) },
                         label = { Text(stringResource(R.string.reps_col)) },
+                        placeholder = { Text(state.targetRepsForCurrentSet) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -208,11 +198,10 @@ fun ActiveWorkoutSessionScreen(
                     )
 
                     if (!state.isCurrentSetCompleted) {
-                        val restText = "En Descanso (${state.restTimerSecondsRemaining}s)"
                         NeonButton(
-                            text = if (isResting) restText else stringResource(R.string.complete_set),
+                            text = if (isResting) stringResource(R.string.rest_timer_label, state.restTimerSecondsRemaining) else stringResource(R.string.complete_set),
                             onClick = { onCompleteSet(state.currentSetIndex) },
-                            enabled = state.currentSetReps.isNotBlank() && !isResting,
+                            enabled = !isResting,
                         )
                     } else {
                         NeonButton(
@@ -291,7 +280,7 @@ fun ExerciseHeader(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
         ) {
             Text(
-                text = "EJERCICIO $currentExerciseIndex DE $totalExercises".uppercase(),
+                text = stringResource(R.string.exercise_label, currentExerciseIndex, totalExercises).uppercase(),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
@@ -405,67 +394,6 @@ fun ExerciseImageDialog(
                     onClick = onDismiss,
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun WorkoutChronometer(
-    elapsedTimeSeconds: Long,
-    modifier: Modifier = Modifier,
-) {
-    val minutes = elapsedTimeSeconds / 60
-    val seconds = elapsedTimeSeconds % 60
-    val formatted = String.format("%02d:%02d", minutes, seconds)
-
-    KineticCard(modifier = modifier) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Timer,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = stringResource(R.string.elapsed_time),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Text(
-                text = formatted,
-                style = MaterialTheme.typography.displayMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-    }
-}
-
-@Composable
-fun RestTimerWidget(
-    secondsRemaining: Int,
-    modifier: Modifier = Modifier,
-) {
-    KineticCard(
-        modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.rest_between_sets),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = "${secondsRemaining}s",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
         }
     }
 }

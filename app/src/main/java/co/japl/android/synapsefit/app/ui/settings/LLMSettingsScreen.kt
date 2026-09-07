@@ -137,7 +137,7 @@ fun LLMSettingsScreen(
                 onEdit = {
                     editingId = providerModel.id
                     selectedProvider = providerModel.provider
-                    apiKeyInput = ""
+                    apiKeyInput = providerModel.apiKey
                     modelNameInput = providerModel.modelName
                     isFormDialogOpen = true
                 },
@@ -206,6 +206,7 @@ private fun LLMSettingsScreenPreview() {
                             LlmProviderUiModel(
                                 id = "1",
                                 provider = LlmProvider.GEMINI,
+                                apiKey = "sk-1234567890",
                                 apiKeyMasked = "••••••••1234",
                                 modelName = "gemini-1.5-flash",
                                 isActive = true,
@@ -337,8 +338,8 @@ fun LlmFormDialog(
                     ) {
                         OutlinedTextField(
                             value = modelNameInput,
-                            onValueChange = {},
-                            readOnly = true,
+                            onValueChange = onModelNameChange,
+                            readOnly = false,
                             label = { Text(stringResource(R.string.model_name)) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelExpanded) },
                             modifier = Modifier.menuAnchor().fillMaxWidth(),

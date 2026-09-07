@@ -19,6 +19,8 @@ data class UserProfileEntity(
     val bloodType: String,
     @ColumnInfo(name = "medical_conditions")
     val medicalConditions: String? = null,
+    @ColumnInfo(name = "needs_medical_evaluation")
+    val needsMedicalEvaluation: Boolean = false,
     @ColumnInfo(name = "created_at")
     val createdAt: Long,
     @ColumnInfo(name = "updated_at")

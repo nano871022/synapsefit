@@ -28,6 +28,7 @@ fun UserProfileEntity.toDomain(): UserProfile =
         heightCm = heightCm,
         bloodType = bloodType,
         medicalConditions = medicalConditions,
+        needsMedicalEvaluation = needsMedicalEvaluation,
         createdAt = createdAt,
         updatedAt = updatedAt,
     )
@@ -41,6 +42,7 @@ fun UserProfile.toEntity(): UserProfileEntity =
         heightCm = heightCm,
         bloodType = bloodType,
         medicalConditions = medicalConditions,
+        needsMedicalEvaluation = needsMedicalEvaluation,
         createdAt = createdAt,
         updatedAt = updatedAt,
     )

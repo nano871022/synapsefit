@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 data class LlmProviderUiModel(
     val id: String,
     val provider: LlmProvider,
+    val apiKey: String,
     val apiKeyMasked: String,
     val modelName: String,
     val isActive: Boolean,
@@ -60,6 +61,7 @@ class LlmSettingsViewModel(
                     LlmProviderUiModel(
                         id = c.id,
                         provider = c.provider,
+                        apiKey = c.apiKeyEncrypted,
                         apiKeyMasked = maskApiKey(c.apiKeyEncrypted),
                         modelName = c.modelName,
                         isActive = c.isActive,

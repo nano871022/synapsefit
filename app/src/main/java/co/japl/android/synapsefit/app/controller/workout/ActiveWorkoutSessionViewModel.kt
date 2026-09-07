@@ -184,7 +184,7 @@ class ActiveWorkoutSessionViewModel(
                         currentSetIndex = 1,
                         totalSetsForCurrentExercise = firstExercise?.targetSets ?: 3,
                         targetRepsForCurrentSet = firstExercise?.targetReps ?: "10",
-                        currentSetReps = firstExercise?.targetReps ?: "10",
+                        currentSetReps = "",
                         currentSetWeightKg = "",
                         isCurrentSetCompleted = false,
                     )
@@ -206,6 +206,7 @@ class ActiveWorkoutSessionViewModel(
                     delay(1000L)
                     val elapsed = DateTimeUtils.calculateElapsedTimeSeconds(sessionStartTimestamp)
                     _uiState.update { it.copy(elapsedTimeSeconds = elapsed) }
+                    WorkoutTimerManager.updateElapsedTime(elapsed)
                     saveStateToPrefs()
                 }
             }
@@ -229,7 +230,7 @@ class ActiveWorkoutSessionViewModel(
 
     fun completeSet(setIndex: Int) {
         val state = _uiState.value
-        val reps = state.currentSetReps.toIntOrNull() ?: 0
+        val reps = state.currentSetReps.toIntOrNull() ?: extractMinimumReps(state.targetRepsForCurrentSet)
         val weight = state.currentSetWeightKg.toDoubleOrNull() ?: 0.0
 
         viewModelScope.launch {
@@ -251,47 +252,22 @@ class ActiveWorkoutSessionViewModel(
             }
 
             val isLastSetForExercise = state.currentSetIndex >= state.totalSetsForCurrentExercise
-            if (isLastSetForExercise) {
-                val startT = exerciseStartTime[currentExId] ?: System.currentTimeMillis()
-                val timeSpent = (System.currentTimeMillis() - startT) / 1000
-                exerciseTimeSpent[currentExId] = (exerciseTimeSpent[currentExId] ?: 0L) + timeSpent
 
-                val isLastExercise = state.currentExerciseIndex + 1 >= state.exercises.size
-                if (isLastExercise) {
-                    finishSession()
-                } else {
-                    val nextExIndex = state.currentExerciseIndex + 1
-                    val nextEx = state.exercises[nextExIndex]
-                    exerciseStartTime[nextEx.id] = System.currentTimeMillis()
-                    fetchExerciseMedia(nextEx)
-
-                    _uiState.update {
-                        it.copy(
-                            currentExerciseIndex = nextExIndex,
-                            currentExerciseId = nextEx.id,
-                            currentExerciseName = nextEx.name,
-                            currentSetIndex = 1,
-                            totalSetsForCurrentExercise = nextEx.targetSets,
-                            targetRepsForCurrentSet = nextEx.targetReps,
-                            currentSetReps = nextEx.targetReps,
-                            currentSetWeightKg = "",
-                            isCurrentSetCompleted = false,
-                            restTimerSecondsRemaining = null,
-                        )
-                    }
-                }
-            } else {
-                val nextSetIdx = state.currentSetIndex + 1
-                _uiState.update {
-                    it.copy(
-                        currentSetIndex = nextSetIdx,
-                        isCurrentSetCompleted = false,
-                        restTimerSecondsRemaining = null,
-                    )
-                }
-                val currentExercise = state.exercises.getOrNull(state.currentExerciseIndex)
-                startRestTimer(currentExercise?.restSeconds ?: 60)
+            _uiState.update {
+                it.copy(
+                    isCurrentSetCompleted = true,
+                    currentSetReps = reps.toString(),
+                    currentSetWeightKg = weight.toString().removeSuffix(".0"),
+                )
             }
+
+            val restTime =
+                if (isLastSetForExercise) {
+                    60
+                } else {
+                    state.exercises.getOrNull(state.currentExerciseIndex)?.restSeconds ?: 60
+                }
+            startRestTimer(restTime)
             saveStateToPrefs()
         }
     }
@@ -339,15 +315,18 @@ class ActiveWorkoutSessionViewModel(
     }
 
     fun nextSetOrExercise() {
+        restTimerJob?.cancel()
         val state = _uiState.value
         val currentExId = state.currentExerciseId
+        val isLastSetForExercise = state.currentSetIndex >= state.totalSetsForCurrentExercise
 
-        if (state.currentSetIndex < state.totalSetsForCurrentExercise) {
+        if (!isLastSetForExercise) {
             val nextSetIdx = state.currentSetIndex + 1
             _uiState.update {
                 it.copy(
                     currentSetIndex = nextSetIdx,
                     isCurrentSetCompleted = false,
+                    currentSetReps = "",
                     restTimerSecondsRemaining = null,
                 )
             }
@@ -356,10 +335,14 @@ class ActiveWorkoutSessionViewModel(
             val timeSpent = (System.currentTimeMillis() - startT) / 1000
             exerciseTimeSpent[currentExId] = (exerciseTimeSpent[currentExId] ?: 0L) + timeSpent
 
-            if (state.currentExerciseIndex + 1 < state.exercises.size) {
+            val isLastExercise = state.currentExerciseIndex + 1 >= state.exercises.size
+            if (isLastExercise) {
+                finishSession()
+            } else {
                 val nextExIndex = state.currentExerciseIndex + 1
                 val nextEx = state.exercises[nextExIndex]
                 exerciseStartTime[nextEx.id] = System.currentTimeMillis()
+                fetchExerciseMedia(nextEx)
 
                 _uiState.update {
                     it.copy(
@@ -369,14 +352,12 @@ class ActiveWorkoutSessionViewModel(
                         currentSetIndex = 1,
                         totalSetsForCurrentExercise = nextEx.targetSets,
                         targetRepsForCurrentSet = nextEx.targetReps,
-                        currentSetReps = nextEx.targetReps,
+                        currentSetReps = "",
                         currentSetWeightKg = "",
                         isCurrentSetCompleted = false,
                         restTimerSecondsRemaining = null,
                     )
                 }
-            } else {
-                finishSession()
             }
         }
         saveStateToPrefs()
@@ -387,11 +368,14 @@ class ActiveWorkoutSessionViewModel(
         restTimerJob =
             viewModelScope.launch {
                 _uiState.update { it.copy(restTimerSecondsRemaining = restSeconds) }
+                WorkoutTimerManager.updateRestTime(restSeconds)
                 for (sec in restSeconds downTo 1) {
                     delay(1000L)
                     _uiState.update { it.copy(restTimerSecondsRemaining = sec - 1) }
+                    WorkoutTimerManager.updateRestTime(sec - 1)
                 }
                 _uiState.update { it.copy(restTimerSecondsRemaining = null) }
+                WorkoutTimerManager.updateRestTime(null)
             }
     }
 
@@ -402,6 +386,7 @@ class ActiveWorkoutSessionViewModel(
     fun finishSession() {
         timerJob?.cancel()
         restTimerJob?.cancel()
+        WorkoutTimerManager.reset()
 
         val state = _uiState.value
         val currentExId = state.currentExerciseId
@@ -451,5 +436,10 @@ class ActiveWorkoutSessionViewModel(
                 exerciseMaxWeight = exerciseMaxWeight,
             )
         }
+    }
+
+    private fun extractMinimumReps(target: String): Int {
+        val firstPart = target.substringBefore('-').substringBefore('–').trim()
+        return firstPart.filter { it.isDigit() }.toIntOrNull() ?: 1
     }
 }

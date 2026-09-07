@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import android.content.Context
+import co.japl.android.synapsefit.app.controller.workout.WorkoutSessionStateManager
 
 data class DashboardUiState(
     val userName: String = "Atleta SynapseFit",
@@ -25,6 +27,7 @@ data class DashboardUiState(
     val todayWorkoutPlanId: String? = null,
     val isPlanCompletedAlertVisible: Boolean = false,
     val activePlanTotalSessions: Int = 12,
+    val hasActiveSession: Boolean = false,
     val isSyncing: Boolean = false,
     val isLoading: Boolean = false,
 )
@@ -34,6 +37,7 @@ class DashboardViewModel(
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort? = null,
     private val validateActivePlanSessionsUseCase: ValidateActivePlanSessionsUseCase? = null,
+    private val context: Context? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
@@ -95,6 +99,7 @@ class DashboardViewModel(
                             val activeDayNumber = if (lastDay == 0) 1 else (lastDay % totalPlanDays) + 1
                             val isLimitReached = validation?.isLimitReached ?: false
                             val totalSessions = validation?.totalSessions ?: targetPlan.totalSessions
+                            val hasActive = context?.let { WorkoutSessionStateManager.hasActiveSession(it) } ?: false
 
                             _uiState.update {
                                 it.copy(
@@ -102,15 +107,18 @@ class DashboardViewModel(
                                     todayWorkoutPlanId = targetPlan.id,
                                     isPlanCompletedAlertVisible = isLimitReached,
                                     activePlanTotalSessions = totalSessions,
+                                    hasActiveSession = hasActive,
                                     isLoading = false,
                                 )
                             }
                         } else {
+                            val hasActive = context?.let { WorkoutSessionStateManager.hasActiveSession(it) } ?: false
                             _uiState.update {
                                 it.copy(
                                     todayWorkoutTitle = "Sin rutina activa",
                                     todayWorkoutPlanId = null,
                                     isPlanCompletedAlertVisible = false,
+                                    hasActiveSession = hasActive,
                                     isLoading = false,
                                 )
                             }
