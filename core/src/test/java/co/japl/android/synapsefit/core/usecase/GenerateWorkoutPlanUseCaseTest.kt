@@ -1,9 +1,11 @@
 package co.japl.android.synapsefit.core.usecase
 
+import co.japl.android.synapsefit.core.domain.model.EquipmentPreference
 import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.LlmConfig
 import co.japl.android.synapsefit.core.domain.model.LlmProvider
 import co.japl.android.synapsefit.core.domain.model.TrainingEnvironment
+import co.japl.android.synapsefit.core.domain.model.TrainingLocation
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
 import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
@@ -44,7 +46,8 @@ class GenerateWorkoutPlanUseCaseTest {
             val result =
                 useCase(
                     promptContext = "Build muscle",
-                    environment = TrainingEnvironment.BODYWEIGHT,
+                    location = TrainingLocation.HOME,
+                    equipment = EquipmentPreference.CALISTHENICS,
                 )
 
             assertTrue(result.isFailure)
@@ -52,7 +55,7 @@ class GenerateWorkoutPlanUseCaseTest {
         }
 
     @Test
-    fun `when environment is CHAIN_GYM and gym query is blank, return failure`() =
+    fun `when location is GYM and gym query is blank, return failure`() =
         runTest {
             val config = LlmConfig("1", LlmProvider.GEMINI, "key", "gemini-1.5-flash", true, 0L, 0L)
             every { llmConfigRepositoryPort.getActiveConfig() } returns flowOf(config)
@@ -61,12 +64,13 @@ class GenerateWorkoutPlanUseCaseTest {
             val result =
                 useCase(
                     promptContext = "Hypertrophy",
-                    environment = TrainingEnvironment.CHAIN_GYM,
+                    location = TrainingLocation.GYM,
+                    equipment = EquipmentPreference.MACHINES,
                     gymChainQuery = "",
                 )
 
             assertTrue(result.isFailure)
-            assertEquals("Gym chain query is required for chain gym environment", result.exceptionOrNull()?.message)
+            assertEquals("Gym chain query is required for gym location", result.exceptionOrNull()?.message)
         }
 
     @Test
@@ -112,7 +116,8 @@ class GenerateWorkoutPlanUseCaseTest {
             val result =
                 useCase(
                     promptContext = "Push workout",
-                    environment = TrainingEnvironment.BODYWEIGHT,
+                    location = TrainingLocation.HOME,
+                    equipment = EquipmentPreference.CALISTHENICS,
                 )
 
             assertTrue(result.isSuccess)

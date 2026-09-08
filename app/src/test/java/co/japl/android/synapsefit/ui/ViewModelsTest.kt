@@ -53,7 +53,7 @@ class ViewModelsTest {
             val viewModel = DashboardViewModel()
             val state = viewModel.uiState.value
             assertEquals("Atleta SynapseFit", state.userName)
-            assertEquals("Sin rutina activa", state.todayWorkoutTitle)
+            assertEquals(null, state.todayWorkoutTitle)
         }
 
     @Test

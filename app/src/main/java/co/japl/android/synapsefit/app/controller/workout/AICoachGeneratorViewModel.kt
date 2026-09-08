@@ -69,11 +69,12 @@ class AICoachGeneratorViewModel(
             _uiState.update { it.copy(isOptimizing = true, generationError = null) }
             context?.let { SynapseFitForegroundService.startLlmService(it, "Optimizando solicitud") }
 
-            val result = optimizeWorkoutPromptUseCase?.invoke(
-                userPrompt = state.promptContext,
-                location = state.selectedLocation,
-                equipment = state.selectedEquipment
-            )
+            val result =
+                optimizeWorkoutPromptUseCase?.invoke(
+                    userPrompt = state.promptContext,
+                    location = state.selectedLocation,
+                    equipment = state.selectedEquipment,
+                )
 
             result?.fold(
                 onSuccess = { optimized ->
@@ -81,9 +82,14 @@ class AICoachGeneratorViewModel(
                     context?.let { SynapseFitForegroundService.stopService(it) }
                 },
                 onFailure = { error ->
-                    _uiState.update { it.copy(isOptimizing = false, generationError = "Error de seguridad u optimización: ${error.message}") }
+                    _uiState.update {
+                        it.copy(
+                            isOptimizing = false,
+                            generationError = "Error de seguridad u optimización: ${error.message}",
+                        )
+                    }
                     context?.let { SynapseFitForegroundService.stopService(it) }
-                }
+                },
             )
         }
     }
@@ -110,7 +116,12 @@ class AICoachGeneratorViewModel(
                         promptContext = state.promptContext.ifBlank { "Plan de entrenamiento general de hipertrofia y fuerza" },
                         location = state.selectedLocation,
                         equipment = state.selectedEquipment,
-                        gymChainQuery = if (state.selectedLocation == co.japl.android.synapsefit.core.domain.model.TrainingLocation.GYM) state.gymChainQuery else null,
+                        gymChainQuery =
+                            if (state.selectedLocation == co.japl.android.synapsefit.core.domain.model.TrainingLocation.GYM) {
+                                state.gymChainQuery
+                            } else {
+                                null
+                            },
                         daysPerWeek = daysInt,
                     )
                 result.fold(

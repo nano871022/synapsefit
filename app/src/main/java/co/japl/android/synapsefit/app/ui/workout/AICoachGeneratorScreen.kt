@@ -5,14 +5,13 @@ package co.japl.android.synapsefit.app.ui.workout
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -40,9 +39,9 @@ import co.com.japl.ui.theme.MaterialThemeComposeUI
 import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.workout.AICoachGeneratorUiState
+import co.japl.android.synapsefit.core.domain.model.EquipmentPreference
 import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.TrainingLocation
-import co.japl.android.synapsefit.core.domain.model.EquipmentPreference
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.ui.components.NeonButton
 
@@ -128,7 +127,7 @@ fun AICoachGeneratorScreen(
             onLocationSelected = onLocationSelected,
         )
 
-         Text(
+        Text(
             text = stringResource(R.string.equipment_preference),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
@@ -172,7 +171,7 @@ fun AICoachGeneratorScreen(
             androidx.compose.material3.TextButton(
                 onClick = onOptimizeClick,
                 modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp, top = 24.dp),
-                enabled = state.promptContext.isNotBlank() && !state.isOptimizing
+                enabled = state.promptContext.isNotBlank() && !state.isOptimizing,
             ) {
                 if (state.isOptimizing) {
                     androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -377,7 +376,7 @@ fun EquipmentSelector(
     FlowRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
-        maxItemsInEachRow = 2
+        maxItemsInEachRow = 2,
     ) {
         EquipmentPreference.entries.forEach { equip ->
             FilterChip(

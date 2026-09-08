@@ -331,12 +331,16 @@ class ActiveWorkoutSessionViewModel(
             if (isLastExercise) {
                 finishSession()
             } else {
-                nextExersise(state,timeSpent)
+                nextExersise(state, timeSpent)
             }
         }
         saveStateToPrefs()
     }
-    private fun nextExersise(state: ActiveWorkoutUiState,timeSpent:Long){
+
+    private fun nextExersise(
+        state: ActiveWorkoutUiState,
+        timeSpent: Long,
+    ) {
         val nextExIndex = state.currentExerciseIndex + 1
         val nextEx = state.exercises[nextExIndex]
         exerciseStartTime[nextEx.id] = System.currentTimeMillis()
@@ -358,7 +362,7 @@ class ActiveWorkoutSessionViewModel(
         }
     }
 
-    private fun nextSet(state: ActiveWorkoutUiState){
+    private fun nextSet(state: ActiveWorkoutUiState) {
         val nextSetIdx = state.currentSetIndex + 1
         _uiState.update {
             it.copy(
@@ -378,7 +382,7 @@ class ActiveWorkoutSessionViewModel(
                 WorkoutTimerManager.updateRestTime(restSeconds)
                 for (sec in restSeconds downTo 1) {
                     delay(1000L.milliseconds)
-                    val value =  sec -1
+                    val value = sec - 1
                     _uiState.update { it.copy(restTimerSecondsRemaining = value) }
                     WorkoutTimerManager.updateRestTime(value)
                 }
@@ -441,7 +445,6 @@ class ActiveWorkoutSessionViewModel(
                 exerciseTimeSpent = exerciseTimeSpent,
                 exerciseCompletedSets = exerciseCompletedSetsCount,
                 exerciseMaxWeight = exerciseMaxWeight,
-
             )
         }
     }

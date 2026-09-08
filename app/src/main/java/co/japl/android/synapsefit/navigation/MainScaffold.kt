@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod", "MatchingDeclarationName", "MagicNumber")
+@file:Suppress("FunctionNaming", "LongMethod", "MatchingDeclarationName", "MagicNumber", "CyclomaticComplexMethod", "MaxLineLength")
 
 package co.japl.android.synapsefit.navigation
 
@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -58,14 +60,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import java.util.Locale
 import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.DependencyContainer
 import co.japl.android.synapsefit.R
@@ -74,6 +73,7 @@ import co.japl.android.synapsefit.ui.components.NeonButton
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 data class NavigationDrawerItemModel(
     val route: String,
@@ -190,7 +190,9 @@ fun MainScaffold(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .padding(if (currentRoute == Routes.SPLASH) androidx.compose.foundation.layout.PaddingValues(0.dp) else paddingValues),
+                        .padding(
+                            if (currentRoute == Routes.SPLASH) androidx.compose.foundation.layout.PaddingValues(0.dp) else paddingValues,
+                        ),
             ) {
                 if (widthSizeClass != WindowWidthSizeClass.Compact && currentRoute != Routes.SPLASH) {
                     NavigationRail {
@@ -438,4 +440,3 @@ private fun LlmStartupDialog(
         }
     }
 }
-

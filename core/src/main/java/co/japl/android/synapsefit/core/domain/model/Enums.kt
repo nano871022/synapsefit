@@ -30,12 +30,12 @@ enum class TrainingEnvironment {
 
 enum class TrainingLocation {
     HOME,
-    GYM
+    GYM,
 }
 
 enum class EquipmentPreference {
     DUMBBELLS,
     CALISTHENICS,
     MACHINES,
-    NO_PREFERENCE
+    NO_PREFERENCE,
 }

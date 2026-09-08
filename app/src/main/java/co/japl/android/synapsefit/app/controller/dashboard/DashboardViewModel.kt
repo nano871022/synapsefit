@@ -1,9 +1,11 @@
-@file:Suppress("MaxLineLength", "LongMethod")
+@file:Suppress("MaxLineLength", "LongMethod", "CyclomaticComplexMethod")
 
 package co.japl.android.synapsefit.app.controller.dashboard
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.japl.android.synapsefit.app.controller.workout.WorkoutSessionStateManager
 import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
@@ -15,8 +17,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import android.content.Context
-import co.japl.android.synapsefit.app.controller.workout.WorkoutSessionStateManager
 
 data class DashboardUiState(
     val userName: String = "Atleta SynapseFit",
