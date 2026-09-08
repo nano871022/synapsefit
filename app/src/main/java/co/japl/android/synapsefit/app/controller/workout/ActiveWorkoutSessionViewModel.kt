@@ -289,9 +289,9 @@ class ActiveWorkoutSessionViewModel(
 
             val restTime =
                 if (isLastSetForExercise) {
-                    60
+                    WorkoutSessionStateManager.EXERCISE_CHANGE_REST_TIME_SECONDS
                 } else {
-                    state.exercises.getOrNull(state.currentExerciseIndex)?.restSeconds ?: 60
+                    state.exercises.getOrNull(state.currentExerciseIndex)?.restSeconds ?: WorkoutSessionStateManager.DEFAULT_REST_TIME_SECONDS
                 }
             startRestTimer(restTime)
             saveStateToPrefs()

@@ -40,6 +40,10 @@ object WorkoutSessionStateManager {
     private const val KEY_TIME_SPENT_JSON = "time_spent_json"
     private const val KEY_COMPLETED_SETS_JSON = "completed_sets_json"
     private const val KEY_MAX_WEIGHT_JSON = "max_weight_json"
+    private const val KEY_COOLDOWN_TARGET_TIMESTAMP = "cooldown_target_timestamp"
+
+    const val DEFAULT_REST_TIME_SECONDS = 60
+    const val EXERCISE_CHANGE_REST_TIME_SECONDS = 60
 
     private fun getPrefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -171,7 +175,7 @@ object WorkoutSessionStateManager {
             val muscleGroup = extractJsonValue(clean, "muscleGroup")
             val targetSets = extractJsonValue(clean, "targetSets").toIntOrNull() ?: 3
             val targetReps = extractJsonValue(clean, "targetReps").ifBlank { "10" }
-            val restSeconds = extractJsonValue(clean, "restSeconds").toIntOrNull() ?: 60
+            val restSeconds = extractJsonValue(clean, "restSeconds").toIntOrNull() ?: DEFAULT_REST_TIME_SECONDS
             val day = extractJsonValue(clean, "day").toIntOrNull() ?: 1
             val video = extractJsonValue(clean, "guideVideoUrl").ifBlank { null }
             val image = extractJsonValue(clean, "guideImageUrl").ifBlank { null }
