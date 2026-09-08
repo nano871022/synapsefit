@@ -50,11 +50,21 @@ data class WorkoutSummary(
     val exerciseSummaries: List<ExerciseSessionSummary>,
 )
 
+sealed interface TrainingStepState {
+    object Active : TrainingStepState
+
+    data class Cooldown(val timeLeftSeconds: Int) : TrainingStepState
+
+    object ReadyForNext : TrainingStepState
+}
+
 data class ActiveWorkoutUiState(
     val planId: String = "",
     val planTitle: String = "",
     val elapsedTimeSeconds: Long = 0L,
     val restTimerSecondsRemaining: Int? = null,
+    val stepState: TrainingStepState = TrainingStepState.Active,
+    val cooldownTargetTimestamp: Long? = null,
     val heartRateBpm: Int? = null,
     val currentExerciseName: String = "",
     val currentExerciseId: String = "",
@@ -119,6 +129,21 @@ class ActiveWorkoutSessionViewModel(
                 }
 
                 startChronometer()
+                restored.uiState.cooldownTargetTimestamp?.let { targetTs ->
+                    val now = System.currentTimeMillis()
+                    if (targetTs > now) {
+                        val remainingSecs = ((targetTs - now) / 1000L).toInt()
+                        startRestTimer(remainingSecs, targetTimestampOverride = targetTs)
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                stepState = TrainingStepState.ReadyForNext,
+                                restTimerSecondsRemaining = 0,
+                                cooldownTargetTimestamp = null,
+                            )
+                        }
+                    }
+                }
                 SynapseFitForegroundService.startWorkoutService(context, restored.uiState.planTitle)
                 return
             }
@@ -357,9 +382,12 @@ class ActiveWorkoutSessionViewModel(
                 currentSetReps = "",
                 currentSetWeightKg = "",
                 isCurrentSetCompleted = false,
-                restTimerSecondsRemaining = timeSpent.toInt(),
+                restTimerSecondsRemaining = null,
+                stepState = TrainingStepState.Active,
+                cooldownTargetTimestamp = null,
             )
         }
+        WorkoutTimerManager.updateRestTime(null)
     }
 
     private fun nextSet(state: ActiveWorkoutUiState) {
@@ -370,24 +398,50 @@ class ActiveWorkoutSessionViewModel(
                 isCurrentSetCompleted = false,
                 currentSetReps = state.currentSetReps,
                 restTimerSecondsRemaining = null,
+                stepState = TrainingStepState.Active,
+                cooldownTargetTimestamp = null,
             )
         }
+        WorkoutTimerManager.updateRestTime(null)
     }
 
-    private fun startRestTimer(restSeconds: Int) {
+    fun startRestTimer(
+        cooldownDurationSeconds: Int,
+        targetTimestampOverride: Long? = null,
+    ) {
         restTimerJob?.cancel()
+        val currentTimestamp = System.currentTimeMillis()
+        val targetTimestamp = targetTimestampOverride ?: (currentTimestamp + (cooldownDurationSeconds * 1000L))
+
         restTimerJob =
             viewModelScope.launch {
-                _uiState.update { it.copy(restTimerSecondsRemaining = restSeconds) }
-                WorkoutTimerManager.updateRestTime(restSeconds)
-                for (sec in restSeconds downTo 1) {
-                    delay(1000L.milliseconds)
-                    val value = sec - 1
-                    _uiState.update { it.copy(restTimerSecondsRemaining = value) }
-                    WorkoutTimerManager.updateRestTime(value)
+                while (isActive) {
+                    val now = System.currentTimeMillis()
+                    val remainingMillis = targetTimestamp - now
+
+                    if (remainingMillis <= 0) {
+                        _uiState.update {
+                            it.copy(
+                                restTimerSecondsRemaining = 0,
+                                stepState = TrainingStepState.ReadyForNext,
+                                cooldownTargetTimestamp = null,
+                            )
+                        }
+                        WorkoutTimerManager.updateRestTime(0)
+                        break
+                    } else {
+                        val remainingSeconds = (remainingMillis / 1000L).toInt() + (if (remainingMillis % 1000L > 0) 1 else 0)
+                        _uiState.update {
+                            it.copy(
+                                restTimerSecondsRemaining = remainingSeconds,
+                                stepState = TrainingStepState.Cooldown(remainingSeconds),
+                                cooldownTargetTimestamp = targetTimestamp,
+                            )
+                        }
+                        WorkoutTimerManager.updateRestTime(remainingSeconds)
+                    }
+                    delay(500L)
                 }
-                _uiState.update { it.copy(restTimerSecondsRemaining = null) }
-                WorkoutTimerManager.updateRestTime(null)
             }
     }
 

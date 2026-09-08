@@ -122,6 +122,8 @@
     <string name="set_label">Serie %1$d de %2$d</string>
     <string name="target_reps">Reps objetivo: %1$s</string>
     <string name="complete_set">Completar Serie</string>
+    <string name="cooldown_timer_label">Cooldown (%1$02d:%2$02d)</string>
+
     <string name="next_set_or_exercise">Siguiente Serie / Ejercicio</string>
     <string name="watch_video">Ver Video (YouTube)</string>
     <string name="view_image">Ver Imagen</string>

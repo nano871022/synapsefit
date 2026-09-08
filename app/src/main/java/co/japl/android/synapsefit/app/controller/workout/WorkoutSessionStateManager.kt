@@ -84,6 +84,7 @@ object WorkoutSessionStateManager {
             putString(KEY_TIME_SPENT_JSON, timeSpentJson)
             putString(KEY_COMPLETED_SETS_JSON, completedSetsJson)
             putString(KEY_MAX_WEIGHT_JSON, maxWeightJson)
+            uiState.cooldownTargetTimestamp?.let { putLong(KEY_COOLDOWN_TARGET_TIMESTAMP, it) } ?: remove(KEY_COOLDOWN_TARGET_TIMESTAMP)
             apply()
         }
     }
@@ -113,6 +114,8 @@ object WorkoutSessionStateManager {
         val completedSetsMap = parseIntMap(prefs.getString(KEY_COMPLETED_SETS_JSON, "{}") ?: "{}")
         val maxWeightMap = parseDoubleMap(prefs.getString(KEY_MAX_WEIGHT_JSON, "{}") ?: "{}")
 
+        val cooldownTargetTs = if (prefs.contains(KEY_COOLDOWN_TARGET_TIMESTAMP)) prefs.getLong(KEY_COOLDOWN_TARGET_TIMESTAMP, 0L) else null
+
         val uiState =
             ActiveWorkoutUiState(
                 planId = planId,
@@ -126,6 +129,7 @@ object WorkoutSessionStateManager {
                 targetRepsForCurrentSet = targetReps,
                 currentSetWeightKg = currentSetWeight,
                 currentSetReps = currentSetReps,
+                cooldownTargetTimestamp = cooldownTargetTs,
             )
 
         return RestoredSessionState(
@@ -272,6 +276,7 @@ object WorkoutSessionStateManager {
             remove(KEY_TIME_SPENT_JSON)
             remove(KEY_COMPLETED_SETS_JSON)
             remove(KEY_MAX_WEIGHT_JSON)
+            remove(KEY_COOLDOWN_TARGET_TIMESTAMP)
             apply()
         }
     }

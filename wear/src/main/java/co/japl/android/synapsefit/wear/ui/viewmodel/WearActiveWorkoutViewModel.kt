@@ -36,4 +36,25 @@ class WearActiveWorkoutViewModel(
         syncPort?.onConnectionStateChanged(isSynced)
         _uiState.update { it.copy(isSyncedWithPhone = isSynced) }
     }
+
+    fun setCooldownTargetTimestamp(targetTimestamp: Long?) {
+        _uiState.update {
+            val remaining =
+                if (targetTimestamp != null) {
+                    val now = System.currentTimeMillis()
+                    val diff = targetTimestamp - now
+                    if (diff > 0) (diff / 1000L).toInt() else 0
+                } else {
+                    null
+                }
+            it.copy(
+                cooldownTargetTimestamp = targetTimestamp,
+                cooldownSecondsRemaining = remaining,
+            )
+        }
+    }
+
+    fun updateCooldownSeconds(seconds: Int?) {
+        _uiState.update { it.copy(cooldownSecondsRemaining = seconds) }
+    }
 }
