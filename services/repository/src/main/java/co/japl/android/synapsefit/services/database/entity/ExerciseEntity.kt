@@ -32,7 +32,7 @@ data class ExerciseEntity(
     val targetReps: String,
     @ColumnInfo(name = "rest_seconds")
     val restSeconds: Int,
-    @ColumnInfo(name = "day")
+    @ColumnInfo(name = "day", defaultValue = "1")
     val day: Int = 1,
     @ColumnInfo(name = "guide_video_url")
     val guideVideoUrl: String? = null,

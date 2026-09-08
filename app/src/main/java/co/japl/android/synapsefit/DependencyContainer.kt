@@ -34,12 +34,6 @@ class DependencyContainer(context: Context) {
             context.applicationContext,
             SynapseFitDatabase::class.java,
             "synapsefit_database.db",
-        ).addMigrations(
-            SynapseFitDatabase.MIGRATION_1_2,
-            SynapseFitDatabase.MIGRATION_2_3,
-            SynapseFitDatabase.MIGRATION_3_4,
-            SynapseFitDatabase.MIGRATION_4_5,
-            SynapseFitDatabase.MIGRATION_5_6,
         ).build()
     }
 

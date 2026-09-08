@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 5,
-    "identityHash": "aa870457dbbefa10f85ab39a34077f3a",
+    "identityHash": "c32edfd409dffb8fb5249709ad0f6e5e",
     "entities": [
       {
         "tableName": "user_profile",
@@ -269,7 +269,7 @@
       },
       {
         "tableName": "exercises",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `plan_id` TEXT NOT NULL, `name` TEXT NOT NULL, `muscle_group` TEXT NOT NULL, `target_sets` INTEGER NOT NULL, `target_reps` TEXT NOT NULL, `rest_seconds` INTEGER NOT NULL, `day` INTEGER NOT NULL, `guide_video_url` TEXT, `guide_image_url` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`plan_id`) REFERENCES `workout_plans`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `plan_id` TEXT NOT NULL, `name` TEXT NOT NULL, `muscle_group` TEXT NOT NULL, `target_sets` INTEGER NOT NULL, `target_reps` TEXT NOT NULL, `rest_seconds` INTEGER NOT NULL, `day` INTEGER NOT NULL DEFAULT 1, `guide_video_url` TEXT, `guide_image_url` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`plan_id`) REFERENCES `workout_plans`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -317,7 +317,8 @@
             "fieldPath": "day",
             "columnName": "day",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": true,
+            "defaultValue": "1"
           },
           {
             "fieldPath": "guideVideoUrl",
@@ -527,7 +528,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'aa870457dbbefa10f85ab39a34077f3a')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c32edfd409dffb8fb5249709ad0f6e5e')"
     ]
   }
 }
