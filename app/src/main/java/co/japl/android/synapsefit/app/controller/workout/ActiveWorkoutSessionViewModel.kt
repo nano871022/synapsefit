@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 data class WorkoutSetUiModel(
     val setIndex: Int,
@@ -203,7 +204,7 @@ class ActiveWorkoutSessionViewModel(
         timerJob =
             viewModelScope.launch {
                 while (isActive) {
-                    delay(1000L)
+                    delay(1000L.milliseconds)
                     val elapsed = DateTimeUtils.calculateElapsedTimeSeconds(sessionStartTimestamp)
                     _uiState.update { it.copy(elapsedTimeSeconds = elapsed) }
                     WorkoutTimerManager.updateElapsedTime(elapsed)
@@ -317,50 +318,56 @@ class ActiveWorkoutSessionViewModel(
     fun nextSetOrExercise() {
         restTimerJob?.cancel()
         val state = _uiState.value
-        val currentExId = state.currentExerciseId
         val isLastSetForExercise = state.currentSetIndex >= state.totalSetsForCurrentExercise
 
         if (!isLastSetForExercise) {
-            val nextSetIdx = state.currentSetIndex + 1
-            _uiState.update {
-                it.copy(
-                    currentSetIndex = nextSetIdx,
-                    isCurrentSetCompleted = false,
-                    currentSetReps = "",
-                    restTimerSecondsRemaining = null,
-                )
-            }
+            nextSet(state)
         } else {
-            val startT = exerciseStartTime[currentExId] ?: System.currentTimeMillis()
-            val timeSpent = (System.currentTimeMillis() - startT) / 1000
+            val currentExId = state.currentExerciseId
+            val timeSpent = DateTimeUtils.calculateElapsedTimeSeconds(exerciseStartTime[currentExId])
             exerciseTimeSpent[currentExId] = (exerciseTimeSpent[currentExId] ?: 0L) + timeSpent
 
             val isLastExercise = state.currentExerciseIndex + 1 >= state.exercises.size
             if (isLastExercise) {
                 finishSession()
             } else {
-                val nextExIndex = state.currentExerciseIndex + 1
-                val nextEx = state.exercises[nextExIndex]
-                exerciseStartTime[nextEx.id] = System.currentTimeMillis()
-                fetchExerciseMedia(nextEx)
-
-                _uiState.update {
-                    it.copy(
-                        currentExerciseIndex = nextExIndex,
-                        currentExerciseId = nextEx.id,
-                        currentExerciseName = nextEx.name,
-                        currentSetIndex = 1,
-                        totalSetsForCurrentExercise = nextEx.targetSets,
-                        targetRepsForCurrentSet = nextEx.targetReps,
-                        currentSetReps = "",
-                        currentSetWeightKg = "",
-                        isCurrentSetCompleted = false,
-                        restTimerSecondsRemaining = null,
-                    )
-                }
+                nextExersise(state,timeSpent)
             }
         }
         saveStateToPrefs()
+    }
+    private fun nextExersise(state: ActiveWorkoutUiState,timeSpent:Long){
+        val nextExIndex = state.currentExerciseIndex + 1
+        val nextEx = state.exercises[nextExIndex]
+        exerciseStartTime[nextEx.id] = System.currentTimeMillis()
+        fetchExerciseMedia(nextEx)
+
+        _uiState.update {
+            it.copy(
+                currentExerciseIndex = nextExIndex,
+                currentExerciseId = nextEx.id,
+                currentExerciseName = nextEx.name,
+                currentSetIndex = 1,
+                totalSetsForCurrentExercise = nextEx.targetSets,
+                targetRepsForCurrentSet = nextEx.targetReps,
+                currentSetReps = "",
+                currentSetWeightKg = "",
+                isCurrentSetCompleted = false,
+                restTimerSecondsRemaining = timeSpent.toInt(),
+            )
+        }
+    }
+
+    private fun nextSet(state: ActiveWorkoutUiState){
+        val nextSetIdx = state.currentSetIndex + 1
+        _uiState.update {
+            it.copy(
+                currentSetIndex = nextSetIdx,
+                isCurrentSetCompleted = false,
+                currentSetReps = state.currentSetReps,
+                restTimerSecondsRemaining = null,
+            )
+        }
     }
 
     private fun startRestTimer(restSeconds: Int) {
@@ -370,9 +377,10 @@ class ActiveWorkoutSessionViewModel(
                 _uiState.update { it.copy(restTimerSecondsRemaining = restSeconds) }
                 WorkoutTimerManager.updateRestTime(restSeconds)
                 for (sec in restSeconds downTo 1) {
-                    delay(1000L)
-                    _uiState.update { it.copy(restTimerSecondsRemaining = sec - 1) }
-                    WorkoutTimerManager.updateRestTime(sec - 1)
+                    delay(1000L.milliseconds)
+                    val value =  sec -1
+                    _uiState.update { it.copy(restTimerSecondsRemaining = value) }
+                    WorkoutTimerManager.updateRestTime(value)
                 }
                 _uiState.update { it.copy(restTimerSecondsRemaining = null) }
                 WorkoutTimerManager.updateRestTime(null)
@@ -391,8 +399,7 @@ class ActiveWorkoutSessionViewModel(
         val state = _uiState.value
         val currentExId = state.currentExerciseId
         if (currentExId.isNotBlank() && exerciseStartTime.containsKey(currentExId)) {
-            val startT = exerciseStartTime[currentExId] ?: System.currentTimeMillis()
-            val timeSpent = (System.currentTimeMillis() - startT) / 1000
+            val timeSpent = DateTimeUtils.calculateElapsedTimeSeconds(exerciseStartTime[currentExId])
             exerciseTimeSpent[currentExId] = (exerciseTimeSpent[currentExId] ?: 0L) + timeSpent
         }
 
@@ -434,6 +441,7 @@ class ActiveWorkoutSessionViewModel(
                 exerciseTimeSpent = exerciseTimeSpent,
                 exerciseCompletedSets = exerciseCompletedSetsCount,
                 exerciseMaxWeight = exerciseMaxWeight,
+
             )
         }
     }

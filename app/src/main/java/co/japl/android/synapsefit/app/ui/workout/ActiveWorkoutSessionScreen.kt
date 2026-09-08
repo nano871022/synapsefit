@@ -11,6 +11,7 @@
 
 package co.japl.android.synapsefit.app.ui.workout
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -84,6 +85,8 @@ fun ActiveWorkoutSessionScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val restingTime = remember { state.restTimerSecondsRemaining }
+    val isResting = restingTime != null
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -116,102 +119,9 @@ fun ActiveWorkoutSessionScreen(
                 }
             }
 
-            val exerciseIndexDisplay = if (state.exercises.isNotEmpty()) state.currentExerciseIndex + 1 else 1
-            val totalExercisesDisplay = if (state.exercises.isNotEmpty()) state.exercises.size else 1
+            Exersise(state,onOpenImagePopup,context)
 
-            ExerciseHeader(
-                currentExerciseIndex = exerciseIndexDisplay,
-                totalExercises = totalExercisesDisplay,
-                exerciseName = state.currentExerciseName,
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-            ) {
-                val queryFormatted = state.currentExerciseName.replace(" ", "+")
-                val videoUrl = state.exerciseVideoUrl ?: "https://www.youtube.com/results?search_query=$queryFormatted"
-                OutlinedButton(
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.watch_video))
-                }
-
-                OutlinedButton(
-                    onClick = onOpenImagePopup,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.view_image))
-                }
-            }
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors =
-                    CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    ),
-            ) {
-                Column(
-                    modifier = Modifier.padding(MaterialTheme.spacing.medium),
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
-                ) {
-                    Text(
-                        text = stringResource(R.string.set_label, state.currentSetIndex, state.totalSetsForCurrentExercise),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-
-                    Text(
-                        text = stringResource(R.string.target_reps, state.targetRepsForCurrentSet),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-
-                    val isResting = state.restTimerSecondsRemaining != null
-
-                    OutlinedTextField(
-                        value = state.currentSetWeightKg,
-                        onValueChange = { onSetWeightChange(state.currentSetIndex, it) },
-                        label = { Text(stringResource(R.string.weight_col)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        enabled = !state.isCurrentSetCompleted && !isResting,
-                    )
-
-                    OutlinedTextField(
-                        value = state.currentSetReps,
-                        onValueChange = { onSetRepsChange(state.currentSetIndex, it) },
-                        label = { Text(stringResource(R.string.reps_col)) },
-                        placeholder = { Text(state.targetRepsForCurrentSet) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        enabled = !state.isCurrentSetCompleted && !isResting,
-                    )
-
-                    if (!state.isCurrentSetCompleted) {
-                        NeonButton(
-                            text = if (isResting) stringResource(R.string.rest_timer_label, state.restTimerSecondsRemaining) else stringResource(R.string.complete_set),
-                            onClick = { onCompleteSet(state.currentSetIndex) },
-                            enabled = !isResting,
-                        )
-                    } else {
-                        NeonButton(
-                            text = stringResource(R.string.next_set_or_exercise),
-                            onClick = onNextSetOrExercise,
-                            enabled = !isResting,
-                        )
-                    }
-                }
-            }
+            ExersisesSet(state,isResting,onSetWeightChange,onSetRepsChange,onCompleteSet,onNextSetOrExercise,restingTime)
         }
     }
 
@@ -229,29 +139,123 @@ fun ActiveWorkoutSessionScreen(
         )
     }
 }
-
-@Preview(showBackground = true)
 @Composable
-private fun ActiveWorkoutSessionScreenPreview() {
-    MaterialThemeComposeUI {
-        ActiveWorkoutSessionScreen(
-            state =
-                ActiveWorkoutUiState(
-                    planTitle = "Sesión Activa - Día 1",
-                    currentExerciseName = "Press de Banca (Barra)",
-                    currentSetIndex = 1,
-                    totalSetsForCurrentExercise = 4,
-                    targetRepsForCurrentSet = "10-12",
-                    currentSetReps = "10",
-                    currentSetWeightKg = "60.0",
-                    elapsedTimeSeconds = 300,
-                    heartRateBpm = 135,
-                ),
-            onSetRepsChange = { _, _ -> },
-            onSetWeightChange = { _, _ -> },
-            onCompleteSet = {},
-            onFinishSession = {},
+private fun ExersisesSet(state: ActiveWorkoutUiState, isResting:Boolean,
+                         onSetWeightChange: (setIndex: Int, weight: String) -> Unit,
+                         onSetRepsChange: (setIndex: Int, reps: String) -> Unit,
+                         onCompleteSet: (setIndex: Int) -> Unit,
+                         onNextSetOrExercise: () -> Unit,
+                         restingTime:Int?){
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            ),
+    ) {
+        Column(
+            modifier = Modifier.padding(MaterialTheme.spacing.medium),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
+        ) {
+            Text(
+                text = stringResource(R.string.set_label, state.currentSetIndex, state.totalSetsForCurrentExercise),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+
+            Text(
+                text = stringResource(R.string.target_reps, state.targetRepsForCurrentSet),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            OutlinedTextField(
+                value = state.currentSetWeightKg,
+                onValueChange = { onSetWeightChange(state.currentSetIndex, it) },
+                label = { Text(stringResource(R.string.weight_col)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                enabled = !state.isCurrentSetCompleted && !isResting,
+            )
+
+            OutlinedTextField(
+                value = state.currentSetReps,
+                onValueChange = { onSetRepsChange(state.currentSetIndex, it) },
+                label = { Text(stringResource(R.string.reps_col)) },
+                placeholder = { Text(state.targetRepsForCurrentSet) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                enabled = !state.isCurrentSetCompleted && !isResting,
+            )
+
+            ExersisesSetButton(state, isResting,restingTime,onCompleteSet,onNextSetOrExercise)
+
+        }
+    }
+}
+@Composable
+private fun ExersisesSetButton(state: ActiveWorkoutUiState,isResting: Boolean, restingTime:Int?,
+                               onCompleteSet: (setIndex: Int) -> Unit,
+                               onNextSetOrExercise: () -> Unit){
+    if (!state.isCurrentSetCompleted ) {
+        NeonButton(
+            text = stringResource(R.string.complete_set),
+            onClick = { onCompleteSet(state.currentSetIndex) },
+            enabled = !isResting,
         )
+    } else if(isResting){
+        Text(text="$isResting $restingTime")
+        NeonButton(
+            text = if (isResting && restingTime != null) stringResource(R.string.rest_timer_label, restingTime) else "60",
+            onClick = { onCompleteSet(state.currentSetIndex) },
+            enabled = isResting,
+        )
+    }else {
+        NeonButton(
+            text = stringResource(R.string.next_set_or_exercise),
+            onClick = onNextSetOrExercise,
+            enabled = !isResting,
+        )
+    }
+}
+
+@Composable
+private fun Exersise(state: ActiveWorkoutUiState,onOpenImagePopup: () -> Unit,context: Context){
+    val exerciseIndexDisplay = if (state.exercises.isNotEmpty()) state.currentExerciseIndex + 1 else 1
+    val totalExercisesDisplay = if (state.exercises.isNotEmpty()) state.exercises.size else 1
+
+    ExerciseHeader(
+        currentExerciseIndex = exerciseIndexDisplay,
+        totalExercises = totalExercisesDisplay,
+        exerciseName = state.currentExerciseName,
+    )
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+    ) {
+        val queryFormatted = state.currentExerciseName.replace(" ", "+")
+        val videoUrl = state.exerciseVideoUrl ?: "https://www.youtube.com/results?search_query=$queryFormatted"
+        OutlinedButton(
+            onClick = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))
+                context.startActivity(intent)
+            },
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.watch_video))
+        }
+
+        OutlinedButton(
+            onClick = onOpenImagePopup,
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.view_image))
+        }
     }
 }
 
@@ -464,3 +468,68 @@ fun WorkoutSummaryDialog(
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun ActiveWorkoutSessionScreenPreview() {
+    var state = getState(true,null)
+    MaterialThemeComposeUI {
+        ActiveWorkoutSessionScreen(
+            state =state,
+            onSetRepsChange = { _, _ -> },
+            onSetWeightChange = { _, _ -> },
+            onCompleteSet = {},
+            onFinishSession = {},
+        )
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+private fun ActiveWorkoutSessionScreenCurrentCompletedPreview() {
+    var state = getState(false,null)
+    MaterialThemeComposeUI {
+        ActiveWorkoutSessionScreen(
+            state = state,
+            onSetRepsChange = { _, _ -> },
+            onSetWeightChange = { _, _ -> },
+            onCompleteSet = {},
+            onFinishSession = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ActiveWorkoutSessionScreenRestPreview() {
+    var state = getState(true,60)
+    MaterialThemeComposeUI {
+        ActiveWorkoutSessionScreen(
+            state =state,
+            onSetRepsChange = { _, _ -> },
+            onSetWeightChange = { _, _ -> },
+            onCompleteSet = {},
+            onFinishSession = {},
+        )
+    }
+}
+
+@Composable
+private fun getState(currentCompletedState: Boolean,restateTimer:Int?): ActiveWorkoutUiState{
+    return ActiveWorkoutUiState(
+        planTitle = "Sesión Activa - Día 1",
+        currentExerciseName = "Press de Banca (Barra)",
+        currentSetIndex = 1,
+        totalSetsForCurrentExercise = 4,
+        targetRepsForCurrentSet = "10-12",
+        currentSetReps = "10",
+        isCurrentSetCompleted = currentCompletedState,
+        currentSetWeightKg = "60.0",
+        elapsedTimeSeconds = 300,
+        restTimerSecondsRemaining = restateTimer,
+        heartRateBpm = 135,
+    )
+}
+
+

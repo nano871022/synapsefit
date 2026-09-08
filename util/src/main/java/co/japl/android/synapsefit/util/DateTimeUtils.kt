@@ -78,10 +78,11 @@ object DateTimeUtils {
 
     @Suppress("MagicNumber")
     fun calculateElapsedTimeSeconds(
-        startTimestamp: Long,
+        startTimestamps: Long?,
         currentTimestamp: Long = System.currentTimeMillis(),
     ): Long {
-        if (startTimestamp <= 0L || currentTimestamp < startTimestamp) return 0L
+        val startTimestamp = startTimestamps ?:System.currentTimeMillis()
+        if (startTimestamp !in 1..currentTimestamp) return 0L
         return (currentTimestamp - startTimestamp) / 1000L
     }
 
