@@ -14,6 +14,7 @@ class RecordWorkoutSessionUseCase(
         weightLiftedKg: Double,
         heartRateBpm: Int? = null,
         sourceDevice: SourceDevice = SourceDevice.MOBILE,
+        durationSeconds: Long = 0L,
         timestamp: Long = System.currentTimeMillis(),
     ): Result<WorkoutLog> {
         if (exerciseId.trim().isEmpty()) {
@@ -38,6 +39,7 @@ class RecordWorkoutSessionUseCase(
                 weightLiftedKg = weightLiftedKg,
                 heartRateBpm = heartRateBpm,
                 sourceDevice = sourceDevice,
+                durationSeconds = durationSeconds,
                 timestamp = timestamp,
                 createdAt = now,
                 updatedAt = now,

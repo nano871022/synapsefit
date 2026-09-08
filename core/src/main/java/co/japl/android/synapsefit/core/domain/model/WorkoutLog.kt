@@ -7,6 +7,7 @@ data class WorkoutLog(
     val weightLiftedKg: Double,
     val heartRateBpm: Int? = null,
     val sourceDevice: SourceDevice = SourceDevice.MOBILE,
+    val durationSeconds: Long = 0L,
     val timestamp: Long,
     val createdAt: Long,
     val updatedAt: Long,
