@@ -5,7 +5,7 @@ import co.japl.android.synapsefit.R
 data class ParsedError(
     val code: String,
     val titleRes: Int,
-    val originalMessage: String
+    val originalMessage: String,
 )
 
 fun parseHttpError(message: String?): ParsedError {

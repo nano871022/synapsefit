@@ -81,7 +81,7 @@ object DateTimeUtils {
         startTimestamps: Long?,
         currentTimestamp: Long = System.currentTimeMillis(),
     ): Long {
-        val startTimestamp = startTimestamps ?:System.currentTimeMillis()
+        val startTimestamp = startTimestamps ?: System.currentTimeMillis()
         if (startTimestamp !in 1..currentTimestamp) return 0L
         return (currentTimestamp - startTimestamp) / 1000L
     }

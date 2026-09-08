@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "UnusedPrivateMember", "MagicNumber")
+@file:Suppress("FunctionNaming", "UnusedPrivateMember", "MagicNumber", "LongParameterList")
 
 package co.japl.android.synapsefit.ui.components
 
@@ -51,7 +51,7 @@ fun NeonButton(
         } else {
             androidx.compose.foundation.layout.Row(
                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
             ) {
                 if (icon != null) {
                     icon()

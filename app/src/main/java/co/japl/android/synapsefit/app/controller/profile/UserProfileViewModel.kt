@@ -82,7 +82,7 @@ class UserProfileViewModel(
                     _uiState.update {
                         it.copy(
                             allRecommendations = list,
-                            latestRecommendation = list.firstOrNull()?.result
+                            latestRecommendation = list.firstOrNull()?.result,
                         )
                     }
                 }

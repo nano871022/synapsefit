@@ -5,7 +5,7 @@ import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
 import kotlinx.coroutines.flow.Flow
 
 class GetMedicalRecommendationsUseCase(
-    private val repository: UserProfileRepositoryPort
+    private val repository: UserProfileRepositoryPort,
 ) {
     fun getLatest(): Flow<MedicalRecommendation?> {
         return repository.getLatestMedicalRecommendation()

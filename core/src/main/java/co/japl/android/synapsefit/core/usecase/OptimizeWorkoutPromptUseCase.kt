@@ -23,7 +23,7 @@ class OptimizeWorkoutPromptUseCase(
             userPrompt = userPrompt,
             location = location.name,
             equipment = equipment.name,
-            config = activeConfig
+            config = activeConfig,
         )
     }
 }

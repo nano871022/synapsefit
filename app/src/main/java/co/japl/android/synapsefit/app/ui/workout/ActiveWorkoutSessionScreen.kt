@@ -6,7 +6,7 @@
     "MaxLineLength",
     "ImplicitDefaultLocale",
     "CyclomaticComplexMethod",
-    "UnusedPrivateMember",
+    "UnusedPrivateMember", "TooManyFunctions",
 )
 
 package co.japl.android.synapsefit.app.ui.workout
@@ -66,7 +66,6 @@ import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.workout.ActiveWorkoutUiState
 import co.japl.android.synapsefit.app.controller.workout.WorkoutSummary
 import co.japl.android.synapsefit.ui.components.HeartRateGauge
-import co.japl.android.synapsefit.ui.components.KineticCard
 import co.japl.android.synapsefit.ui.components.NeonButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -119,9 +118,9 @@ fun ActiveWorkoutSessionScreen(
                 }
             }
 
-            Exersise(state,onOpenImagePopup,context)
+            Exersise(state, onOpenImagePopup, context)
 
-            ExersisesSet(state,isResting,onSetWeightChange,onSetRepsChange,onCompleteSet,onNextSetOrExercise,restingTime)
+            ExersisesSet(state, isResting, onSetWeightChange, onSetRepsChange, onCompleteSet, onNextSetOrExercise, restingTime)
         }
     }
 
@@ -139,13 +138,17 @@ fun ActiveWorkoutSessionScreen(
         )
     }
 }
+
 @Composable
-private fun ExersisesSet(state: ActiveWorkoutUiState, isResting:Boolean,
-                         onSetWeightChange: (setIndex: Int, weight: String) -> Unit,
-                         onSetRepsChange: (setIndex: Int, reps: String) -> Unit,
-                         onCompleteSet: (setIndex: Int) -> Unit,
-                         onNextSetOrExercise: () -> Unit,
-                         restingTime:Int?){
+private fun ExersisesSet(
+    state: ActiveWorkoutUiState,
+    isResting: Boolean,
+    onSetWeightChange: (setIndex: Int, weight: String) -> Unit,
+    onSetRepsChange: (setIndex: Int, reps: String) -> Unit,
+    onCompleteSet: (setIndex: Int) -> Unit,
+    onNextSetOrExercise: () -> Unit,
+    restingTime: Int?,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -192,29 +195,33 @@ private fun ExersisesSet(state: ActiveWorkoutUiState, isResting:Boolean,
                 enabled = !state.isCurrentSetCompleted && !isResting,
             )
 
-            ExersisesSetButton(state, isResting,restingTime,onCompleteSet,onNextSetOrExercise)
-
+            ExersisesSetButton(state, isResting, restingTime, onCompleteSet, onNextSetOrExercise)
         }
     }
 }
+
 @Composable
-private fun ExersisesSetButton(state: ActiveWorkoutUiState,isResting: Boolean, restingTime:Int?,
-                               onCompleteSet: (setIndex: Int) -> Unit,
-                               onNextSetOrExercise: () -> Unit){
-    if (!state.isCurrentSetCompleted ) {
+private fun ExersisesSetButton(
+    state: ActiveWorkoutUiState,
+    isResting: Boolean,
+    restingTime: Int?,
+    onCompleteSet: (setIndex: Int) -> Unit,
+    onNextSetOrExercise: () -> Unit,
+) {
+    if (!state.isCurrentSetCompleted) {
         NeonButton(
             text = stringResource(R.string.complete_set),
             onClick = { onCompleteSet(state.currentSetIndex) },
             enabled = !isResting,
         )
-    } else if(isResting){
-        Text(text="$isResting $restingTime")
+    } else if (isResting) {
+        Text(text = "$isResting $restingTime")
         NeonButton(
             text = if (isResting && restingTime != null) stringResource(R.string.rest_timer_label, restingTime) else "60",
             onClick = { onCompleteSet(state.currentSetIndex) },
             enabled = isResting,
         )
-    }else {
+    } else {
         NeonButton(
             text = stringResource(R.string.next_set_or_exercise),
             onClick = onNextSetOrExercise,
@@ -224,7 +231,11 @@ private fun ExersisesSetButton(state: ActiveWorkoutUiState,isResting: Boolean, r
 }
 
 @Composable
-private fun Exersise(state: ActiveWorkoutUiState,onOpenImagePopup: () -> Unit,context: Context){
+private fun Exersise(
+    state: ActiveWorkoutUiState,
+    onOpenImagePopup: () -> Unit,
+    context: Context,
+) {
     val exerciseIndexDisplay = if (state.exercises.isNotEmpty()) state.currentExerciseIndex + 1 else 1
     val totalExercisesDisplay = if (state.exercises.isNotEmpty()) state.exercises.size else 1
 
@@ -472,10 +483,10 @@ fun WorkoutSummaryDialog(
 @Preview(showBackground = true)
 @Composable
 private fun ActiveWorkoutSessionScreenPreview() {
-    var state = getState(true,null)
+    var state = getState(true, null)
     MaterialThemeComposeUI {
         ActiveWorkoutSessionScreen(
-            state =state,
+            state = state,
             onSetRepsChange = { _, _ -> },
             onSetWeightChange = { _, _ -> },
             onCompleteSet = {},
@@ -484,11 +495,10 @@ private fun ActiveWorkoutSessionScreenPreview() {
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 private fun ActiveWorkoutSessionScreenCurrentCompletedPreview() {
-    var state = getState(false,null)
+    var state = getState(false, null)
     MaterialThemeComposeUI {
         ActiveWorkoutSessionScreen(
             state = state,
@@ -503,10 +513,10 @@ private fun ActiveWorkoutSessionScreenCurrentCompletedPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun ActiveWorkoutSessionScreenRestPreview() {
-    var state = getState(true,60)
+    var state = getState(true, 60)
     MaterialThemeComposeUI {
         ActiveWorkoutSessionScreen(
-            state =state,
+            state = state,
             onSetRepsChange = { _, _ -> },
             onSetWeightChange = { _, _ -> },
             onCompleteSet = {},
@@ -516,7 +526,10 @@ private fun ActiveWorkoutSessionScreenRestPreview() {
 }
 
 @Composable
-private fun getState(currentCompletedState: Boolean,restateTimer:Int?): ActiveWorkoutUiState{
+private fun getState(
+    currentCompletedState: Boolean,
+    restateTimer: Int?,
+): ActiveWorkoutUiState {
     return ActiveWorkoutUiState(
         planTitle = "Sesión Activa - Día 1",
         currentExerciseName = "Press de Banca (Barra)",
@@ -531,5 +544,3 @@ private fun getState(currentCompletedState: Boolean,restateTimer:Int?): ActiveWo
         heartRateBpm = 135,
     )
 }
-
-

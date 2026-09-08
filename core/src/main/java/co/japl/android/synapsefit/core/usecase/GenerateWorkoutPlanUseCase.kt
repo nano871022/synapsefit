@@ -1,4 +1,4 @@
-@file:Suppress("CyclomaticComplexMethod")
+@file:Suppress("CyclomaticComplexMethod", "MaxLineLength")
 
 package co.japl.android.synapsefit.core.usecase
 
@@ -64,7 +64,7 @@ class GenerateWorkoutPlanUseCase(
 
     private fun mapToEnvironment(
         location: co.japl.android.synapsefit.core.domain.model.TrainingLocation,
-        equipment: co.japl.android.synapsefit.core.domain.model.EquipmentPreference
+        equipment: co.japl.android.synapsefit.core.domain.model.EquipmentPreference,
     ): TrainingEnvironment {
         return when {
             location == co.japl.android.synapsefit.core.domain.model.TrainingLocation.GYM -> TrainingEnvironment.CHAIN_GYM
