@@ -110,6 +110,9 @@
 
     <!-- V7: Active Workout Session -->
     <string name="finish_workout">Finalizar Entrenamiento</string>
+    <string name="finish_session_confirmation_title">Confirmar Finalización</string>
+    <string name="finish_session_confirmation_message">¿Está seguro de que desea terminar la sesión de entrenamiento actual?</string>
+    <string name="finish_session_confirm">Terminar Sesión</string>
     <string name="elapsed_time">Tiempo Transcurrido</string>
     <string name="rest_between_sets">Descanso entre series</string>
     <string name="rest_timer_label">En Descanso (%1$ds)</string>

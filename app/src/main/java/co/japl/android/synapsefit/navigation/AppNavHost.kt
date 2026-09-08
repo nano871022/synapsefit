@@ -342,8 +342,8 @@ fun AppNavHost(
                         object : ViewModelProvider.Factory {
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return WorkoutHistoryViewModel(
-                                    workoutLogRepositoryPort = dependencyContainer.workoutLogRepository,
                                     workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
+                                    getGroupedWorkoutHistoryUseCase = dependencyContainer.getGroupedWorkoutHistoryUseCase,
                                 ) as T
                             }
                         },

@@ -12,6 +12,7 @@ import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase
 import co.japl.android.synapsefit.core.usecase.GenerateWorkoutPlanUseCase
 import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
+import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
 import co.japl.android.synapsefit.core.usecase.GetMedicalRecommendationsUseCase
 import co.japl.android.synapsefit.core.usecase.GetUserProfileUseCase
 import co.japl.android.synapsefit.core.usecase.PerformDriveSyncUseCase
@@ -34,7 +35,8 @@ class DependencyContainer(context: Context) {
             context.applicationContext,
             SynapseFitDatabase::class.java,
             "synapsefit_database.db",
-        ).build()
+        ).addMigrations(SynapseFitDatabase.MIGRATION_6_7)
+            .build()
     }
 
     val userProfileRepository: UserProfileRepositoryPort by lazy {
@@ -111,6 +113,10 @@ class DependencyContainer(context: Context) {
 
     val getMedicalRecommendationsUseCase: GetMedicalRecommendationsUseCase by lazy {
         GetMedicalRecommendationsUseCase(userProfileRepository)
+    }
+
+    val getGroupedWorkoutHistoryUseCase: GetGroupedWorkoutHistoryUseCase by lazy {
+        GetGroupedWorkoutHistoryUseCase(workoutLogRepository)
     }
 
     val optimizeWorkoutPromptUseCase: co.japl.android.synapsefit.core.usecase.OptimizeWorkoutPromptUseCase by lazy {

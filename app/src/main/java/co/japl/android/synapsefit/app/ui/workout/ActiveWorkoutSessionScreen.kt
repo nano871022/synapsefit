@@ -87,13 +87,14 @@ fun ActiveWorkoutSessionScreen(
     val context = LocalContext.current
     val restingTime = remember { state.restTimerSecondsRemaining }
     val isResting = restingTime != null
+    var showFinishConfirmation by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
             NeonButton(
                 text = stringResource(R.string.finish_workout),
-                onClick = onFinishSession,
+                onClick = { showFinishConfirmation = true },
                 modifier = Modifier.padding(MaterialTheme.spacing.marginEdge),
             )
         },
@@ -136,6 +137,16 @@ fun ActiveWorkoutSessionScreen(
         ExerciseImageDialog(
             imageUrl = state.exerciseImageUrl,
             onDismiss = onCloseImagePopup,
+        )
+    }
+
+    if (showFinishConfirmation) {
+        FinishWorkoutConfirmationDialog(
+            onConfirm = {
+                showFinishConfirmation = false
+                onFinishSession()
+            },
+            onDismiss = { showFinishConfirmation = false },
         )
     }
 }
@@ -518,6 +529,57 @@ fun WorkoutSummaryDialog(
                     text = stringResource(R.string.accept_and_close),
                     onClick = onDismiss,
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun FinishWorkoutConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp,
+            modifier = modifier.fillMaxWidth().padding(MaterialTheme.spacing.small),
+        ) {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.spacing.medium),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
+            ) {
+                Text(
+                    text = stringResource(R.string.finish_session_confirmation_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+
+                Text(
+                    text = stringResource(R.string.finish_session_confirmation_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(stringResource(R.string.cancel))
+                    }
+
+                    NeonButton(
+                        text = stringResource(R.string.finish_session_confirm),
+                        onClick = onConfirm,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
     }

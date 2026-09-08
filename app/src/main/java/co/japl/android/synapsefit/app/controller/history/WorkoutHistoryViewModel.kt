@@ -4,23 +4,22 @@ package co.japl.android.synapsefit.app.controller.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import co.japl.android.synapsefit.core.domain.model.WorkoutLog
-import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryGroup
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
-import co.japl.android.synapsefit.util.DateTimeUtils
+import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
 import co.japl.android.synapsefit.util.MathUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
-import kotlin.collections.set
-import kotlin.text.isNotBlank
 
 data class CalendarDayUiModel(
     val dayNumber: Int,
@@ -107,19 +106,13 @@ data class WorkoutHistoryUiState(
 )
 
 class WorkoutHistoryViewModel(
-    private val workoutLogRepositoryPort: WorkoutLogRepositoryPort? = null,
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
+    private val getGroupedWorkoutHistoryUseCase: GetGroupedWorkoutHistoryUseCase? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(WorkoutHistoryUiState())
     val uiState: StateFlow<WorkoutHistoryUiState> = _uiState.asStateFlow()
 
-    val exerciseNameMap = mutableMapOf<String, String>()
-    val exerciseDayMap = mutableMapOf<String, Int>()
-    val exerciseMuscleMap = mutableMapOf<String, String>()
-    var listLogs = mutableListOf<WorkoutLog>()
-
-    private var activePlanTitle: String = ""
-    private var activePlanTotalSessions: Int = 12
+    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault())
 
     init {
         val currentCal = Calendar.getInstance()
@@ -137,39 +130,106 @@ class WorkoutHistoryViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            val logsFlow = workoutLogRepositoryPort?.getAllLogs() ?: flowOf(emptyList())
+            val historyFlow = getGroupedWorkoutHistoryUseCase?.invoke() ?: flowOf(emptyList())
             val plansFlow = workoutPlanRepositoryPort?.getAllPlans() ?: flowOf(emptyList())
 
-            combine(logsFlow, plansFlow) { logs, plans ->
-                Pair(logs, plans)
-            }.collect { (logs, plans) ->
-                exerciseNameMap.clear()
-                exerciseDayMap.clear()
-                exerciseMuscleMap.clear()
-
+            combine(historyFlow, plansFlow) { groups, plans ->
                 val activePlan = plans.firstOrNull { it.isActive } ?: plans.firstOrNull()
-                if (activePlan != null) {
-                    activePlanTitle = activePlan.title
-                    activePlanTotalSessions = activePlan.totalSessions
-                } else {
-                    activePlanTitle = ""
-                    activePlanTotalSessions = 12
-                }
+                val activePlanTitle = activePlan?.title ?: ""
+                val activePlanTotalSessions = activePlan?.totalSessions ?: 12
 
-                workoutPlanRepositoryPort?.let { port ->
-                    plans.forEach { plan ->
-                        val planWithExercises = port.getPlanWithExercises(plan.id).firstOrNull()
-                        planWithExercises?.second?.forEach { ex ->
-                            exerciseNameMap[ex.id] = ex.name
-                            exerciseDayMap[ex.id] = ex.day
-                            exerciseMuscleMap[ex.id] = ex.muscleGroup
-                        }
-                    }
-                }
-                listLogs.clear()
-                listLogs.addAll(logs)
-                load()
+                Triple(groups, activePlanTitle, activePlanTotalSessions)
+            }.collect { (groups, activePlanTitle, activePlanTotalSessions) ->
+                updateStateWithGroups(groups, activePlanTitle, activePlanTotalSessions)
             }
+        }
+    }
+
+    private fun updateStateWithGroups(
+        groups: List<WorkoutHistoryGroup>,
+        activePlanTitle: String,
+        activePlanTotalSessions: Int
+    ) {
+        val uiGroups = groups.map { group ->
+            WorkoutSessionGroupUiModel(
+                sessionId = group.sessionId,
+                sessionTitle = "Día ${group.day}",
+                dateFormatted = dateFormatter.format(Instant.ofEpochMilli(group.timestamp)),
+                durationMinutes = (group.totalDurationSeconds / 60).toInt().coerceAtLeast(1),
+                timestamp = group.timestamp,
+                muscleGroups = group.muscleGroups,
+                totalExercisesCount = group.exercises.size,
+                totalVolumeKg = MathUtils.roundToDecimals(group.totalVolumeKg, 1),
+                exercises = group.exercises.map { ex ->
+                    ExerciseSessionDetailUiModel(
+                        exerciseId = ex.exerciseId,
+                        exerciseName = ex.exerciseName,
+                        muscleGroup = ex.muscleGroup,
+                        sets = ex.sets.map { s ->
+                            ExerciseLogSetUiModel(
+                                setIndex = s.setIndex,
+                                repsCompleted = s.repsCompleted,
+                                weightLiftedKg = s.weightLiftedKg,
+                                heartRateBpm = s.heartRateBpm,
+                                durationSeconds = s.durationSeconds,
+                                timestamp = s.timestamp
+                            )
+                        },
+                        averageReps = ex.averageReps,
+                        averageWeightKg = ex.averageWeightKg
+                    )
+                }
+            )
+        }
+
+        val targetYearMonth = _uiState.value.selectedYearMonth
+        val filteredGroups = uiGroups.filter { it.dateFormatted.startsWith(targetYearMonth) }
+        val grid = buildCalendarGrid(targetYearMonth, uiGroups.map { it.dateFormatted }.toSet())
+
+        // Weekly metrics
+        val now = System.currentTimeMillis()
+        val weekAgo = now - (7 * 24 * 60 * 60 * 1000L)
+        val weeklyGroups = uiGroups.filter { it.timestamp >= weekAgo }
+        val weeklyVol = weeklyGroups.sumOf { it.totalVolumeKg }
+        val weeklyDurationSec = weeklyGroups.sumOf { it.durationMinutes * 60L }
+        val weeklyHours = MathUtils.roundToDecimals(weeklyDurationSec / 3600.0, 1)
+
+        // Active plan stats
+        val totalPlanVolKg = uiGroups.sumOf { it.totalVolumeKg }
+        val totalPlanVolTons = MathUtils.roundToDecimals(totalPlanVolKg / 1000.0, 1)
+        val totalPlanDurationSec = uiGroups.sumOf { it.durationMinutes * 60L }
+        val totalPlanHours = MathUtils.roundToDecimals(totalPlanDurationSec / 3600.0, 1)
+        val completedCount = uiGroups.size
+        val currentWeek = ((completedCount / 3) + 1).coerceAtMost(8)
+
+        val activeStats = ActivePlanStatsUiModel(
+            planTitle = activePlanTitle.ifBlank { "Plan de Entrenamiento" },
+            currentWeek = currentWeek,
+            totalWeeks = 8,
+            completedSessionsCount = completedCount,
+            totalSessionsGoal = activePlanTotalSessions,
+            totalVolumeTons = totalPlanVolTons,
+            totalHours = totalPlanHours,
+        )
+
+        val globalStats = GlobalHistoryStatsUiModel(
+            totalWorkoutsCount = uiGroups.size,
+            totalVolumeFormatted = formatVolume(totalPlanVolKg),
+            totalHours = totalPlanHours,
+        )
+
+        _uiState.update {
+            it.copy(
+                calendarGrid = grid,
+                sessionGroups = uiGroups,
+                filteredSessionGroups = if (filteredGroups.isNotEmpty()) filteredGroups else uiGroups,
+                weeklySessionsCount = weeklyGroups.size,
+                weeklyTotalHours = weeklyHours,
+                weeklyTotalVolumeKg = MathUtils.roundToDecimals(weeklyVol, 1),
+                activePlanStats = activeStats,
+                globalHistoryStats = globalStats,
+                isLoading = false,
+            )
         }
     }
 
@@ -206,7 +266,7 @@ class WorkoutHistoryViewModel(
                 selectedYearMonthDisplay = formatMonthDisplay(cal),
             )
         }
-        load()
+        loadHistory()
     }
 
     private fun formatMonthDisplay(cal: Calendar): String {
@@ -216,76 +276,6 @@ class WorkoutHistoryViewModel(
 
     private fun String.capitalizeLocale(): String =
         replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-
-    private fun load() {
-        val mapped = listLogs.map { log -> sessionHistoryMap(log, exerciseNameMap) }
-        val sessionClusterMap = sortLogs(listLogs)
-
-        val groups =
-            sessionClusterMap.map { (clusterKey, sessionLogs) ->
-                sessionGroup(clusterKey, sessionLogs, exerciseNameMap, exerciseDayMap, exerciseMuscleMap)
-            }
-
-        val targetYearMonth = _uiState.value.selectedYearMonth
-        val filteredGroups =
-            groups.filter { group ->
-                group.dateFormatted.startsWith(targetYearMonth)
-            }
-
-        val grid = buildCalendarGrid(targetYearMonth, groups.map { it.dateFormatted }.toSet())
-
-        // Weekly metrics (current week or recent logs)
-        val now = System.currentTimeMillis()
-        val weekAgo = now - (7 * 24 * 60 * 60 * 1000L)
-        val weeklyLogs = listLogs.filter { it.timestamp >= weekAgo }
-        val weeklyGroups = groups.filter { it.timestamp >= weekAgo }
-        val weeklyVol = weeklyLogs.sumOf { it.repsCompleted * it.weightLiftedKg }
-        val weeklyDurationSec = weeklyLogs.sumOf { it.durationSeconds }
-        val weeklyHours = MathUtils.roundToDecimals(weeklyDurationSec / 3600.0, 1)
-
-        // Active plan stats
-        val totalPlanVolKg = listLogs.sumOf { it.repsCompleted * it.weightLiftedKg }
-        val totalPlanVolTons = MathUtils.roundToDecimals(totalPlanVolKg / 1000.0, 1)
-        val totalPlanDurationSec = listLogs.sumOf { it.durationSeconds }
-        val totalPlanHours = MathUtils.roundToDecimals(totalPlanDurationSec / 3600.0, 1)
-        val completedCount = groups.size
-        val currentWeek = ((completedCount / 3) + 1).coerceAtMost(8)
-
-        val activeStats =
-            ActivePlanStatsUiModel(
-                planTitle = activePlanTitle.ifBlank { "Plan de Entrenamiento" },
-                currentWeek = currentWeek,
-                totalWeeks = 8,
-                completedSessionsCount = completedCount,
-                totalSessionsGoal = activePlanTotalSessions,
-                totalVolumeTons = totalPlanVolTons,
-                totalHours = totalPlanHours,
-            )
-
-        // Global stats
-        val globalVolFormatted = formatVolume(totalPlanVolKg)
-        val globalStats =
-            GlobalHistoryStatsUiModel(
-                totalWorkoutsCount = groups.size,
-                totalVolumeFormatted = globalVolFormatted,
-                totalHours = totalPlanHours,
-            )
-
-        _uiState.update {
-            it.copy(
-                calendarGrid = grid,
-                recordedSessions = mapped,
-                sessionGroups = groups,
-                filteredSessionGroups = if (filteredGroups.isNotEmpty()) filteredGroups else groups,
-                weeklySessionsCount = weeklyGroups.size,
-                weeklyTotalHours = weeklyHours,
-                weeklyTotalVolumeKg = MathUtils.roundToDecimals(weeklyVol, 1),
-                activePlanStats = activeStats,
-                globalHistoryStats = globalStats,
-                isLoading = false,
-            )
-        }
-    }
 
     private fun formatVolume(kg: Double): String {
         return if (kg >= 1_000_000) {
@@ -316,168 +306,28 @@ class WorkoutHistoryViewModel(
         cal.set(Calendar.DAY_OF_MONTH, 1)
 
         val daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-        // Adjust for Monday start (1=Monday ... 7=Sunday)
         var firstDayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1
         if (firstDayOfWeek == 0) firstDayOfWeek = 7
 
-        // Previous month filler
         val prevCal = cal.clone() as Calendar
         prevCal.add(Calendar.MONTH, -1)
         val prevDaysInMonth = prevCal.getActualMaximum(Calendar.DAY_OF_MONTH)
         for (i in (firstDayOfWeek - 1) downTo 1) {
             val dayNum = prevDaysInMonth - i + 1
-            grid.add(
-                CalendarDayUiModel(
-                    dayNumber = dayNum,
-                    isCurrentMonth = false,
-                    isSelected = false,
-                    hasWorkout = false,
-                    dateIso = "",
-                ),
-            )
+            grid.add(CalendarDayUiModel(dayNum, false, false, false, ""))
         }
 
-        // Current month days
         for (day in 1..daysInMonth) {
             val dateIso = String.format(Locale.ROOT, "%04d-%02d-%02d", year, month + 1, day)
             val hasWorkout = workoutDates.contains(dateIso)
-            grid.add(
-                CalendarDayUiModel(
-                    dayNumber = day,
-                    isCurrentMonth = true,
-                    isSelected = false,
-                    hasWorkout = hasWorkout,
-                    dateIso = dateIso,
-                ),
-            )
+            grid.add(CalendarDayUiModel(day, true, false, hasWorkout, dateIso))
         }
 
-        // Next month filler up to 35 or 42 cells
         val totalCells = if (grid.size > 35) 42 else 35
         var nextMonthDay = 1
         while (grid.size < totalCells) {
-            grid.add(
-                CalendarDayUiModel(
-                    dayNumber = nextMonthDay++,
-                    isCurrentMonth = false,
-                    isSelected = false,
-                    hasWorkout = false,
-                    dateIso = "",
-                ),
-            )
+            grid.add(CalendarDayUiModel(nextMonthDay++, false, false, false, ""))
         }
-
         return grid
-    }
-
-    private fun sessionHistoryMap(
-        log: WorkoutLog,
-        exerciseNameMap: Map<String, String>,
-    ): SessionHistoryUiModel {
-        val nameResolved = exerciseNameMap[log.exerciseId]?.takeIf { it.isNotBlank() }
-        val fallbackName = "Ejercicio (${log.exerciseId.take(8)})"
-        return SessionHistoryUiModel(
-            id = log.id,
-            exerciseId = log.exerciseId,
-            exerciseName = nameResolved ?: fallbackName,
-            repsCompleted = log.repsCompleted,
-            weightLiftedKg = log.weightLiftedKg,
-            heartRateBpm = log.heartRateBpm,
-            sourceDevice = log.sourceDevice.name,
-            timestamp = log.timestamp,
-        )
-    }
-
-    private fun sortLogs(logs: List<WorkoutLog>): LinkedHashMap<String, MutableList<WorkoutLog>> {
-        val sessionClusterMap = LinkedHashMap<String, MutableList<WorkoutLog>>()
-        val sortedLogs = logs.sortedByDescending { it.timestamp }
-        var currentClusterKey = ""
-        for (log in sortedLogs) {
-            val dateKey = DateTimeUtils.formatEpoch(log.timestamp, "yyyy-MM-dd")
-            if (currentClusterKey.isEmpty() || !currentClusterKey.startsWith(dateKey)) {
-                currentClusterKey = "${dateKey}_${log.timestamp}"
-                sessionClusterMap[currentClusterKey] = mutableListOf()
-            }
-            sessionClusterMap[currentClusterKey]?.add(log)
-        }
-        return sessionClusterMap
-    }
-
-    private fun sessionGroup(
-        clusterKey: String,
-        sessionLogs: MutableList<WorkoutLog>,
-        exerciseNameMap: Map<String, String>,
-        exerciseDayMap: Map<String, Int>,
-        exerciseMuscleMap: Map<String, String>,
-    ): WorkoutSessionGroupUiModel {
-        val dateStr = DateTimeUtils.formatEpoch(sessionLogs.first().timestamp, "yyyy-MM-dd")
-
-        val exerciseGroupMap = LinkedHashMap<String, MutableList<WorkoutLog>>()
-        sessionLogs.forEach { log ->
-            exerciseGroupMap.getOrPut(log.exerciseId) { mutableListOf() }.add(log)
-        }
-
-        var sessionDayNumber = 1
-        val muscleGroupsSet = mutableSetOf<String>()
-
-        val exerciseDetails =
-            exerciseGroupMap.map { (exId, exLogs) ->
-                val day = exerciseDayMap[exId] ?: 1
-                if (day > 1) sessionDayNumber = day
-                val muscle = exerciseMuscleMap[exId] ?: ""
-                if (muscle.isNotBlank()) muscleGroupsSet.add(muscle)
-                exerciseMap(exId, exLogs, exerciseNameMap, muscle)
-            }
-
-        val sessionVol = sessionLogs.sumOf { it.repsCompleted * it.weightLiftedKg }
-        val sessionDurationSec = sessionLogs.sumOf { it.durationSeconds }
-        val durationMins = (sessionDurationSec / 60L).toInt().coerceAtLeast(1)
-        val dayTitle = "Día $sessionDayNumber"
-
-        return WorkoutSessionGroupUiModel(
-            sessionId = clusterKey,
-            sessionTitle = dayTitle,
-            dateFormatted = dateStr,
-            durationMinutes = durationMins,
-            timestamp = sessionLogs.first().timestamp,
-            muscleGroups = muscleGroupsSet.toList(),
-            totalExercisesCount = exerciseDetails.size,
-            totalVolumeKg = MathUtils.roundToDecimals(sessionVol, 1),
-            exercises = exerciseDetails,
-        )
-    }
-
-    private fun exerciseMap(
-        exId: String,
-        exLogs: MutableList<WorkoutLog>,
-        exerciseNameMap: Map<String, String>,
-        muscleGroup: String,
-    ): ExerciseSessionDetailUiModel {
-        val exName = exerciseNameMap[exId]?.takeIf { it.isNotBlank() } ?: "Ejercicio (${exId.take(8)})"
-
-        val sortedExLogs = exLogs.sortedBy { it.timestamp }
-        val setModels =
-            sortedExLogs.mapIndexed { index, l ->
-                ExerciseLogSetUiModel(
-                    setIndex = index + 1,
-                    repsCompleted = l.repsCompleted,
-                    weightLiftedKg = l.weightLiftedKg,
-                    heartRateBpm = l.heartRateBpm,
-                    durationSeconds = l.durationSeconds,
-                    timestamp = l.timestamp,
-                )
-            }
-
-        val avgReps = MathUtils.roundToDecimals(setModels.map { it.repsCompleted }.average(), 1)
-        val avgWeight = MathUtils.roundToDecimals(setModels.map { it.weightLiftedKg }.average(), 1)
-
-        return ExerciseSessionDetailUiModel(
-            exerciseId = exId,
-            exerciseName = exName,
-            muscleGroup = muscleGroup,
-            sets = setModels,
-            averageReps = avgReps,
-            averageWeightKg = avgWeight,
-        )
     }
 }

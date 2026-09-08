@@ -200,3 +200,20 @@ fun LlmConfig.toEntity(): LlmConfigEntity =
         createdAt = createdAt,
         updatedAt = updatedAt,
     )
+
+fun co.japl.android.synapsefit.services.database.entity.WorkoutLogWithExerciseEntity.toDomain(): co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord =
+    co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord(
+        logId = logId,
+        exerciseId = exerciseId,
+        planId = planId,
+        planTitle = planTitle,
+        day = day,
+        exerciseName = exerciseName,
+        muscleGroup = muscleGroup,
+        repsCompleted = repsCompleted,
+        weightLiftedKg = weightLiftedKg,
+        heartRateBpm = heartRateBpm,
+        durationSeconds = durationSeconds,
+        sourceDevice = runCatching { SourceDevice.valueOf(sourceDevice) }.getOrDefault(SourceDevice.MOBILE),
+        timestamp = timestamp,
+    )

@@ -45,8 +45,8 @@ class ValidateActivePlanSessionsUseCaseTest {
 
             val logs =
                 listOf(
-                    WorkoutLog("l1", "e1", 10, 50.0, null, SourceDevice.MOBILE, 1700000000000L, 1000L, 1000L),
-                    WorkoutLog("l2", "e1", 10, 50.0, null, SourceDevice.MOBILE, 1700100000000L, 1000L, 1000L),
+                    WorkoutLog("l1", "e1", 10, 50.0, null, SourceDevice.MOBILE, 60L, 1700000000000L, 1000L, 1000L),
+                    WorkoutLog("l2", "e1", 10, 50.0, null, SourceDevice.MOBILE, 60L, 1700100000000L, 1000L, 1000L),
                 )
             every { workoutLogRepositoryPort.getLatestLogsForPlan("p1") } returns flowOf(logs)
 
@@ -74,7 +74,7 @@ class ValidateActivePlanSessionsUseCaseTest {
 
             val logs =
                 listOf(
-                    WorkoutLog("l1", "e1", 10, 50.0, null, SourceDevice.MOBILE, 1700000000000L, 1000L, 1000L),
+                    WorkoutLog("l1", "e1", 10, 50.0, null, SourceDevice.MOBILE, 60L, 1700000000000L, 1000L, 1000L),
                 )
             every { workoutLogRepositoryPort.getLatestLogsForPlan("p1") } returns flowOf(logs)
 

@@ -110,6 +110,9 @@
 
     <!-- V7: Active Workout Session -->
     <string name="finish_workout">Finish Workout</string>
+    <string name="finish_session_confirmation_title">Confirm Finish</string>
+    <string name="finish_session_confirmation_message">Are you sure you want to finish the current workout session?</string>
+    <string name="finish_session_confirm">Finish Session</string>
     <string name="elapsed_time">Elapsed Time</string>
     <string name="rest_between_sets">Rest between sets</string>
     <string name="rest_timer_label">Resting (%1$ds)</string>
