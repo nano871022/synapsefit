@@ -34,7 +34,7 @@ class DependencyContainer(context: Context) {
             context.applicationContext,
             SynapseFitDatabase::class.java,
             "synapsefit_database.db",
-        ).fallbackToDestructiveMigration().build()
+        ).build()
     }
 
     val userProfileRepository: UserProfileRepositoryPort by lazy {
