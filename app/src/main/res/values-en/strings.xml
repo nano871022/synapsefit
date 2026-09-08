@@ -123,6 +123,8 @@
     <string name="target_reps">Target reps: %1$s</string>
     <string name="complete_set">Complete Set</string>
     <string name="next_set_or_exercise">Next Set / Exercise</string>
+    <string name="next_set">Next Set</string>
+    <string name="next_exercise">Next Exercise</string>
     <string name="watch_video">Watch Video (YouTube)</string>
     <string name="view_image">View Image</string>
     <string name="close">Close</string>

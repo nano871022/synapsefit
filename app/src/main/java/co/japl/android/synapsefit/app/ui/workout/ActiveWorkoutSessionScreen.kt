@@ -119,9 +119,9 @@ fun ActiveWorkoutSessionScreen(
                 }
             }
 
-            Exersise(state, onOpenImagePopup, context)
+            Exercise(state, onOpenImagePopup, context)
 
-            ExersisesSet(state, isResting, onSetWeightChange, onSetRepsChange, onCompleteSet, onNextSetOrExercise, restingTime)
+            ExercisesSet(state, isResting, onSetWeightChange, onSetRepsChange, onCompleteSet, onNextSetOrExercise, restingTime)
         }
     }
 
@@ -141,7 +141,7 @@ fun ActiveWorkoutSessionScreen(
 }
 
 @Composable
-private fun ExersisesSet(
+private fun ExercisesSet(
     state: ActiveWorkoutUiState,
     isResting: Boolean,
     onSetWeightChange: (setIndex: Int, weight: String) -> Unit,
@@ -196,13 +196,13 @@ private fun ExersisesSet(
                 enabled = !state.isCurrentSetCompleted && !isResting,
             )
 
-            ExersisesSetButton(state, isResting, restingTime, onCompleteSet, onNextSetOrExercise)
+            ExercisesSetButton(state, isResting, restingTime, onCompleteSet, onNextSetOrExercise)
         }
     }
 }
 
 @Composable
-private fun ExersisesSetButton(
+private fun ExercisesSetButton(
     state: ActiveWorkoutUiState,
     isResting: Boolean,
     restingTime: Int?,
@@ -211,6 +211,8 @@ private fun ExersisesSetButton(
 ) {
     CooldownActionButton(
         state = state.stepState,
+        currentSetIndex = state.currentSetIndex,
+        totalSets = state.totalSetsForCurrentExercise,
         onCompleteSet = { onCompleteSet(state.currentSetIndex) },
         onNextStep = onNextSetOrExercise,
     )
@@ -219,6 +221,8 @@ private fun ExersisesSetButton(
 @Composable
 fun CooldownActionButton(
     state: TrainingStepState,
+    currentSetIndex: Int,
+    totalSets: Int,
     onCompleteSet: () -> Unit,
     onNextStep: () -> Unit,
     modifier: Modifier = Modifier,
@@ -253,8 +257,14 @@ fun CooldownActionButton(
             }
         }
         is TrainingStepState.ReadyForNext -> {
+            val buttonText =
+                if (currentSetIndex < totalSets) {
+                    stringResource(R.string.next_set)
+                } else {
+                    stringResource(R.string.next_exercise)
+                }
             NeonButton(
-                text = stringResource(R.string.next_set_or_exercise),
+                text = buttonText,
                 onClick = onNextStep,
                 modifier = modifier,
                 enabled = true,
@@ -264,7 +274,7 @@ fun CooldownActionButton(
 }
 
 @Composable
-private fun Exersise(
+private fun Exercise(
     state: ActiveWorkoutUiState,
     onOpenImagePopup: () -> Unit,
     context: Context,

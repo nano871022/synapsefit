@@ -356,13 +356,13 @@ class ActiveWorkoutSessionViewModel(
             if (isLastExercise) {
                 finishSession()
             } else {
-                nextExersise(state, timeSpent)
+                nextExercise(state, timeSpent)
             }
         }
         saveStateToPrefs()
     }
 
-    private fun nextExersise(
+    private fun nextExercise(
         state: ActiveWorkoutUiState,
         timeSpent: Long,
     ) {

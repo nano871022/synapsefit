@@ -125,6 +125,8 @@
     <string name="cooldown_timer_label">Cooldown (%1$02d:%2$02d)</string>
 
     <string name="next_set_or_exercise">Siguiente Serie / Ejercicio</string>
+    <string name="next_set">Siguiente Serie</string>
+    <string name="next_exercise">Siguiente Ejercicio</string>
     <string name="watch_video">Ver Video (YouTube)</string>
     <string name="view_image">Ver Imagen</string>
     <string name="close">Cerrar</string>
