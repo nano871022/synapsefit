@@ -8,4 +8,6 @@
     <string name="wear_dec_reps">-</string>
     <string name="wear_synced">Sincronizado</string>
     <string name="wear_not_synced">Sin Sincronizar</string>
+    <string name="wear_cooldown_label">Descanso (%1$02d:%2$02d)</string>
+
 </resources>

@@ -132,17 +132,29 @@ private fun CentralWorkoutContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text =
-                if (uiState.isSyncedWithPhone) {
-                    stringResource(R.string.wear_synced)
-                } else {
-                    stringResource(R.string.wear_not_synced)
-                },
-            fontSize = 10.sp,
-            color = if (uiState.isSyncedWithPhone) PrimaryCyan else OnSurfaceDark,
-            textAlign = TextAlign.Center,
-        )
+        if (uiState.cooldownSecondsRemaining != null && uiState.cooldownSecondsRemaining > 0) {
+            val mins = uiState.cooldownSecondsRemaining / 60
+            val secs = uiState.cooldownSecondsRemaining % 60
+            Text(
+                text = stringResource(R.string.wear_cooldown_label, mins, secs),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryCyan,
+                textAlign = TextAlign.Center,
+            )
+        } else {
+            Text(
+                text =
+                    if (uiState.isSyncedWithPhone) {
+                        stringResource(R.string.wear_synced)
+                    } else {
+                        stringResource(R.string.wear_not_synced)
+                    },
+                fontSize = 10.sp,
+                color = if (uiState.isSyncedWithPhone) PrimaryCyan else OnSurfaceDark,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 

@@ -64,6 +64,7 @@ import co.com.japl.ui.theme.MaterialThemeComposeUI
 import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.workout.ActiveWorkoutUiState
+import co.japl.android.synapsefit.app.controller.workout.TrainingStepState
 import co.japl.android.synapsefit.app.controller.workout.WorkoutSummary
 import co.japl.android.synapsefit.ui.components.HeartRateGauge
 import co.japl.android.synapsefit.ui.components.NeonButton
@@ -208,25 +209,57 @@ private fun ExersisesSetButton(
     onCompleteSet: (setIndex: Int) -> Unit,
     onNextSetOrExercise: () -> Unit,
 ) {
-    if (!state.isCurrentSetCompleted) {
-        NeonButton(
-            text = stringResource(R.string.complete_set),
-            onClick = { onCompleteSet(state.currentSetIndex) },
-            enabled = !isResting,
-        )
-    } else if (isResting) {
-        Text(text = "$isResting $restingTime")
-        NeonButton(
-            text = if (isResting && restingTime != null) stringResource(R.string.rest_timer_label, restingTime) else "60",
-            onClick = { onCompleteSet(state.currentSetIndex) },
-            enabled = isResting,
-        )
-    } else {
-        NeonButton(
-            text = stringResource(R.string.next_set_or_exercise),
-            onClick = onNextSetOrExercise,
-            enabled = !isResting,
-        )
+    CooldownActionButton(
+        state = state.stepState,
+        onCompleteSet = { onCompleteSet(state.currentSetIndex) },
+        onNextStep = onNextSetOrExercise,
+    )
+}
+
+@Composable
+fun CooldownActionButton(
+    state: TrainingStepState,
+    onCompleteSet: () -> Unit,
+    onNextStep: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    when (state) {
+        is TrainingStepState.Active -> {
+            NeonButton(
+                text = stringResource(R.string.complete_set),
+                onClick = onCompleteSet,
+                modifier = modifier,
+                enabled = true,
+            )
+        }
+        is TrainingStepState.Cooldown -> {
+            val minutes = state.timeLeftSeconds / 60
+            val seconds = state.timeLeftSeconds % 60
+            androidx.compose.material3.Button(
+                onClick = { /* Bloqueado en Cooldown */ },
+                modifier = modifier.fillMaxWidth().height(52.dp),
+                enabled = false,
+                shape = RoundedCornerShape(12.dp),
+                colors =
+                    androidx.compose.material3.ButtonDefaults.buttonColors(
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+            ) {
+                Text(
+                    text = stringResource(R.string.cooldown_timer_label, minutes, seconds),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+        }
+        is TrainingStepState.ReadyForNext -> {
+            NeonButton(
+                text = stringResource(R.string.next_set_or_exercise),
+                onClick = onNextStep,
+                modifier = modifier,
+                enabled = true,
+            )
+        }
     }
 }
 
