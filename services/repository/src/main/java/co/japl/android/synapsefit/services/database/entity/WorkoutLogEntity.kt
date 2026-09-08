@@ -31,6 +31,8 @@ data class WorkoutLogEntity(
     val heartRateBpm: Int? = null,
     @ColumnInfo(name = "source_device", defaultValue = "'MOBILE'")
     val sourceDevice: String,
+    @ColumnInfo(name = "duration_seconds", defaultValue = "0")
+    val durationSeconds: Long = 0L,
     val timestamp: Long,
     @ColumnInfo(name = "created_at")
     val createdAt: Long,

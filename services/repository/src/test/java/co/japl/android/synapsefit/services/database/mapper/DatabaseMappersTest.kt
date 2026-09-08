@@ -92,6 +92,7 @@ class DatabaseMappersTest {
                 weightLiftedKg = 80.0,
                 heartRateBpm = 135,
                 sourceDevice = SourceDevice.MOBILE,
+                durationSeconds = 45L,
                 timestamp = now,
                 createdAt = now,
                 updatedAt = now,

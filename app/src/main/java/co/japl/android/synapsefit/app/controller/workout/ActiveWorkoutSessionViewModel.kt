@@ -260,6 +260,8 @@ class ActiveWorkoutSessionViewModel(
         val weight = state.currentSetWeightKg.toDoubleOrNull() ?: 0.0
 
         viewModelScope.launch {
+            val setDuration =
+                if (sessionStartTimestamp > 0) DateTimeUtils.calculateElapsedTimeSeconds(sessionStartTimestamp) else 0L
             if (recordWorkoutSessionUseCase != null && state.currentExerciseId.isNotBlank() && reps > 0) {
                 recordWorkoutSessionUseCase(
                     exerciseId = state.currentExerciseId,
@@ -267,6 +269,7 @@ class ActiveWorkoutSessionViewModel(
                     weightLiftedKg = weight,
                     heartRateBpm = state.heartRateBpm,
                     sourceDevice = SourceDevice.MOBILE,
+                    durationSeconds = setDuration,
                 )
             }
 
@@ -291,7 +294,8 @@ class ActiveWorkoutSessionViewModel(
                 if (isLastSetForExercise) {
                     WorkoutSessionStateManager.EXERCISE_CHANGE_REST_TIME_SECONDS
                 } else {
-                    state.exercises.getOrNull(state.currentExerciseIndex)?.restSeconds ?: WorkoutSessionStateManager.DEFAULT_REST_TIME_SECONDS
+                    state.exercises.getOrNull(state.currentExerciseIndex)?.restSeconds
+                        ?: WorkoutSessionStateManager.DEFAULT_REST_TIME_SECONDS
                 }
             startRestTimer(restTime)
             saveStateToPrefs()
