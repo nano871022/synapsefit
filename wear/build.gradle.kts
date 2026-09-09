@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.wear.compose.navigation)
     implementation(libs.horologist.compose.layout)
     implementation(libs.horologist.compose.material)
+    implementation(libs.play.services.wearable)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

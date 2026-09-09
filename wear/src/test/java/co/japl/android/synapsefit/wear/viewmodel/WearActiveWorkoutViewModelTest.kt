@@ -1,14 +1,19 @@
 package co.japl.android.synapsefit.wear.viewmodel
 
+import co.japl.android.synapsefit.core.domain.model.ExerciseSession
+import co.japl.android.synapsefit.core.domain.model.TrainingStepState
 import co.japl.android.synapsefit.services.wear.WearHeartRateSensorAdapter
 import co.japl.android.synapsefit.services.wear.WearableSyncAdapter
+import co.japl.android.synapsefit.wear.service.WorkoutPlanPayloadParser
 import co.japl.android.synapsefit.wear.ui.viewmodel.WearActiveWorkoutViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
+@Suppress("LongMethod")
 class WearActiveWorkoutViewModelTest {
     private lateinit var sensorAdapter: WearHeartRateSensorAdapter
     private lateinit var syncAdapter: WearableSyncAdapter
@@ -73,5 +78,101 @@ class WearActiveWorkoutViewModelTest {
         viewModel.setSyncStatus(true)
         assertTrue(viewModel.uiState.value.isSyncedWithPhone)
         assertTrue(syncAdapter.isPhoneConnected.value)
+    }
+
+    @Test
+    fun testLoadExerciseSessionsSetsActiveState() {
+        val sessions =
+            listOf(
+                ExerciseSession(
+                    exerciseId = "ex1",
+                    planId = "p1",
+                    name = "Press de Banca",
+                    muscleGroup = "Pecho",
+                    targetSets = 2,
+                    targetReps = "10",
+                    restSeconds = 60,
+                ),
+            )
+
+        viewModel.loadExerciseSessions(sessions)
+
+        val state = viewModel.trainingStepState.value
+        assertTrue(state is TrainingStepState.Active)
+        val active = state as TrainingStepState.Active
+        assertEquals("Press de Banca", active.exerciseSession.name)
+        assertEquals(1, active.currentSet)
+    }
+
+    @Test
+    fun testCompleteSetTransitionsToCooldownThenReadyForNext() {
+        val sessions =
+            listOf(
+                ExerciseSession(
+                    exerciseId = "ex1",
+                    planId = "p1",
+                    name = "Sentadilla",
+                    muscleGroup = "Piernas",
+                    targetSets = 2,
+                    targetReps = "12",
+                    restSeconds = 30,
+                ),
+            )
+
+        viewModel.loadExerciseSessions(sessions)
+
+        viewModel.completeSet()
+        assertTrue(viewModel.trainingStepState.value is TrainingStepState.Cooldown)
+        val cooldown = viewModel.trainingStepState.value as TrainingStepState.Cooldown
+        assertEquals(1, cooldown.exerciseSession.completedSets)
+        assertFalse(cooldown.exerciseSession.isCompleted)
+
+        viewModel.setCooldownTargetTimestamp(System.currentTimeMillis() - 1000L)
+        viewModel.recalculateCooldownTimer()
+
+        assertTrue(viewModel.trainingStepState.value is TrainingStepState.ReadyForNext)
+
+        viewModel.startNextExercise()
+        assertTrue(viewModel.trainingStepState.value is TrainingStepState.Active)
+
+        viewModel.completeSet()
+        val finalState = viewModel.trainingStepState.value
+        assertTrue(finalState is TrainingStepState.ReadyForNext)
+
+        val completedSession = viewModel.uiState.value.exerciseSessions.first()
+        assertTrue(completedSession.isCompleted)
+        assertEquals(2, completedSession.completedSets)
+    }
+
+    @Test
+    fun testWorkoutPlanPayloadParser() {
+        val jsonPayload =
+            """
+            {
+              "planId": "plan_123",
+              "title": "Rutina Fuerza",
+              "goalDescription": "Aumento de masa",
+              "day": 1,
+              "exercises": [
+                {
+                  "id": "ex_1",
+                  "name": "Dominadas",
+                  "muscleGroup": "Espalda",
+                  "targetSets": 4,
+                  "targetReps": "8",
+                  "restSeconds": 90,
+                  "day": 1
+                }
+              ]
+            }
+            """.trimIndent()
+
+        val parsed = WorkoutPlanPayloadParser.parseJsonPayload(jsonPayload)
+        assertNotNull(parsed)
+        assertEquals("plan_123", parsed?.plan?.id)
+        assertEquals("Rutina Fuerza", parsed?.plan?.title)
+        assertEquals(1, parsed?.exercises?.size)
+        assertEquals("Dominadas", parsed?.exercises?.get(0)?.name)
+        assertEquals(4, parsed?.exercises?.get(0)?.targetSets)
     }
 }
