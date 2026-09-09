@@ -10,4 +10,14 @@
     <string name="wear_not_synced">Sin Sincronizar</string>
     <string name="wear_cooldown_label">Descanso (%1$02d:%2$02d)</string>
 
+    <string name="wear_workout_hub">Workout Hub</string>
+    <string name="wear_day_header">DÍA %1$d: %2$s</string>
+    <string name="wear_programmed_exercises">%1$d ejercicios programados</string>
+    <string name="wear_tap_to_start_exercise">Toca un ejercicio para iniciar directamente</string>
+    <string name="wear_start_session">INICIAR SESIÓN</string>
+
+    <string name="wear_exercise_sets_reps_timer">%1$d × %2$s reps • timer %3$ds</string>
+    <string name="wear_exercise_sets_reps_weight_timer">%1$d × %2$s reps %3$s • timer %4$ds</string>
+    <string name="wear_no_active_plan">Sin plan activo</string>
+    <string name="wear_no_exercises">Sin ejercicios programados</string>
 </resources>

@@ -15,11 +15,28 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val uiState by viewModel.uiState.collectAsState()
-            WearActiveWorkoutScreen(
-                uiState = uiState,
-                onIncrementReps = { viewModel.incrementReps() },
-                onDecrementReps = { viewModel.decrementReps() },
-            )
+
+            if (uiState.isSessionStarted) {
+                WearActiveWorkoutScreen(
+                    uiState = uiState,
+                    onIncrementReps = { viewModel.incrementReps() },
+                    onDecrementReps = { viewModel.decrementReps() },
+                    onCompleteSet = { viewModel.completeSet() },
+                    onStartNextExercise = { viewModel.startNextExercise() },
+                )
+            } else {
+                WearPreWorkoutSelectionHubScreen(
+                    planTitle = uiState.activePlanTitle,
+                    currentDay = uiState.currentDay,
+                    exercises = uiState.availableExercises,
+                    onSelectExercise = { exercise, index ->
+                        viewModel.selectExercise(exercise, index)
+                    },
+                    onStartSession = {
+                        viewModel.startSession()
+                    },
+                )
+            }
         }
     }
 }

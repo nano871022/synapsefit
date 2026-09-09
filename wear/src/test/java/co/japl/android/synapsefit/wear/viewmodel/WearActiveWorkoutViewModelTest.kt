@@ -1,5 +1,6 @@
 package co.japl.android.synapsefit.wear.viewmodel
 
+import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.ExerciseSession
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
 import co.japl.android.synapsefit.services.wear.WearHeartRateSensorAdapter
@@ -133,7 +134,8 @@ class WearActiveWorkoutViewModelTest {
         assertTrue(viewModel.trainingStepState.value is TrainingStepState.ReadyForNext)
 
         viewModel.startNextExercise()
-        assertTrue(viewModel.trainingStepState.value is TrainingStepState.Active)
+        val activeState = viewModel.trainingStepState.value
+        assertTrue(activeState is TrainingStepState.Active)
 
         viewModel.completeSet()
         val finalState = viewModel.trainingStepState.value
@@ -174,5 +176,31 @@ class WearActiveWorkoutViewModelTest {
         assertEquals(1, parsed?.exercises?.size)
         assertEquals("Dominadas", parsed?.exercises?.get(0)?.name)
         assertEquals(4, parsed?.exercises?.get(0)?.targetSets)
+    }
+
+    @Test
+    fun testStartSessionAndSelectExercise() {
+        val exercise =
+            Exercise(
+                id = "ex_1",
+                planId = "plan_1",
+                name = "Press de Banca (Compuesto)",
+                muscleGroup = "Pecho",
+                targetSets = 4,
+                targetReps = "12",
+                restSeconds = 90,
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
+            )
+
+        viewModel.selectExercise(exercise, 0)
+        assertTrue(viewModel.uiState.value.isSessionStarted)
+        assertEquals("Press de Banca (Compuesto)", viewModel.uiState.value.exerciseName)
+
+        viewModel.exitToSelectionHub()
+        assertFalse(viewModel.uiState.value.isSessionStarted)
+
+        viewModel.startSession()
+        assertTrue(viewModel.uiState.value.isSessionStarted)
     }
 }

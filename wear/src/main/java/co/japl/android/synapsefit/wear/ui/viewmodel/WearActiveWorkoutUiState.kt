@@ -1,5 +1,6 @@
 package co.japl.android.synapsefit.wear.ui.viewmodel
 
+import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.ExerciseSession
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
 
@@ -13,4 +14,8 @@ data class WearActiveWorkoutUiState(
     val trainingStepState: TrainingStepState = TrainingStepState.ReadyForNext(null),
     val exerciseSessions: List<ExerciseSession> = emptyList(),
     val activeExerciseIndex: Int = 0,
+    val activePlanTitle: String = "",
+    val currentDay: Int = 1,
+    val availableExercises: List<Exercise> = emptyList(),
+    val isSessionStarted: Boolean = false,
 )
