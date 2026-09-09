@@ -18,7 +18,7 @@ data class WorkoutHistoryRecord(
     val heartRateBpm: Int?,
     val durationSeconds: Long,
     val sourceDevice: SourceDevice,
-    val timestamp: Long
+    val timestamp: Long,
 )
 
 /**
@@ -30,7 +30,7 @@ data class ExerciseSetHistory(
     val weightLiftedKg: Double,
     val heartRateBpm: Int?,
     val durationSeconds: Long,
-    val timestamp: Long
+    val timestamp: Long,
 )
 
 /**
@@ -42,7 +42,7 @@ data class ExerciseHistory(
     val muscleGroup: String,
     val sets: List<ExerciseSetHistory>,
     val averageReps: Double,
-    val averageWeightKg: Double
+    val averageWeightKg: Double,
 )
 
 /**
@@ -57,5 +57,5 @@ data class WorkoutHistoryGroup(
     val exercises: List<ExerciseHistory>,
     val totalVolumeKg: Double,
     val totalDurationSeconds: Long,
-    val muscleGroups: List<String>
+    val muscleGroups: List<String>,
 )

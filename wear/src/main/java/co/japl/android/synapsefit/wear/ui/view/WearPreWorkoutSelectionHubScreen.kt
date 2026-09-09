@@ -45,8 +45,8 @@ import co.com.japl.ui.theme.OnSurfaceDark
 import co.com.japl.ui.theme.PrimaryCyan
 import co.com.japl.ui.theme.SurfaceContainer
 import co.com.japl.ui.theme.SurfaceContainerHigh
+import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.core.domain.model.Exercise
-import co.japl.android.synapsefit.wear.R
 
 @Suppress("LongMethod", "LongParameterList")
 @Composable

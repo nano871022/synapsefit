@@ -1,11 +1,11 @@
 package co.japl.android.synapsefit.app.controller.history
 
-import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
+import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -48,13 +48,12 @@ class WorkoutHistoryViewModelTest {
                     WorkoutLog("2", "ex1", 10, 60.0, 125, SourceDevice.MOBILE, 60L, now, now, now),
                 )
             val plan = WorkoutPlan("plan1", "Plan Hipertrofia", "Ganar músculo", true, true, 12, now, now)
-            val exercise = Exercise("ex1", "plan1", "Press de Banca", "Pecho", 4, "10", 60, 1, null, null, now, now)
 
             every { workoutLogRepositoryPort.getAllLogs() } returns flowOf(logs)
             every { workoutPlanRepositoryPort.getAllPlans() } returns flowOf(listOf(plan))
-            every { workoutPlanRepositoryPort.getPlanWithExercises("plan1") } returns flowOf(Pair(plan, listOf(exercise)))
 
-            val viewModel = WorkoutHistoryViewModel(workoutLogRepositoryPort, workoutPlanRepositoryPort)
+            val getGroupedWorkoutHistoryUseCase = GetGroupedWorkoutHistoryUseCase(workoutLogRepositoryPort)
+            val viewModel = WorkoutHistoryViewModel(workoutPlanRepositoryPort, getGroupedWorkoutHistoryUseCase)
             testDispatcher.scheduler.advanceUntilIdle()
 
             val state = viewModel.uiState.value
@@ -71,7 +70,8 @@ class WorkoutHistoryViewModelTest {
             every { workoutLogRepositoryPort.getAllLogs() } returns flowOf(emptyList())
             every { workoutPlanRepositoryPort.getAllPlans() } returns flowOf(emptyList())
 
-            val viewModel = WorkoutHistoryViewModel(workoutLogRepositoryPort, workoutPlanRepositoryPort)
+            val getGroupedWorkoutHistoryUseCase = GetGroupedWorkoutHistoryUseCase(workoutLogRepositoryPort)
+            val viewModel = WorkoutHistoryViewModel(workoutPlanRepositoryPort, getGroupedWorkoutHistoryUseCase)
             testDispatcher.scheduler.advanceUntilIdle()
 
             val initialMonth = viewModel.uiState.value.selectedYearMonth

@@ -11,7 +11,7 @@ data class ParsedWorkoutPlanPayload(
 )
 
 object WorkoutPlanPayloadParser {
-    @Suppress("LongMethod", "CyclomaticComplexMethod", "TooGenericExceptionCaught")
+    @Suppress("LongMethod", "CyclomaticComplexMethod", "TooGenericExceptionCaught", "ReturnCount")
     fun parseJsonPayload(json: String): ParsedWorkoutPlanPayload? {
         if (json.isBlank()) return null
         return try {
@@ -42,9 +42,9 @@ object WorkoutPlanPayloadParser {
                     val exId = extractValue(clean, "id").ifBlank { "${planId}_ex_$idx" }
                     val name = extractValue(clean, "name").ifBlank { "Exercise ${idx + 1}" }
                     val muscleGroup = extractValue(clean, "muscleGroup").ifBlank { "Full Body" }
-                    val targetSets = extractValue(clean, "targetSets").toIntOrNull() ?: 3
-                    val targetReps = extractValue(clean, "targetReps").ifBlank { "10" }
-                    val restSeconds = extractValue(clean, "restSeconds").toIntOrNull() ?: 60
+                    val targetSets = extractValue(clean, "targetSets").toIntOrNull() ?: DEFAULT_TARGET_SETS
+                    val targetReps = extractValue(clean, "targetReps").ifBlank { DEFAULT_TARGET_REPS }
+                    val restSeconds = extractValue(clean, "restSeconds").toIntOrNull() ?: DEFAULT_REST_SECONDS
                     val exDay = extractValue(clean, "day").toIntOrNull() ?: day
 
                     exercisesList.add(
@@ -83,6 +83,7 @@ object WorkoutPlanPayloadParser {
         return match?.groupValues?.get(1)?.trim() ?: ""
     }
 
+    @Suppress("ReturnCount")
     private fun extractArraySection(
         json: String,
         key: String,
@@ -94,4 +95,8 @@ object WorkoutPlanPayloadParser {
         if (arrayStart == -1 || arrayEnd == -1 || arrayEnd <= arrayStart) return ""
         return json.substring(arrayStart + 1, arrayEnd)
     }
+
+    private const val DEFAULT_TARGET_SETS = 3
+    private const val DEFAULT_TARGET_REPS = "10"
+    private const val DEFAULT_REST_SECONDS = 60
 }
