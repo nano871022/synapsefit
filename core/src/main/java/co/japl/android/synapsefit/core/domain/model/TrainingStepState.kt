@@ -1,5 +1,7 @@
 package co.japl.android.synapsefit.core.domain.model
 
+import co.japl.android.synapsefit.util.DateTimeUtils
+
 sealed interface TrainingStepState {
     data class Active(
         val exerciseSession: ExerciseSession,
@@ -19,7 +21,7 @@ sealed interface TrainingStepState {
     companion object {
         fun calculateRemainingMillis(
             targetTimestamp: Long,
-            currentTimestamp: Long = System.currentTimeMillis(),
+            currentTimestamp: Long = DateTimeUtils.getCurrentTimestamp(),
         ): Long {
             return maxOf(0L, targetTimestamp - currentTimestamp)
         }
