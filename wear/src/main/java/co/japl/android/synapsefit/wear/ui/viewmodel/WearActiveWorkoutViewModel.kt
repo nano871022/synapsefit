@@ -1,6 +1,8 @@
 package co.japl.android.synapsefit.wear.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.ExerciseSession
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
 import co.japl.android.synapsefit.core.port.secondary.WearSensorPort
@@ -10,9 +12,13 @@ import co.japl.android.synapsefit.util.DateTimeUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-@Suppress("TooManyFunctions", "LongMethod", "CyclomaticComplexMethod")
+private const val MILLIS_PER_SECOND = 1000L
+
+@Suppress("TooManyFunctions", "LongMethod", "CyclomaticComplexMethod", "MagicNumber")
 class WearActiveWorkoutViewModel(
     private val sensorPort: WearSensorPort? = null,
     private val syncPort: WearSyncPort? = null,
@@ -24,6 +30,126 @@ class WearActiveWorkoutViewModel(
 
     private val _uiState = MutableStateFlow(WearActiveWorkoutUiState())
     val uiState: StateFlow<WearActiveWorkoutUiState> = _uiState.asStateFlow()
+
+    init {
+        loadActivePlanData()
+    }
+
+    fun loadActivePlanData() {
+        val repository = workoutPlanRepositoryPort ?: return
+        viewModelScope.launch {
+            repository.getActivePlan().collect { activePlan ->
+                if (activePlan == null) return@collect
+                val pair = repository.getPlanWithExercises(activePlan.id).firstOrNull()
+                val exercises = pair?.second ?: emptyList()
+
+                _uiState.update { current ->
+                    current.copy(
+                        activePlanTitle = activePlan.title,
+                        currentDay = 1,
+                        availableExercises = exercises,
+                    )
+                }
+
+                if (_uiState.value.exerciseSessions.isEmpty() && exercises.isNotEmpty()) {
+                    val sessions =
+                        exercises.map { ex ->
+                            ExerciseSession(
+                                exerciseId = ex.id,
+                                planId = ex.planId,
+                                name = ex.name,
+                                muscleGroup = ex.muscleGroup,
+                                targetSets = ex.targetSets,
+                                targetReps = ex.targetReps,
+                                restSeconds = ex.restSeconds,
+                            )
+                        }
+                    loadExerciseSessions(sessions)
+                }
+            }
+        }
+    }
+
+    fun startSession() {
+        if (_uiState.value.availableExercises.isNotEmpty() && _uiState.value.exerciseSessions.isEmpty()) {
+            val sessions =
+                _uiState.value.availableExercises.map { ex ->
+                    ExerciseSession(
+                        exerciseId = ex.id,
+                        planId = ex.planId,
+                        name = ex.name,
+                        muscleGroup = ex.muscleGroup,
+                        targetSets = ex.targetSets,
+                        targetReps = ex.targetReps,
+                        restSeconds = ex.restSeconds,
+                    )
+                }
+            loadExerciseSessions(sessions)
+        }
+        _uiState.update { it.copy(isSessionStarted = true) }
+    }
+
+    fun selectExercise(
+        exercise: Exercise,
+        index: Int,
+    ) {
+        val sessions =
+            if (_uiState.value.exerciseSessions.isEmpty()) {
+                _uiState.value.availableExercises.map { ex ->
+                    ExerciseSession(
+                        exerciseId = ex.id,
+                        planId = ex.planId,
+                        name = ex.name,
+                        muscleGroup = ex.muscleGroup,
+                        targetSets = ex.targetSets,
+                        targetReps = ex.targetReps,
+                        restSeconds = ex.restSeconds,
+                    )
+                }
+            } else {
+                _uiState.value.exerciseSessions
+            }
+
+        val targetSession =
+            if (sessions.isNotEmpty()) {
+                sessions.getOrNull(index) ?: sessions.first()
+            } else {
+                ExerciseSession(
+                    exerciseId = exercise.id,
+                    planId = exercise.planId,
+                    name = exercise.name,
+                    muscleGroup = exercise.muscleGroup,
+                    targetSets = exercise.targetSets,
+                    targetReps = exercise.targetReps,
+                    restSeconds = exercise.restSeconds,
+                )
+            }
+
+        val updatedSessions =
+            if (sessions.none { it.exerciseId == targetSession.exerciseId }) {
+                sessions + targetSession
+            } else {
+                sessions
+            }
+
+        val initialSet = (targetSession.completedSets + 1).coerceAtMost(targetSession.targetSets)
+        val initialState = TrainingStepState.Active(targetSession, initialSet)
+
+        _trainingStepState.value = initialState
+        _uiState.update {
+            it.copy(
+                exerciseName = targetSession.name,
+                exerciseSessions = updatedSessions,
+                activeExerciseIndex = index.coerceIn(0, maxOf(0, updatedSessions.lastIndex)),
+                trainingStepState = initialState,
+                isSessionStarted = true,
+            )
+        }
+    }
+
+    fun exitToSelectionHub() {
+        _uiState.update { it.copy(isSessionStarted = false) }
+    }
 
     fun loadExerciseSessions(sessions: List<ExerciseSession>) {
         if (sessions.isEmpty()) {
@@ -77,8 +203,8 @@ class WearActiveWorkoutViewModel(
             val nextState = TrainingStepState.ReadyForNext(nextIncomplete)
             _trainingStepState.value = nextState
 
-            _uiState.update {
-                it.copy(
+            _uiState.update { current ->
+                current.copy(
                     exerciseSessions = updatedList,
                     trainingStepState = nextState,
                     cooldownTargetTimestamp = null,
@@ -87,12 +213,12 @@ class WearActiveWorkoutViewModel(
             }
             syncPort?.queueDataForDeferredSync(
                 exerciseId = session.exerciseId,
-                reps = it.currentReps,
-                heartRateBpm = it.currentHeartRateBpm,
+                reps = _uiState.value.currentReps,
+                heartRateBpm = _uiState.value.currentHeartRateBpm,
             )
         } else {
             val targetTimestamp =
-                DateTimeUtils.getCurrentTimestamp() + (session.restSeconds * 1000L)
+                DateTimeUtils.getCurrentTimestamp() + (session.restSeconds * MILLIS_PER_SECOND)
             val remainingMillis = TrainingStepState.calculateRemainingMillis(targetTimestamp)
             val cooldownState =
                 TrainingStepState.Cooldown(
@@ -102,12 +228,12 @@ class WearActiveWorkoutViewModel(
                 )
             _trainingStepState.value = cooldownState
 
-            _uiState.update {
-                it.copy(
+            _uiState.update { current ->
+                current.copy(
                     exerciseSessions = updatedList,
                     trainingStepState = cooldownState,
                     cooldownTargetTimestamp = targetTimestamp,
-                    cooldownSecondsRemaining = (remainingMillis / 1000L).toInt(),
+                    cooldownSecondsRemaining = (remainingMillis / MILLIS_PER_SECOND).toInt(),
                 )
             }
         }
@@ -131,7 +257,7 @@ class WearActiveWorkoutViewModel(
             _uiState.update {
                 it.copy(
                     trainingStepState = updatedState,
-                    cooldownSecondsRemaining = (remainingMillis / 1000L).toInt(),
+                    cooldownSecondsRemaining = (remainingMillis / MILLIS_PER_SECOND).toInt(),
                 )
             }
         } else {
@@ -194,11 +320,21 @@ class WearActiveWorkoutViewModel(
     }
 
     fun setCooldownTargetTimestamp(targetTimestamp: Long?) {
+        val currentState = _trainingStepState.value
+        if (currentState is TrainingStepState.Cooldown && targetTimestamp != null) {
+            val remainingMillis = TrainingStepState.calculateRemainingMillis(targetTimestamp)
+            _trainingStepState.value =
+                TrainingStepState.Cooldown(
+                    exerciseSession = currentState.exerciseSession,
+                    targetTimestamp = targetTimestamp,
+                    remainingMillis = remainingMillis,
+                )
+        }
         _uiState.update {
             val remaining =
                 if (targetTimestamp != null) {
                     val diff = targetTimestamp - DateTimeUtils.getCurrentTimestamp()
-                    if (diff > 0) (diff / 1000L).toInt() else 0
+                    if (diff > 0) (diff / MILLIS_PER_SECOND).toInt() else 0
                 } else {
                     null
                 }
