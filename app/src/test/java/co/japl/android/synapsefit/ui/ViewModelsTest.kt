@@ -17,6 +17,7 @@ import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.TrainingLocation
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
+import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -201,7 +202,8 @@ class ViewModelsTest {
                 }
             every { mockLogPort.getAllLogs() } returns flowOf(logs)
 
-            val viewModel = WorkoutHistoryViewModel(workoutLogRepositoryPort = mockLogPort)
+            val useCase = GetGroupedWorkoutHistoryUseCase(mockLogPort)
+            val viewModel = WorkoutHistoryViewModel(getGroupedWorkoutHistoryUseCase = useCase)
             val groups = viewModel.uiState.value.sessionGroups
 
             assertEquals(1, groups.size)
@@ -230,7 +232,8 @@ class ViewModelsTest {
                 }
             every { mockLogPort.getAllLogs() } returns flowOf(logs)
 
-            val viewModel = WorkoutHistoryViewModel(workoutLogRepositoryPort = mockLogPort)
+            val useCase = GetGroupedWorkoutHistoryUseCase(mockLogPort)
+            val viewModel = WorkoutHistoryViewModel(getGroupedWorkoutHistoryUseCase = useCase)
             val state = viewModel.uiState.value
 
             assertEquals(10, state.recordedSessions.size)

@@ -15,5 +15,5 @@ data class WorkoutLogWithExerciseEntity(
     @ColumnInfo(name = "heartRateBpm") val heartRateBpm: Int?,
     @ColumnInfo(name = "durationSeconds") val durationSeconds: Long,
     @ColumnInfo(name = "sourceDevice") val sourceDevice: String,
-    @ColumnInfo(name = "timestamp") val timestamp: Long
+    @ColumnInfo(name = "timestamp") val timestamp: Long,
 )

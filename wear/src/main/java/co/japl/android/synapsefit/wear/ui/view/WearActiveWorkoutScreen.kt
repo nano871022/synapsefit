@@ -32,11 +32,13 @@ import co.com.japl.ui.theme.OnPrimaryDark
 import co.com.japl.ui.theme.OnSurfaceDark
 import co.com.japl.ui.theme.PrimaryCyan
 import co.com.japl.ui.theme.SurfaceContainerHigh
+import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
-import co.japl.android.synapsefit.wear.R
 import co.japl.android.synapsefit.wear.ui.viewmodel.WearActiveWorkoutUiState
 
-@Suppress("LongMethod")
+private const val SECONDS_PER_MINUTE = 60
+
+@Suppress("LongMethod", "LongParameterList", "UnusedParameter")
 @Composable
 fun WearActiveWorkoutScreen(
     uiState: WearActiveWorkoutUiState,
@@ -88,6 +90,7 @@ fun WearActiveWorkoutScreen(
     }
 }
 
+@Suppress("UnusedParameter")
 @Composable
 private fun CentralWorkoutContent(
     uiState: WearActiveWorkoutUiState,
@@ -145,8 +148,8 @@ private fun CentralWorkoutContent(
         Spacer(modifier = Modifier.height(8.dp))
 
         if (uiState.cooldownSecondsRemaining != null && uiState.cooldownSecondsRemaining > 0) {
-            val mins = uiState.cooldownSecondsRemaining / 60
-            val secs = uiState.cooldownSecondsRemaining % 60
+            val mins = uiState.cooldownSecondsRemaining / SECONDS_PER_MINUTE
+            val secs = uiState.cooldownSecondsRemaining % SECONDS_PER_MINUTE
             Text(
                 text = stringResource(R.string.wear_cooldown_label, mins, secs),
                 fontSize = 11.sp,

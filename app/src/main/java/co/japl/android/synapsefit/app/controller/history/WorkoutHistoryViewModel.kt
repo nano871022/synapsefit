@@ -148,39 +148,42 @@ class WorkoutHistoryViewModel(
     private fun updateStateWithGroups(
         groups: List<WorkoutHistoryGroup>,
         activePlanTitle: String,
-        activePlanTotalSessions: Int
+        activePlanTotalSessions: Int,
     ) {
-        val uiGroups = groups.map { group ->
-            WorkoutSessionGroupUiModel(
-                sessionId = group.sessionId,
-                sessionTitle = "Día ${group.day}",
-                dateFormatted = dateFormatter.format(Instant.ofEpochMilli(group.timestamp)),
-                durationMinutes = (group.totalDurationSeconds / 60).toInt().coerceAtLeast(1),
-                timestamp = group.timestamp,
-                muscleGroups = group.muscleGroups,
-                totalExercisesCount = group.exercises.size,
-                totalVolumeKg = MathUtils.roundToDecimals(group.totalVolumeKg, 1),
-                exercises = group.exercises.map { ex ->
-                    ExerciseSessionDetailUiModel(
-                        exerciseId = ex.exerciseId,
-                        exerciseName = ex.exerciseName,
-                        muscleGroup = ex.muscleGroup,
-                        sets = ex.sets.map { s ->
-                            ExerciseLogSetUiModel(
-                                setIndex = s.setIndex,
-                                repsCompleted = s.repsCompleted,
-                                weightLiftedKg = s.weightLiftedKg,
-                                heartRateBpm = s.heartRateBpm,
-                                durationSeconds = s.durationSeconds,
-                                timestamp = s.timestamp
+        val uiGroups =
+            groups.map { group ->
+                WorkoutSessionGroupUiModel(
+                    sessionId = group.sessionId,
+                    sessionTitle = "Día ${group.day}",
+                    dateFormatted = dateFormatter.format(Instant.ofEpochMilli(group.timestamp)),
+                    durationMinutes = (group.totalDurationSeconds / 60).toInt().coerceAtLeast(1),
+                    timestamp = group.timestamp,
+                    muscleGroups = group.muscleGroups,
+                    totalExercisesCount = group.exercises.size,
+                    totalVolumeKg = MathUtils.roundToDecimals(group.totalVolumeKg, 1),
+                    exercises =
+                        group.exercises.map { ex ->
+                            ExerciseSessionDetailUiModel(
+                                exerciseId = ex.exerciseId,
+                                exerciseName = ex.exerciseName,
+                                muscleGroup = ex.muscleGroup,
+                                sets =
+                                    ex.sets.map { s ->
+                                        ExerciseLogSetUiModel(
+                                            setIndex = s.setIndex,
+                                            repsCompleted = s.repsCompleted,
+                                            weightLiftedKg = s.weightLiftedKg,
+                                            heartRateBpm = s.heartRateBpm,
+                                            durationSeconds = s.durationSeconds,
+                                            timestamp = s.timestamp,
+                                        )
+                                    },
+                                averageReps = ex.averageReps,
+                                averageWeightKg = ex.averageWeightKg,
                             )
                         },
-                        averageReps = ex.averageReps,
-                        averageWeightKg = ex.averageWeightKg
-                    )
-                }
-            )
-        }
+                )
+            }
 
         val targetYearMonth = _uiState.value.selectedYearMonth
         val filteredGroups = uiGroups.filter { it.dateFormatted.startsWith(targetYearMonth) }
@@ -202,21 +205,23 @@ class WorkoutHistoryViewModel(
         val completedCount = uiGroups.size
         val currentWeek = ((completedCount / 3) + 1).coerceAtMost(8)
 
-        val activeStats = ActivePlanStatsUiModel(
-            planTitle = activePlanTitle.ifBlank { "Plan de Entrenamiento" },
-            currentWeek = currentWeek,
-            totalWeeks = 8,
-            completedSessionsCount = completedCount,
-            totalSessionsGoal = activePlanTotalSessions,
-            totalVolumeTons = totalPlanVolTons,
-            totalHours = totalPlanHours,
-        )
+        val activeStats =
+            ActivePlanStatsUiModel(
+                planTitle = activePlanTitle.ifBlank { "Plan de Entrenamiento" },
+                currentWeek = currentWeek,
+                totalWeeks = 8,
+                completedSessionsCount = completedCount,
+                totalSessionsGoal = activePlanTotalSessions,
+                totalVolumeTons = totalPlanVolTons,
+                totalHours = totalPlanHours,
+            )
 
-        val globalStats = GlobalHistoryStatsUiModel(
-            totalWorkoutsCount = uiGroups.size,
-            totalVolumeFormatted = formatVolume(totalPlanVolKg),
-            totalHours = totalPlanHours,
-        )
+        val globalStats =
+            GlobalHistoryStatsUiModel(
+                totalWorkoutsCount = uiGroups.size,
+                totalVolumeFormatted = formatVolume(totalPlanVolKg),
+                totalHours = totalPlanHours,
+            )
 
         _uiState.update {
             it.copy(
