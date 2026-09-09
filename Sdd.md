@@ -73,7 +73,7 @@ v                             v
 * **Responsibility:** Date/time formatters, SHA-256 checksum generators, math helpers, and Kotlin extensions.
 
 ### `:wear` (Wear OS Companion App)
-* **Namespace:** `co.japl.android.synapsefit.wear`
+* **Namespace:** `co.japl.android.synapsefit`
 * **Responsibility:** Circular standalone/connected UI, Health Services sensor integrations (Heart Rate BPM), and `WearableListenerService` for deferred Bluetooth data syncing.
 
 ---
