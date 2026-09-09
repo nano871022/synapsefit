@@ -12,6 +12,10 @@ on:
         required: true
         default: '2'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   version-bump:
     name: Bump Version & Create Tag
