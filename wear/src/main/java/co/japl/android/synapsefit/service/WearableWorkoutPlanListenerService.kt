@@ -1,4 +1,4 @@
-package co.japl.android.synapsefit.wear.service
+package co.japl.android.synapsefit.service
 
 import androidx.room.Room
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort

@@ -1,4 +1,4 @@
-package co.japl.android.synapsefit.wear.ui.view
+package co.japl.android.synapsefit.ui.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

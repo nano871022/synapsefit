@@ -1,4 +1,4 @@
-package co.japl.android.synapsefit.wear.ui.view
+package co.japl.android.synapsefit.ui.view
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import co.japl.android.synapsefit.wear.ui.viewmodel.WearActiveWorkoutViewModel
+import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutViewModel
 
 class MainActivity : ComponentActivity() {
     private val viewModel: WearActiveWorkoutViewModel by viewModels()

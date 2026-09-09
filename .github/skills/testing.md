@@ -1,6 +1,6 @@
 # Skill: Testing Strategy & Execution
 
-> **File Location:** `.github/skills/testing.md`  
+> **File Location:** `.github/skills/testing.md`
 > **Target Scope:** Unit, Integration, Architecture, and UI testing across `:core`, `:services`, `:app`, and `:wear` modules in `co.japl.android.synapsefit`.
 
 ---
@@ -17,12 +17,12 @@ Testing in SynapseFit follows strict layer isolation to guarantee high execution
                  /  Integ  \  Database & API Integration Tests (Room In-Memory, MockWebServer)
                 /  Services \ [Module: :services]
                /-------------\
-              /   Unit Tests  \ Pure Domain & Use Case Tests (JUnit5 + MockK + Turbine)
-             /      :core      \ [Module: :core]
+              /   Unit Tests  \ Pure Domain, Utils & Use Case Tests (JUnit5 + MockK + Turbine)
+             /      :core, :util \ [Modules: :core, :util]
             /-------------------\
 
 2. Testing Guidelines by Layer
-A. :core Unit Tests (Pure Kotlin)
+A. :core & :util Unit Tests (Pure Kotlin)
  * Frameworks: JUnit 5, MockK, Turbine, Kotlinx Coroutines Test.
  * Rules:
    * Zero Android Dependencies: Tests must run on the local JVM in milliseconds without Android/Robolectric runners.
@@ -78,10 +78,10 @@ class SaveBodyMeasurementUseCaseTest {
         val result = useCase(weightKg = 75.5, waistCm = 82.0)
 
         assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { 
-            repositoryPort.saveMeasurement(match { 
-                it.weightKg == 75.5 && it.waistCm == 82.0 
-            }) 
+        coVerify(exactly = 1) {
+            repositoryPort.saveMeasurement(match {
+                it.weightKg == 75.5 && it.waistCm == 82.0
+            })
         }
     }
 }

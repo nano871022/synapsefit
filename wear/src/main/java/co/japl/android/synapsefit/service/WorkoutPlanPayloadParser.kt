@@ -1,4 +1,4 @@
-package co.japl.android.synapsefit.wear.service
+package co.japl.android.synapsefit.service
 
 import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan

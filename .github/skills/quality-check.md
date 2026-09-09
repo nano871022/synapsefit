@@ -1,6 +1,6 @@
 # Skill: Quality Assurance, Code Standards & Architecture Compliance
 
-> **File Location:** `.github/skills/quality-check.md`  
+> **File Location:** `.github/skills/quality-check.md`
 > **Target Scope:** Static analysis, code formatting, architectural guardrails, and pull request readiness for `co.japl.android.synapsefit`.
 
 ---
@@ -11,7 +11,7 @@ Every pull request or code modification must pass the following core architectur
 
 | Rule ID | Module | Enforced Rule | Verification Method |
 | :--- | :--- | :--- | :--- |
-| **ARCH-01** | `:core` | **Pure Kotlin Only:** Zero imports from `android.*`, `androidx.*`, or Room annotations. | Static analysis / Compilation |
+| **ARCH-01** | `:core` / `:util` | **Pure Kotlin Only:** Zero imports from `android.*`, `androidx.*`, or Room annotations. | Static analysis / Compilation |
 | **ARCH-02** | `:app` / `:wear` | **Passive UI:** No direct DB queries, HTTP calls, or domain mutations inside `@Composable` functions or ViewModels. | Code review / UI Test rules |
 | **ARCH-03** | `:app` / `:wear` | **Decoupled Navigation:** Composables must not accept `NavController` directly. Must use `AppNavigator`. | Inspection |
 | **ARCH-04** | `:services` | **Domain Isolation:** Room `@Entity` and REST DTO classes must never leak to `:app` or `:core`. Mappers are mandatory. | Package inspection |
@@ -56,7 +56,7 @@ Every pull request or code modification must pass the following core architectur
 Before submitting a Pull Request or completing a task, verify the code against this checklist:
 
 ### 1. Architecture & Boundaries
-* [ ] No `android.*` packages imported inside `:core`.
+* [ ] No `android.*` packages imported inside `:core` or `:util`.
 * [ ] Mappers explicitly convert Room `@Entity` and DTOs into pure Domain Models.
 * [ ] ViewModels consume `:core` Use Cases via Dependency Injection rather than direct repository implementation.
 

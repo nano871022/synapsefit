@@ -1,4 +1,4 @@
-package co.japl.android.synapsefit.wear.ui.viewmodel
+package co.japl.android.synapsefit.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

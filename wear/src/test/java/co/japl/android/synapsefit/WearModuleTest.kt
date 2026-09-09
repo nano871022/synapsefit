@@ -1,4 +1,4 @@
-package co.japl.android.synapsefit.wear
+package co.japl.android.synapsefit
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

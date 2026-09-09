@@ -1,12 +1,12 @@
-package co.japl.android.synapsefit.wear.viewmodel
+package co.japl.android.synapsefit.viewmodel
 
 import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.ExerciseSession
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
 import co.japl.android.synapsefit.services.wear.WearHeartRateSensorAdapter
 import co.japl.android.synapsefit.services.wear.WearableSyncAdapter
-import co.japl.android.synapsefit.wear.service.WorkoutPlanPayloadParser
-import co.japl.android.synapsefit.wear.ui.viewmodel.WearActiveWorkoutViewModel
+import co.japl.android.synapsefit.service.WorkoutPlanPayloadParser
+import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

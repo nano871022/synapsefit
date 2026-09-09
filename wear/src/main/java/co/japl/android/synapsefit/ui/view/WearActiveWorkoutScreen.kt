@@ -1,4 +1,4 @@
-package co.japl.android.synapsefit.wear.ui.view
+package co.japl.android.synapsefit.ui.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -34,7 +34,7 @@ import co.com.japl.ui.theme.PrimaryCyan
 import co.com.japl.ui.theme.SurfaceContainerHigh
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
-import co.japl.android.synapsefit.wear.ui.viewmodel.WearActiveWorkoutUiState
+import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutUiState
 
 private const val SECONDS_PER_MINUTE = 60
 

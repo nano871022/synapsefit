@@ -1,4 +1,4 @@
-package co.japl.android.synapsefit.wear.ui.viewmodel
+package co.japl.android.synapsefit.ui.viewmodel
 
 import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.ExerciseSession

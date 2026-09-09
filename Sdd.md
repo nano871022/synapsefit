@@ -1,10 +1,10 @@
 # Software Design Document (SDD): SynapseFit
 
-**Project Name:** SynapseFit  
-**Application ID:** `co.japl.android.synapsefit`  
-**Wear OS Application ID:** `co.japl.android.synapsefit.wear`  
-**Architecture:** Multi-Module Hexagonal Architecture (Ports & Adapters)  
-**SDK Support:** API 26 (Android 8.0) – API 36 (Android 16)  
+**Project Name:** SynapseFit
+**Application ID:** `co.japl.android.synapsefit`
+**Wear OS Application ID:** `co.japl.android.synapsefit`
+**Architecture:** Multi-Module Hexagonal Architecture (Ports & Adapters)
+**SDK Support:** API 26 (Android 8.0) – API 36 (Android 16)
 **Primary Tech Stack:** Kotlin, Jetpack Compose, Room (SQLite), Kotlin Coroutines & Flow, Material 3, Wear OS Horologist, Jetpack Security.
 
 ---
@@ -80,7 +80,7 @@ v                             v
 
 ## 3. Database Schema Specification (Room SQLite)
 
-**Database Name:** `synapsefit_database.db`  
+**Database Name:** `synapsefit_database.db`
 **Audit Requirements:** All primary tables enforce `created_at` and `updated_at` INTEGER (epoch timestamp) columns.
 
 ```sql
@@ -161,7 +161,7 @@ sealed class NavigationCommand {
         val popUpToRoute: String? = null,
         val inclusive: Boolean = false
     ) : NavigationCommand()
-    
+
     object NavigateUp : NavigationCommand()
 }
 
@@ -207,13 +207,13 @@ Adaptive Layout Rules (WindowSizeClass)
  * Compact (<600dp - Smartphones / Z Fold 4 Folded): 1-column stacked layouts, bottom navigation bar enabled.
  * Medium (600dp–840dp - Z Fold 4 Unfolded): 2-pane layouts (ListDetailPaneScaffold / SupportingPaneScaffold), navigation rail enabled.
  * Expanded (>840dp - Redmi Pad Pro / Tablets): Multi-column dashboard grid with persistent navigation drawer.
- * 
+ *
 ## 6. AI Architecture & Data Security
 
  * Multi-LLM Switchboard: Handles Gemini, OpenAI, and Anthropic API connections. Prioritizes active configuration ordered by ORDER BY updated_at DESC, created_at DESC LIMIT 1.
  * Credential Encryption: All API keys are encrypted using EncryptedSharedPreferences backed by the Android KeyStore (AES256_GCM) before being stored in Room.
  * Web 4.0 Backup Sovereignty: Backups use the private DriveScopes.DRIVE_APPDATA folder on Google Drive. Export files (co.japl.android.synapsefit.backup.enc) are compressed, encrypted, and validated via SHA-256 hash checksums.
- 
+
 ## 7. CI/CD DevOps Pipeline (GitHub Actions)
 
  * Trigger: Pushes to main branch or pull requests with Conventional Commits (feat:, fix:, refactor:).
