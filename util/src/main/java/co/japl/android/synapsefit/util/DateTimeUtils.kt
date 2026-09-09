@@ -98,4 +98,6 @@ object DateTimeUtils {
             null
         }
     }
+
+    fun getCurrentTimestamp(): Long = System.currentTimeMillis()
 }

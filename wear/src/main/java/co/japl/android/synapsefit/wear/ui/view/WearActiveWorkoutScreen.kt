@@ -32,6 +32,7 @@ import co.com.japl.ui.theme.OnPrimaryDark
 import co.com.japl.ui.theme.OnSurfaceDark
 import co.com.japl.ui.theme.PrimaryCyan
 import co.com.japl.ui.theme.SurfaceContainerHigh
+import co.japl.android.synapsefit.core.domain.model.TrainingStepState
 import co.japl.android.synapsefit.wear.R
 import co.japl.android.synapsefit.wear.ui.viewmodel.WearActiveWorkoutUiState
 
@@ -42,6 +43,8 @@ fun WearActiveWorkoutScreen(
     onIncrementReps: () -> Unit,
     onDecrementReps: () -> Unit,
     modifier: Modifier = Modifier,
+    onCompleteSet: (() -> Unit)? = null,
+    onStartNextExercise: (() -> Unit)? = null,
 ) {
     Box(
         modifier =
@@ -51,9 +54,14 @@ fun WearActiveWorkoutScreen(
         contentAlignment = Alignment.Center,
     ) {
         val exerciseTitle =
-            uiState.exerciseName.ifEmpty {
-                stringResource(R.string.wear_default_exercise)
+            when (val state = uiState.trainingStepState) {
+                is TrainingStepState.Active -> state.exerciseSession.name
+                is TrainingStepState.Cooldown -> state.exerciseSession.name
+                is TrainingStepState.ReadyForNext ->
+                    state.nextExerciseSession?.name
+                        ?: uiState.exerciseName.ifEmpty { stringResource(R.string.wear_default_exercise) }
             }
+
         CurvedLayout(
             modifier = Modifier.fillMaxSize(),
         ) {
@@ -74,6 +82,8 @@ fun WearActiveWorkoutScreen(
             uiState = uiState,
             onIncrementReps = onIncrementReps,
             onDecrementReps = onDecrementReps,
+            onCompleteSet = onCompleteSet,
+            onStartNextExercise = onStartNextExercise,
         )
     }
 }
@@ -83,6 +93,8 @@ private fun CentralWorkoutContent(
     uiState: WearActiveWorkoutUiState,
     onIncrementReps: () -> Unit,
     onDecrementReps: () -> Unit,
+    onCompleteSet: (() -> Unit)?,
+    onStartNextExercise: (() -> Unit)?,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
