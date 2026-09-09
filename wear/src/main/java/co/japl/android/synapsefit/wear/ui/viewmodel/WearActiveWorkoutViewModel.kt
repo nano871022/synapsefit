@@ -43,7 +43,7 @@ class WearActiveWorkoutViewModel(
                 if (targetTimestamp != null) {
                     val now = System.currentTimeMillis()
                     val diff = targetTimestamp - now
-                    if (diff > 0) (diff / 1000L).toInt() else 0
+                    if (diff > 0) (diff / MILLIS_PER_SECOND).toInt() else 0
                 } else {
                     null
                 }
@@ -58,3 +58,5 @@ class WearActiveWorkoutViewModel(
         _uiState.update { it.copy(cooldownSecondsRemaining = seconds) }
     }
 }
+
+private const val MILLIS_PER_SECOND = 1000L

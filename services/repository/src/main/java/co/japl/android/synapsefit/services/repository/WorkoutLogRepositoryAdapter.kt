@@ -1,6 +1,7 @@
 package co.japl.android.synapsefit.services.repository
 
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.services.database.dao.WorkoutLogDao
 import co.japl.android.synapsefit.services.database.mapper.toDomain
@@ -32,7 +33,7 @@ class WorkoutLogRepositoryAdapter(
             entities.map { it.toDomain() }
         }
 
-    override fun getHistoryRecords(): Flow<List<co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord>> =
+    override fun getHistoryRecords(): Flow<List<WorkoutHistoryRecord>> =
         dao.getHistoryRecords().map { entities ->
             entities.map { it.toDomain() }
         }

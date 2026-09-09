@@ -12,7 +12,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 class GetGroupedWorkoutHistoryUseCase(
-    private val workoutLogRepository: WorkoutLogRepositoryPort
+    private val workoutLogRepository: WorkoutLogRepositoryPort,
 ) {
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault())
 
@@ -52,29 +52,31 @@ class GetGroupedWorkoutHistoryUseCase(
             // Group by exercise within the session
             val exerciseGroups = clusterRecords.groupBy { it.exerciseId }
 
-            val exerciseHistories = exerciseGroups.map { (exId, exRecords) ->
-                // Sort sets by timestamp ascending
-                val sortedSets = exRecords.sortedBy { it.timestamp }
-                val sets = sortedSets.mapIndexed { index, rec ->
-                    ExerciseSetHistory(
-                        setIndex = index + 1,
-                        repsCompleted = rec.repsCompleted,
-                        weightLiftedKg = rec.weightLiftedKg,
-                        heartRateBpm = rec.heartRateBpm,
-                        durationSeconds = rec.durationSeconds,
-                        timestamp = rec.timestamp
+            val exerciseHistories =
+                exerciseGroups.map { (exId, exRecords) ->
+                    // Sort sets by timestamp ascending
+                    val sortedSets = exRecords.sortedBy { it.timestamp }
+                    val sets =
+                        sortedSets.mapIndexed { index, rec ->
+                            ExerciseSetHistory(
+                                setIndex = index + 1,
+                                repsCompleted = rec.repsCompleted,
+                                weightLiftedKg = rec.weightLiftedKg,
+                                heartRateBpm = rec.heartRateBpm,
+                                durationSeconds = rec.durationSeconds,
+                                timestamp = rec.timestamp,
+                            )
+                        }
+
+                    ExerciseHistory(
+                        exerciseId = exId,
+                        exerciseName = exRecords.first().exerciseName,
+                        muscleGroup = exRecords.first().muscleGroup,
+                        sets = sets,
+                        averageReps = sets.map { it.repsCompleted }.average(),
+                        averageWeightKg = sets.map { it.weightLiftedKg }.average(),
                     )
                 }
-
-                ExerciseHistory(
-                    exerciseId = exId,
-                    exerciseName = exRecords.first().exerciseName,
-                    muscleGroup = exRecords.first().muscleGroup,
-                    sets = sets,
-                    averageReps = sets.map { it.repsCompleted }.average(),
-                    averageWeightKg = sets.map { it.weightLiftedKg }.average()
-                )
-            }
 
             val totalVolume = clusterRecords.sumOf { it.repsCompleted * it.weightLiftedKg }
             val totalDuration = clusterRecords.sumOf { it.durationSeconds }
@@ -89,7 +91,7 @@ class GetGroupedWorkoutHistoryUseCase(
                 exercises = exerciseHistories,
                 totalVolumeKg = totalVolume,
                 totalDurationSeconds = totalDuration,
-                muscleGroups = muscleGroups
+                muscleGroups = muscleGroups,
             )
         }
     }

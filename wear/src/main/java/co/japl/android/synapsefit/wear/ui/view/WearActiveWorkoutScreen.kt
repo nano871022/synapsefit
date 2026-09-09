@@ -133,8 +133,8 @@ private fun CentralWorkoutContent(
         Spacer(modifier = Modifier.height(8.dp))
 
         if (uiState.cooldownSecondsRemaining != null && uiState.cooldownSecondsRemaining > 0) {
-            val mins = uiState.cooldownSecondsRemaining / 60
-            val secs = uiState.cooldownSecondsRemaining % 60
+            val mins = uiState.cooldownSecondsRemaining / SECONDS_PER_MINUTE
+            val secs = uiState.cooldownSecondsRemaining % SECONDS_PER_MINUTE
             Text(
                 text = stringResource(R.string.wear_cooldown_label, mins, secs),
                 fontSize = 11.sp,
@@ -204,3 +204,5 @@ private fun RepControlButtons(
         }
     }
 }
+
+private const val SECONDS_PER_MINUTE = 60

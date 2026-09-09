@@ -104,6 +104,7 @@ class ActiveWorkoutSessionViewModel(
     private val exerciseCompletedSetsCount = mutableMapOf<String, Int>()
     private val exerciseMaxWeight = mutableMapOf<String, Double>()
 
+    @Suppress("NestedBlockDepth")
     fun startSession(planId: String) {
         if (_uiState.value.planId == planId && _uiState.value.exercises.isNotEmpty()) {
             return

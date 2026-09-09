@@ -11,12 +11,14 @@ import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.UserProfile
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord
 import co.japl.android.synapsefit.services.database.entity.BodyMeasurementEntity
 import co.japl.android.synapsefit.services.database.entity.ExerciseEntity
 import co.japl.android.synapsefit.services.database.entity.LlmConfigEntity
 import co.japl.android.synapsefit.services.database.entity.MedicalRecommendationEntity
 import co.japl.android.synapsefit.services.database.entity.UserProfileEntity
 import co.japl.android.synapsefit.services.database.entity.WorkoutLogEntity
+import co.japl.android.synapsefit.services.database.entity.WorkoutLogWithExerciseEntity
 import co.japl.android.synapsefit.services.database.entity.WorkoutPlanEntity
 
 fun UserProfileEntity.toDomain(): UserProfile =
@@ -201,8 +203,8 @@ fun LlmConfig.toEntity(): LlmConfigEntity =
         updatedAt = updatedAt,
     )
 
-fun co.japl.android.synapsefit.services.database.entity.WorkoutLogWithExerciseEntity.toDomain(): co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord =
-    co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord(
+fun WorkoutLogWithExerciseEntity.toDomain(): WorkoutHistoryRecord =
+    WorkoutHistoryRecord(
         logId = logId,
         exerciseId = exerciseId,
         planId = planId,

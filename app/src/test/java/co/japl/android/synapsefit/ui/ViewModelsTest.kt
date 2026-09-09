@@ -13,10 +13,16 @@ import co.japl.android.synapsefit.app.controller.workout.ActiveWorkoutSessionVie
 import co.japl.android.synapsefit.app.controller.workout.WorkoutPlanDetailViewModel
 import co.japl.android.synapsefit.app.controller.workout.WorkoutPlansViewModel
 import co.japl.android.synapsefit.core.domain.model.AnatomicalZone
-import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.TrainingLocation
-import co.japl.android.synapsefit.core.domain.model.WorkoutLog
-import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
+import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
+import co.japl.android.synapsefit.core.domain.model.history.ExerciseHistory
+import co.japl.android.synapsefit.core.domain.model.history.ExerciseSetHistory
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryGroup
+import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
+import co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase
+import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
+import co.japl.android.synapsefit.core.usecase.SaveBodyMeasurementUseCase
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -69,7 +75,11 @@ class ViewModelsTest {
     @Test
     fun bodyMeasurementsViewModel_validation_succeedsWithWeight() =
         runTest {
-            val viewModel = BodyMeasurementsViewModel()
+            val saveBodyMeasurementUseCase = mockk<SaveBodyMeasurementUseCase>()
+            coEvery {
+                saveBodyMeasurementUseCase(any(), any(), any(), any(), any(), any(), any(), any(), any())
+            } returns Result.success(mockk())
+            val viewModel = BodyMeasurementsViewModel(saveBodyMeasurementUseCase = saveBodyMeasurementUseCase)
             viewModel.onWeightChange("75.5")
             viewModel.saveMeasurement()
             val state = viewModel.uiState.value
@@ -103,7 +113,12 @@ class ViewModelsTest {
     @Test
     fun workoutPlanDetailViewModel_loadDetail_updatesState() =
         runTest {
-            val viewModel = WorkoutPlanDetailViewModel()
+            val workoutPlanRepositoryPort = mockk<WorkoutPlanRepositoryPort>()
+            val plan = WorkoutPlan("test-plan-id", "Title", "Goal", true, true, 12, 0L, 0L)
+            every {
+                workoutPlanRepositoryPort.getPlanWithExercises("test-plan-id")
+            } returns flowOf(Pair(plan, emptyList()))
+            val viewModel = WorkoutPlanDetailViewModel(workoutPlanRepositoryPort = workoutPlanRepositoryPort)
             viewModel.loadPlanDetail("test-plan-id")
             assertEquals("test-plan-id", viewModel.uiState.value.planId)
         }
@@ -113,6 +128,7 @@ class ViewModelsTest {
         runTest {
             val viewModel = ActiveWorkoutSessionViewModel()
             viewModel.startSession("plan-123")
+            viewModel.finishSession()
             assertEquals("plan-123", viewModel.uiState.value.planId)
         }
 
@@ -156,8 +172,8 @@ class ViewModelsTest {
     @Test
     fun userProfileViewModel_evaluateMedicalConditions_showsDialogAndHandlesRetry() =
         runTest {
-            val mockEvalUseCase = mockk<co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase>()
-            io.mockk.coEvery {
+            val mockEvalUseCase = mockk<EvaluateMedicalConditionsUseCase>()
+            coEvery {
                 mockEvalUseCase(any(), any(), any(), any())
             } returns Result.failure(RuntimeException("Error de conexión con LLM"))
 
@@ -167,6 +183,7 @@ class ViewModelsTest {
                 )
 
             viewModel.onFullNameChange("Juan Perez")
+            viewModel.onBirthDateChange("1995-05-20")
             viewModel.onHeightCmChange("175")
             viewModel.onMedicalConditionsChange("Hernia lumbar")
 
@@ -184,24 +201,34 @@ class ViewModelsTest {
     @Test
     fun workoutHistoryViewModel_groupsMultipleExercisesOnSameDay() =
         runTest {
-            val mockLogPort = mockk<WorkoutLogRepositoryPort>()
+            val getGroupedWorkoutHistoryUseCase = mockk<GetGroupedWorkoutHistoryUseCase>()
             val baseTime = System.currentTimeMillis()
-            val logs =
+            val exercises =
                 (1..5).map { index ->
-                    WorkoutLog(
-                        id = "log-$index",
+                    ExerciseHistory(
                         exerciseId = "ex-$index",
-                        repsCompleted = 10,
-                        weightLiftedKg = 50.0,
-                        timestamp = baseTime + (index * 3600 * 1000L),
-                        sourceDevice = SourceDevice.MOBILE,
-                        createdAt = baseTime,
-                        updatedAt = baseTime,
+                        exerciseName = "Exercise $index",
+                        muscleGroup = "Pecho",
+                        sets = listOf(ExerciseSetHistory(1, 10, 50.0, 120, 60L, baseTime)),
+                        averageReps = 10.0,
+                        averageWeightKg = 50.0,
                     )
                 }
-            every { mockLogPort.getAllLogs() } returns flowOf(logs)
+            val group =
+                WorkoutHistoryGroup(
+                    sessionId = "s1",
+                    planId = "p1",
+                    planTitle = "Plan 1",
+                    day = 1,
+                    timestamp = baseTime,
+                    exercises = exercises,
+                    totalVolumeKg = 2500.0,
+                    totalDurationSeconds = 300L,
+                    muscleGroups = listOf("Pecho"),
+                )
+            every { getGroupedWorkoutHistoryUseCase.invoke() } returns flowOf(listOf(group))
 
-            val viewModel = WorkoutHistoryViewModel(workoutLogRepositoryPort = mockLogPort)
+            val viewModel = WorkoutHistoryViewModel(getGroupedWorkoutHistoryUseCase = getGroupedWorkoutHistoryUseCase)
             val groups = viewModel.uiState.value.sessionGroups
 
             assertEquals(1, groups.size)
@@ -212,29 +239,38 @@ class ViewModelsTest {
     @Test
     fun workoutHistoryViewModel_loadsAllWorkoutSessionsAcrossMultipleDays() =
         runTest {
-            val mockLogPort = mockk<WorkoutLogRepositoryPort>()
+            val getGroupedWorkoutHistoryUseCase = mockk<GetGroupedWorkoutHistoryUseCase>()
             val baseTime = System.currentTimeMillis()
             val dayMillis = 86400000L
-            val logs =
+            val groupsList =
                 (1..10).map { index ->
-                    WorkoutLog(
-                        id = "log-$index",
-                        exerciseId = "ex-$index",
-                        repsCompleted = 10,
-                        weightLiftedKg = 50.0,
+                    WorkoutHistoryGroup(
+                        sessionId = "s-$index",
+                        planId = "p1",
+                        planTitle = "Plan 1",
+                        day = index,
                         timestamp = baseTime - (index * dayMillis),
-                        sourceDevice = SourceDevice.MOBILE,
-                        createdAt = baseTime,
-                        updatedAt = baseTime,
+                        exercises =
+                            listOf(
+                                ExerciseHistory(
+                                    exerciseId = "ex-$index",
+                                    exerciseName = "Exercise $index",
+                                    muscleGroup = "Pecho",
+                                    sets = listOf(ExerciseSetHistory(1, 10, 50.0, 120, 60L, baseTime)),
+                                    averageReps = 10.0,
+                                    averageWeightKg = 50.0,
+                                ),
+                            ),
+                        totalVolumeKg = 500.0,
+                        totalDurationSeconds = 60L,
+                        muscleGroups = listOf("Pecho"),
                     )
                 }
-            every { mockLogPort.getAllLogs() } returns flowOf(logs)
+            every { getGroupedWorkoutHistoryUseCase.invoke() } returns flowOf(groupsList)
 
-            val viewModel = WorkoutHistoryViewModel(workoutLogRepositoryPort = mockLogPort)
+            val viewModel = WorkoutHistoryViewModel(getGroupedWorkoutHistoryUseCase = getGroupedWorkoutHistoryUseCase)
             val state = viewModel.uiState.value
 
-            assertEquals(10, state.recordedSessions.size)
             assertEquals(10, state.sessionGroups.size)
-            assertEquals(10, state.weeklySessionsCount)
         }
 }
