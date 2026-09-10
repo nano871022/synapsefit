@@ -355,11 +355,12 @@ class WearActiveWorkoutViewModel(
         if (currentState is TrainingStepState.Cooldown) {
             val newTarget = currentState.targetTimestamp + extraMillis
             val newRemaining = TrainingStepState.calculateRemainingMillis(newTarget)
-            val updatedState = TrainingStepState.Cooldown(
-                exerciseSession = currentState.exerciseSession,
-                targetTimestamp = newTarget,
-                remainingMillis = newRemaining,
-            )
+            val updatedState =
+                TrainingStepState.Cooldown(
+                    exerciseSession = currentState.exerciseSession,
+                    targetTimestamp = newTarget,
+                    remainingMillis = newRemaining,
+                )
             _trainingStepState.value = updatedState
             _uiState.update {
                 it.copy(
