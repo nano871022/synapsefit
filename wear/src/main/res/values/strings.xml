@@ -32,4 +32,16 @@
     <string name="wear_add_30s">+30s</string>
     <string name="wear_skip_rest">Saltar</string>
     <string name="wear_exercise_index_footer">EJERCICIO %1$d DE %2$d • SYNAPSEFIT</string>
+    <string name="wear_summary_title">Resumen de Entrenamiento</string>
+    <string name="wear_summary_total_time">Tiempo Total</string>
+    <string name="wear_summary_total_volume">Volumen Total</string>
+    <string name="wear_summary_avg_hr">FC Promedio</string>
+    <string name="wear_summary_max_hr">FC Máxima</string>
+    <string name="wear_summary_saved_locally">Guardado Localmente</string>
+    <string name="wear_summary_completed_exercises">Ejercicios Realizados</string>
+    <string name="wear_summary_finish">FINALIZAR</string>
+
+    <string name="wear_summary_kg">%1$.1f kg</string>
+    <string name="wear_summary_bpm_value">%1$d BPM</string>
+    <string name="wear_summary_sets_count">%1$d series</string>
 </resources>
