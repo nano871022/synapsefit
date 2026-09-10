@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wear_app_name">SynapseFit Wear</string>
+    <string name="wear_default_exercise">Bench Press</string>
+    <string name="wear_bpm_unit">BPM</string>
+    <string name="wear_reps_label">Reps</string>
+    <string name="wear_inc_reps">+</string>
+    <string name="wear_dec_reps">-</string>
+    <string name="wear_synced">Synced</string>
+    <string name="wear_not_synced">Not Synced</string>
+    <string name="wear_cooldown_label">Rest (%1$02d:%2$02d)</string>
+    <string name="wear_workout_hub">Workout Hub</string>
+    <string name="wear_day_header">DAY %1$d: %2$s</string>
+    <string name="wear_programmed_exercises">%1$d scheduled exercises</string>
+    <string name="wear_tap_to_start_exercise">Tap an exercise to start directly</string>
+    <string name="wear_start_session">START SESSION</string>
+    <string name="wear_exercise_sets_reps_timer">%1$d × %2$s reps • timer %3$ds</string>
+    <string name="wear_exercise_sets_reps_weight_timer">%1$d × %2$s reps %3$s • timer %4$ds</string>
+    <string name="wear_no_active_plan">No active plan</string>
+    <string name="wear_no_exercises">No scheduled exercises</string>
+    <string name="wear_select_session_title">Select Session</string>
+    <string name="wear_today_tag">TODAY</string>
+    <string name="wear_day_title_with_exercises">Day %1$d • %2$d exercises</string>
+    <string name="wear_no_sessions">No sessions available</string>
+    <string name="wear_rest_timer">REST %1$02d:%2$02d</string>
+    <string name="wear_state_cooldown">Status: Cooldown</string>
+    <string name="wear_state_ready">Status: Ready</string>
+    <string name="wear_completed_badge">COMPLETED</string>
+    <string name="wear_sets_ready_format">%1$d / %2$d sets completed • %3$ds</string>
+    <string name="wear_next_set_format">NEXT SET %1$d/%2$d</string>
+    <string name="wear_ready_tap_to_start">Ready for next! Tap to start</string>
+    <string name="wear_add_30s">+30s</string>
+    <string name="wear_skip_rest">Skip</string>
+    <string name="wear_exercise_index_footer">EXERCISE %1$d OF %2$d • SYNAPSEFIT</string>
+</resources>
