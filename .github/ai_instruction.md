@@ -11,6 +11,7 @@
 3. **Atomic & Granular Execution (Jules Flow):** Code modifications must be executed as isolated, 1-task-per-execution operations. Do not introduce speculative features or refactor unrelated modules in a single step.
 4. **Pure `:core` Domain:** The `:core` module is pure Kotlin. It must contain zero Android dependencies (`android.*`). All Android framework interactions belong in `:services`, `:app`, `:ui`, `:util`, or `:wear`.
 5. **Data Sovereignty:** All user health data and logs must persist locally in Room DB (`synapsefit_database.db`) first. Remote operations (Google Drive AppData sync) are secondary adapters.
+6. **Strict Internationalization (i18n):** The application officially supports **Spanish** (default `values/strings.xml`) and **English** (`values-en/strings.xml`). Every user-facing text or label must use Android string resources (`stringResource(R.string.id)`). Hardcoded user-facing text is strictly prohibited. Any new string must be added to both resource bundles symmetrically.
 
 ---
 

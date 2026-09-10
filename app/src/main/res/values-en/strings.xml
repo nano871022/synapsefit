@@ -125,6 +125,7 @@
     <string name="set_label">Set %1$d of %2$d</string>
     <string name="target_reps">Target reps: %1$s</string>
     <string name="complete_set">Complete Set</string>
+    <string name="cooldown_timer_label">Cooldown (%1$02d:%2$02d)</string>
     <string name="next_set_or_exercise">Next Set / Exercise</string>
     <string name="next_set">Next Set</string>
     <string name="next_exercise">Next Exercise</string>

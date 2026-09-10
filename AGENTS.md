@@ -11,6 +11,7 @@
 3. **Atomic Execution:** Code modifications must be executed as isolated, 1-task-per-execution operations. Do not introduce speculative features or refactor unrelated modules in a single step.
 4. **Pure `:core` Domain (Strict Rule):** The `:core` module is pure Kotlin. It must contain ZERO Android dependencies (`android.*`). All Android framework interactions belong in `:services`, `:app`, `:ui`, or `:wear`. The `:core` module may depend on the pure Kotlin `:util` module.
 5. **Data Sovereignty:** All user health data and logs must persist locally in Room DB (`synapsefit_database.db`) first. Remote operations (Google Drive AppData sync) are secondary adapters.
+6. **Strict Internationalization (i18n):** The application is multi-lingual and supports **Spanish (`values/strings.xml`)** as the default language and **English (`values-en/strings.xml`)**. AI agents and developers must NEVER hardcode strings in Composables, ViewModels, or logs shown to the user. Every user-facing literal must be declared symmetrically in both resource files.
 
 ---
 

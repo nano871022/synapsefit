@@ -67,7 +67,7 @@
     <string name="active_plan">Plan Activo</string>
     <string name="no_active_plan_configured">No tienes un plan activo configurado</string>
     <string name="plan_history">Historial de Planes</string>
-    <string name="ia_generated">IA Generated</string>
+    <string name="ia_generated">Generado por IA</string>
     <string name="exercises_programmed">%1$d ejercicios programados</string>
     <string name="view_detail">Ver Detalle</string>
 
@@ -227,7 +227,7 @@
     <string name="id_label">ID: %1$s</string>
     <string name="hexagonal_architecture">Arquitectura Hexagonal Multi-módulo</string>
     <string name="hexagonal_desc">Módulos: :app, :core (Kotlin puro), :services (Room/Drive/LLM), :ui (Kinetic Pulse), :util, :wear (Wear OS Companion).</string>
-    <string name="data_sovereignty">Soberanía de datos local primero with respaldo cifrado SHA-256.</string>
+    <string name="data_sovereignty">Soberanía de datos local primero con respaldo cifrado SHA-256.</string>
 
     <!-- Foreground Service Notifications -->
     <string name="notification_channel_name">Servicio en Segundo Plano SynapseFit</string>
