@@ -32,6 +32,9 @@ class WearPostWorkoutSummaryViewModel(
         viewModelScope.launch {
             syncPort.isPhoneConnected.collect { isConnected ->
                 _uiState.update { it.copy(isSyncedWithPhone = isConnected) }
+                if (isConnected) {
+                    syncPort.flushSyncQueue()
+                }
             }
         }
         viewModelScope.launch {
@@ -57,6 +60,7 @@ class WearPostWorkoutSummaryViewModel(
 
                     if (targetGroup != null) {
                         populateStateFromGroup(targetGroup)
+                        transmitWorkoutLogsToMobile(targetGroup)
                     } else {
                         _uiState.update { it.copy(isLoading = false) }
                     }
@@ -83,6 +87,19 @@ class WearPostWorkoutSummaryViewModel(
                 exercises = group.exercises,
                 isLoading = false,
             )
+        }
+    }
+
+    private fun transmitWorkoutLogsToMobile(group: WorkoutHistoryGroup) {
+        val syncPort = syncPort ?: return
+        for (exercise in group.exercises) {
+            for (set in exercise.sets) {
+                syncPort.queueDataForDeferredSync(
+                    exerciseId = exercise.exerciseId,
+                    reps = set.repsCompleted,
+                    heartRateBpm = set.heartRateBpm ?: 0,
+                )
+            }
         }
     }
 

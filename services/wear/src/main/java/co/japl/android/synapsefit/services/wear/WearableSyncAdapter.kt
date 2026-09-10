@@ -12,6 +12,8 @@ class WearableSyncAdapter : WearSyncPort {
     private val _pendingSyncDataCount = MutableStateFlow(0)
     override val pendingSyncDataCount: StateFlow<Int> = _pendingSyncDataCount.asStateFlow()
 
+    private val pendingLogsQueue = mutableListOf<Triple<String, Int, Int>>()
+
     override fun onConnectionStateChanged(isConnected: Boolean) {
         _isPhoneConnected.value = isConnected
     }
@@ -21,11 +23,13 @@ class WearableSyncAdapter : WearSyncPort {
         reps: Int,
         heartRateBpm: Int,
     ) {
-        _pendingSyncDataCount.value += 1
+        pendingLogsQueue.add(Triple(exerciseId, reps, heartRateBpm))
+        _pendingSyncDataCount.value = pendingLogsQueue.size
     }
 
     override fun flushSyncQueue() {
         if (_isPhoneConnected.value) {
+            pendingLogsQueue.clear()
             _pendingSyncDataCount.value = 0
         }
     }
