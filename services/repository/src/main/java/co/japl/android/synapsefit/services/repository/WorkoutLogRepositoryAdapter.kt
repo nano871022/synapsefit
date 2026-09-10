@@ -1,6 +1,7 @@
 package co.japl.android.synapsefit.services.repository
 
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.services.database.dao.WorkoutLogDao
 import co.japl.android.synapsefit.services.database.mapper.toDomain
