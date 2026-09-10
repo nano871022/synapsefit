@@ -7,6 +7,7 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+@Suppress("TooManyFunctions")
 object DateTimeUtils {
     private val DEFAULT_ZONE_ID: ZoneId = ZoneId.systemDefault()
 

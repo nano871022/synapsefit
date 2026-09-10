@@ -201,7 +201,8 @@ fun LlmConfig.toEntity(): LlmConfigEntity =
         updatedAt = updatedAt,
     )
 
-fun co.japl.android.synapsefit.services.database.entity.WorkoutLogWithExerciseEntity.toDomain(): co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord =
+fun co.japl.android.synapsefit.services.database.entity.WorkoutLogWithExerciseEntity.toDomain():
+    co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord =
     co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord(
         logId = logId,
         exerciseId = exerciseId,
