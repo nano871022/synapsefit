@@ -203,4 +203,10 @@ class WearActiveWorkoutViewModelTest {
         viewModel.startSession()
         assertTrue(viewModel.uiState.value.isSessionStarted)
     }
+
+    @Test
+    fun testLoadPlanDataWithNullRepositoryGracefullyHandles() {
+        viewModel.loadPlanData("plan_1", 2)
+        assertEquals("", viewModel.uiState.value.activePlanTitle)
+    }
 }
