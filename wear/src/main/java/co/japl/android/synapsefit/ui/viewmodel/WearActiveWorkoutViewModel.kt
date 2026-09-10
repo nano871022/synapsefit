@@ -348,4 +348,39 @@ class WearActiveWorkoutViewModel(
     fun updateCooldownSeconds(seconds: Int?) {
         _uiState.update { it.copy(cooldownSecondsRemaining = seconds) }
     }
+
+    fun addExtraCooldownTime(extraSeconds: Int = 30) {
+        val currentState = _trainingStepState.value
+        val extraMillis = extraSeconds * MILLIS_PER_SECOND
+        if (currentState is TrainingStepState.Cooldown) {
+            val newTarget = currentState.targetTimestamp + extraMillis
+            val newRemaining = TrainingStepState.calculateRemainingMillis(newTarget)
+            val updatedState = TrainingStepState.Cooldown(
+                exerciseSession = currentState.exerciseSession,
+                targetTimestamp = newTarget,
+                remainingMillis = newRemaining,
+            )
+            _trainingStepState.value = updatedState
+            _uiState.update {
+                it.copy(
+                    trainingStepState = updatedState,
+                    cooldownTargetTimestamp = newTarget,
+                    cooldownSecondsRemaining = (newRemaining / MILLIS_PER_SECOND).toInt(),
+                )
+            }
+        }
+    }
+
+    fun skipCooldown() {
+        val nextIncomplete = _uiState.value.exerciseSessions.firstOrNull { !it.isCompleted }
+        val nextState = TrainingStepState.ReadyForNext(nextIncomplete)
+        _trainingStepState.value = nextState
+        _uiState.update {
+            it.copy(
+                trainingStepState = nextState,
+                cooldownTargetTimestamp = null,
+                cooldownSecondsRemaining = 0,
+            )
+        }
+    }
 }

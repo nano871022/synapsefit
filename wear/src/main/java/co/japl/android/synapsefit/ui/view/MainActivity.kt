@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import co.japl.android.synapsefit.core.domain.model.TrainingStepState
 import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutViewModel
 
 class MainActivity : ComponentActivity() {
@@ -17,13 +18,36 @@ class MainActivity : ComponentActivity() {
             val uiState by viewModel.uiState.collectAsState()
 
             if (uiState.isSessionStarted) {
-                WearActiveWorkoutScreen(
-                    uiState = uiState,
-                    onIncrementReps = { viewModel.incrementReps() },
-                    onDecrementReps = { viewModel.decrementReps() },
-                    onCompleteSet = { viewModel.completeSet() },
-                    onStartNextExercise = { viewModel.startNextExercise() },
-                )
+                when (uiState.trainingStepState) {
+                    is TrainingStepState.Active -> {
+                        WearActiveWorkoutScreen(
+                            uiState = uiState,
+                            onIncrementReps = { viewModel.incrementReps() },
+                            onDecrementReps = { viewModel.decrementReps() },
+                            onCompleteSet = { viewModel.completeSet() },
+                            onStartNextExercise = { viewModel.startNextExercise() },
+                        )
+                    }
+                    is TrainingStepState.Cooldown, is TrainingStepState.ReadyForNext -> {
+                        WearCooldownTransitionScreen(
+                            trainingStepState = uiState.trainingStepState,
+                            exerciseSessions = uiState.exerciseSessions,
+                            heartRateBpm = uiState.currentHeartRateBpm,
+                            onAddExtraTime = { viewModel.addExtraCooldownTime() },
+                            onSkipRest = { viewModel.skipCooldown() },
+                            onStartNextExercise = { viewModel.startNextExercise() },
+                            onSelectExercise = { exerciseSession, index ->
+                                val exercise =
+                                    uiState.availableExercises.firstOrNull {
+                                        it.id == exerciseSession.exerciseId
+                                    }
+                                if (exercise != null) {
+                                    viewModel.selectExercise(exercise, index)
+                                }
+                            },
+                        )
+                    }
+                }
             } else {
                 WearPreWorkoutSelectionHubScreen(
                     planTitle = uiState.activePlanTitle,
