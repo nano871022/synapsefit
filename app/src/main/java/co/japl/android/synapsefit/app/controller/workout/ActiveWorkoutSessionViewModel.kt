@@ -6,6 +6,7 @@
     "TooManyFunctions",
     "CyclomaticComplexMethod",
     "MaxLineLength",
+    "NestedBlockDepth",
 )
 
 package co.japl.android.synapsefit.app.controller.workout

@@ -32,7 +32,7 @@ class WorkoutLogRepositoryAdapter(
             entities.map { it.toDomain() }
         }
 
-    override fun getHistoryRecords(): Flow<List<co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord>> =
+    override fun getHistoryRecords(): Flow<List<WorkoutHistoryRecord>> =
         dao.getHistoryRecords().map { entities ->
             entities.map { it.toDomain() }
         }
