@@ -41,6 +41,34 @@ class WearPostWorkoutSummaryViewModel(
         }
     }
 
+    fun loadSummaryForPlanAndDay(
+        planId: String,
+        day: Int,
+    ) {
+        val useCase = getGroupedWorkoutHistoryUseCase ?: return
+        loadJob?.cancel()
+        loadJob =
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true) }
+                useCase.invoke().collect { groups ->
+                    val targetGroup =
+                        if (planId.isNotBlank() && planId != "default") {
+                            groups.firstOrNull { it.planId == planId && it.day == day }
+                                ?: groups.firstOrNull { it.planId == planId }
+                                ?: groups.firstOrNull()
+                        } else {
+                            groups.firstOrNull()
+                        }
+
+                    if (targetGroup != null) {
+                        populateStateFromGroup(targetGroup)
+                    } else {
+                        _uiState.update { it.copy(isLoading = false) }
+                    }
+                }
+            }
+    }
+
     fun loadSummary(sessionId: String? = null) {
         val useCase = getGroupedWorkoutHistoryUseCase ?: return
         loadJob?.cancel()

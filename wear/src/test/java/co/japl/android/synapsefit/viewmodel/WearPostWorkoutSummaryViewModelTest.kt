@@ -69,4 +69,11 @@ class WearPostWorkoutSummaryViewModelTest {
         assertEquals(1, state.exercises.size)
         assertFalse(state.isLoading)
     }
+
+    @Test
+    fun testLoadSummaryForPlanAndDayWithNullUseCase() {
+        val viewModel = WearPostWorkoutSummaryViewModel()
+        viewModel.loadSummaryForPlanAndDay("plan_1", 2)
+        assertFalse(viewModel.uiState.value.isLoading)
+    }
 }

@@ -35,6 +35,57 @@ class WearActiveWorkoutViewModel(
         loadActivePlanData()
     }
 
+    fun loadPlanData(
+        planId: String,
+        day: Int,
+    ) {
+        val repository = workoutPlanRepositoryPort ?: return
+        viewModelScope.launch {
+            val targetPlanId =
+                if (planId.isBlank() || planId == "default") {
+                    repository.getActivePlan().firstOrNull()?.id ?: ""
+                } else {
+                    planId
+                }
+            if (targetPlanId.isBlank()) return@launch
+
+            val pair = repository.getPlanWithExercises(targetPlanId).firstOrNull()
+            val plan = pair?.first
+            val allExercises = pair?.second ?: emptyList()
+            val exercises =
+                if (day > 0) {
+                    val filtered = allExercises.filter { it.day == day }
+                    if (filtered.isNotEmpty()) filtered else allExercises
+                } else {
+                    allExercises
+                }
+
+            _uiState.update { current ->
+                current.copy(
+                    activePlanTitle = plan?.title ?: current.activePlanTitle,
+                    currentDay = if (day > 0) day else current.currentDay,
+                    availableExercises = exercises,
+                )
+            }
+
+            if (_uiState.value.exerciseSessions.isEmpty() && exercises.isNotEmpty()) {
+                val sessions =
+                    exercises.map { ex ->
+                        ExerciseSession(
+                            exerciseId = ex.id,
+                            planId = ex.planId,
+                            name = ex.name,
+                            muscleGroup = ex.muscleGroup,
+                            targetSets = ex.targetSets,
+                            targetReps = ex.targetReps,
+                            restSeconds = ex.restSeconds,
+                        )
+                    }
+                loadExerciseSessions(sessions)
+            }
+        }
+    }
+
     fun loadActivePlanData() {
         val repository = workoutPlanRepositoryPort ?: return
         viewModelScope.launch {
