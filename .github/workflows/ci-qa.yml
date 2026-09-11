@@ -27,6 +27,13 @@ jobs:
     uses: ./.github/workflows/build-release.yml
     secrets: inherit
 
+  deploy-release:
+    name: Deploy Internal
+    needs: build-release
+    if: github.ref == 'refs/heads/master'
+    uses: ./.github/workflows/publish-internal.yml
+    secrets: inherit  
+
   tag-version:
     name: Create Tag Version
     needs: build-release

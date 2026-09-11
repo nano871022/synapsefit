@@ -1,0 +1,52 @@
+name: Publish Internal
+
+on:
+  workflow_call:
+   
+jobs:
+  
+   deploy-google-play:
+     name: Deploy to Google Play Console
+     runs-on: ubuntu-latest
+     
+     steps:
+     
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Checkout private properties repository
+        uses: actions/checkout@v4
+        with:
+          repository: nano871022/japl-properties
+          token: ${{ secrets.TOKEN_PROP_GITHUB }}
+          path: private-props
+
+      - name: Download build artifact Mobile
+        uses: actions/download-artifact@v4
+        with:
+          name: synapsefit-app-release-bundle
+          path: app/build/outputs/bundle/release/app-release.aab
+          
+      - name: Download build artifact WearOS
+        uses: actions/download-artifact@v4
+        with:
+          name: synapsefit-wear-release-bundle
+          path: wear/build/outputs/bundle/release/wear-release.aab
+
+      - name: Upload Mobile to Google Play Console (Internal Track)
+        uses: r0adkll/upload-google-play@v3
+        with:
+          service-account-json: ${{ github.workspace }}/private-props/synapseefit/synapsefit-507614-2b30a67ac3fb.json
+          packageName: 'co.japl.android.synapsefit'
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          track: internal
+          whatsNewDirectory: distribution/whats-new
+
+      - name: Upload WearOS to Google Play Console (Internal Track)
+        uses: r0adkll/upload-google-play@v3
+        with:
+          service-account-json: ${{ github.workspace }}/private-props/synapseefit/synapsefit-507614-2b30a67ac3fb.json
+          packageName: 'co.japl.android.synapsefit'
+          releaseFiles: wear/build/outputs/bundle/release/wear-release.aab
+          track: internal
+          whatsNewDirectory: distribution/whats-new
