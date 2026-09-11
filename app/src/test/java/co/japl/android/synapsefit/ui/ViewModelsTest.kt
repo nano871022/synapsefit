@@ -247,6 +247,7 @@ class ViewModelsTest {
             val state = viewModel.uiState.value
 
             assertEquals(10, state.sessionGroups.size)
-            assertEquals(10, state.weeklySessionsCount.coerceAtLeast(0)) // checking session groups count or weekly count
+            // checking session groups count or weekly count
+            assertEquals(10, state.weeklySessionsCount.coerceAtLeast(0))
         }
 }
