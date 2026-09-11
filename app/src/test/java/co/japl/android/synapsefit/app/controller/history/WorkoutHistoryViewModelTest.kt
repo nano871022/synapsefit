@@ -40,19 +40,38 @@ class WorkoutHistoryViewModelTest {
     fun `loadHistory updates state with history records and plans`() =
         runTest {
             val now = System.currentTimeMillis()
-            val rec1 =
-                WorkoutHistoryRecord(
-                    logId = "1", exerciseId = "ex1", planId = "plan1", planTitle = "Plan Hipertrofia", day = 1,
-                    exerciseName = "Ex 1", muscleGroup = "Pecho", repsCompleted = 10, weightLiftedKg = 50.0,
-                    heartRateBpm = 120, durationSeconds = 60L, sourceDevice = SourceDevice.MOBILE, timestamp = now,
-                )
-            val rec2 =
-                WorkoutHistoryRecord(
-                    logId = "2", exerciseId = "ex1", planId = "plan1", planTitle = "Plan Hipertrofia", day = 1,
-                    exerciseName = "Ex 1", muscleGroup = "Pecho", repsCompleted = 10, weightLiftedKg = 60.0,
-                    heartRateBpm = 125, durationSeconds = 60L, sourceDevice = SourceDevice.MOBILE, timestamp = now,
-                )
-            val records = listOf(rec1, rec2)
+            val records =
+                listOf(
+                    WorkoutHistoryRecord(
+                        logId = "1",
+                        exerciseId = "ex1",
+                        planId = "plan1",
+                        planTitle = "Plan Hipertrofia",
+                        day = 1,
+                        exerciseName = "Ex 1",
+                        muscleGroup = "Pecho",
+                        repsCompleted = 10,
+                        weightLiftedKg = 50.0,
+                        heartRateBpm = 120,
+                        durationSeconds = 60L,
+                        sourceDevice = SourceDevice.MOBILE,
+                        timestamp = now,
+                    ),
+                    WorkoutHistoryRecord(
+                        logId = "2",
+                        exerciseId = "ex1",
+                        planId = "plan1",
+                        planTitle = "Plan Hipertrofia",
+                        day = 1,
+                        exerciseName = "Ex 1",
+                        muscleGroup = "Pecho",
+                        repsCompleted = 10,
+                        weightLiftedKg = 60.0,
+                        heartRateBpm = 125,
+                        durationSeconds = 60L,
+                        sourceDevice = SourceDevice.MOBILE,
+                        timestamp = now,
+                    ),
             val plan = WorkoutPlan("plan1", "Plan Hipertrofia", "Ganar músculo", true, true, 12, now, now)
 
             every { workoutLogRepositoryPort.getHistoryRecords() } returns flowOf(records)

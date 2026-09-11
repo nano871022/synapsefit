@@ -69,7 +69,10 @@ class ActiveWorkoutSessionViewModelTest {
         viewModel.startRestTimer(cooldownDurationSeconds = 60)
 
         val state = viewModel.uiState.value
-        assertTrue(state.stepState is TrainingStepState.Cooldown || state.stepState is TrainingStepState.ReadyForNext)
+        val isCooldownOrReady =
+            state.stepState is TrainingStepState.Cooldown ||
+                state.stepState is TrainingStepState.ReadyForNext
+        assertTrue(isCooldownOrReady)
         viewModel.nextSetOrExercise()
     }
 
@@ -104,7 +107,10 @@ class ActiveWorkoutSessionViewModelTest {
             )
 
             val state = viewModel.uiState.value
-            assertTrue(state.stepState is TrainingStepState.Cooldown || state.stepState is TrainingStepState.ReadyForNext)
+            val isCooldownOrReady =
+                state.stepState is TrainingStepState.Cooldown ||
+                    state.stepState is TrainingStepState.ReadyForNext
+            assertTrue(isCooldownOrReady)
             viewModel.nextSetOrExercise()
         }
 }
