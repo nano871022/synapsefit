@@ -72,6 +72,7 @@ class WorkoutHistoryViewModelTest {
                         sourceDevice = SourceDevice.MOBILE,
                         timestamp = now,
                     ),
+                )
             val plan = WorkoutPlan("plan1", "Plan Hipertrofia", "Ganar músculo", true, true, 12, now, now)
 
             every { workoutLogRepositoryPort.getHistoryRecords() } returns flowOf(records)

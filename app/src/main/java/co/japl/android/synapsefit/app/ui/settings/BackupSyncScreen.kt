@@ -1,5 +1,4 @@
-@file:Suppress("LongParameterList")
-@file:Suppress("FunctionNaming", "LongMethod", "UnusedPrivateMember", "MagicNumber")
+@file:Suppress("LongParameterList", "FunctionNaming", "LongMethod", "UnusedPrivateMember", "MagicNumber")
 
 package co.japl.android.synapsefit.app.ui.settings
 
