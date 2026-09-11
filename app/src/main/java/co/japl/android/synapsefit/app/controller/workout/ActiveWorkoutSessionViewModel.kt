@@ -2,6 +2,7 @@
     "MagicNumber",
     "LongParameterList",
     "UnusedParameter",
+    "UnusedPrivateProperty",
     "LongMethod",
     "TooManyFunctions",
     "CyclomaticComplexMethod",
@@ -14,7 +15,9 @@ package co.japl.android.synapsefit.app.controller.workout
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.japl.android.synapsefit.core.domain.model.LiveSyncEvent
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
+import co.japl.android.synapsefit.core.port.secondary.WearStateMirrorPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
@@ -91,6 +94,7 @@ class ActiveWorkoutSessionViewModel(
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort? = null,
     private val getExerciseMediaUseCase: GetExerciseMediaUseCase? = null,
     private val context: Context? = null,
+    private val wearStateMirrorPort: WearStateMirrorPort? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ActiveWorkoutUiState())
     val uiState: StateFlow<ActiveWorkoutUiState> = _uiState.asStateFlow()
@@ -104,6 +108,74 @@ class ActiveWorkoutSessionViewModel(
     private val exerciseTimeSpent = mutableMapOf<String, Long>()
     private val exerciseCompletedSetsCount = mutableMapOf<String, Int>()
     private val exerciseMaxWeight = mutableMapOf<String, Double>()
+
+    init {
+        wearStateMirrorPort?.let { port ->
+            viewModelScope.launch {
+                port.liveSyncEvents.collect { event ->
+                    handleIncomingLiveSyncEvent(event)
+                }
+            }
+        }
+    }
+
+    private fun handleIncomingLiveSyncEvent(event: LiveSyncEvent) {
+        when (event) {
+            is LiveSyncEvent.StartSession -> {
+                if (_uiState.value.planId != event.planId) {
+                    startSession(event.planId)
+                }
+            }
+            is LiveSyncEvent.SelectExercise -> {
+                val state = _uiState.value
+                val index =
+                    state.exercises.indexOfFirst {
+                        it.id == event.exerciseId || it.name == event.exerciseName
+                    }
+                if (index >= 0 && index != state.currentExerciseIndex) {
+                    val nextEx = state.exercises[index]
+                    _uiState.update {
+                        it.copy(
+                            currentExerciseIndex = index,
+                            currentExerciseId = nextEx.id,
+                            currentExerciseName = nextEx.name,
+                            currentSetIndex = 1,
+                            totalSetsForCurrentExercise = nextEx.targetSets,
+                            targetRepsForCurrentSet = nextEx.targetReps,
+                            isCurrentSetCompleted = false,
+                            stepState = TrainingStepState.Active,
+                            cooldownTargetTimestamp = null,
+                        )
+                    }
+                }
+            }
+            is LiveSyncEvent.CompleteSet -> {
+                val exId = event.exerciseId
+                exerciseCompletedSetsCount[exId] = (exerciseCompletedSetsCount[exId] ?: 0) + 1
+                if (event.weightKg > (exerciseMaxWeight[exId] ?: 0.0)) {
+                    exerciseMaxWeight[exId] = event.weightKg
+                }
+                _uiState.update {
+                    it.copy(
+                        isCurrentSetCompleted = true,
+                        currentSetReps = event.reps.toString(),
+                    )
+                }
+                val cooldownSecs = event.cooldownDurationSeconds
+                if (event.targetTimestamp != null && cooldownSecs != null) {
+                    startRestTimer(cooldownSecs, event.targetTimestamp)
+                }
+            }
+            is LiveSyncEvent.SkipExercise -> {
+                nextSetOrExercise()
+            }
+            is LiveSyncEvent.FinishSession -> {
+                if (!_uiState.value.isSessionComplete) {
+                    finishSession()
+                }
+            }
+        }
+    }
 
     fun startSession(planId: String) {
         if (_uiState.value.planId == planId && _uiState.value.exercises.isNotEmpty()) {
@@ -138,90 +210,83 @@ class ActiveWorkoutSessionViewModel(
                     } else {
                         _uiState.update {
                             it.copy(
-                                stepState = TrainingStepState.ReadyForNext,
                                 restTimerSecondsRemaining = 0,
+                                stepState = TrainingStepState.ReadyForNext,
                                 cooldownTargetTimestamp = null,
                             )
                         }
                     }
                 }
-                SynapseFitForegroundService.startWorkoutService(context, restored.uiState.planTitle)
                 return
             }
         }
 
-        viewModelScope.launch {
-            _uiState.update { it.copy(planId = planId) }
+        sessionStartTimestamp = System.currentTimeMillis()
+        exerciseStartTime.clear()
+        exerciseTimeSpent.clear()
+        exerciseCompletedSetsCount.clear()
+        exerciseMaxWeight.clear()
 
-            val planPair =
-                workoutPlanRepositoryPort?.getPlanWithExercises(planId)?.let { flow ->
-                    flow.firstOrNull()
+        startChronometer()
+
+        viewModelScope.launch {
+            val repository = workoutPlanRepositoryPort ?: return@launch
+            val activePlanPair =
+                if (planId.isNotBlank()) {
+                    repository.getPlanWithExercises(planId).firstOrNull()
+                } else {
+                    val plan = repository.getActivePlan().firstOrNull()
+                    if (plan != null) repository.getPlanWithExercises(plan.id).firstOrNull() else null
                 }
 
-            if (planPair != null) {
-                val (plan, exercises) = planPair
-                val mappedExercises =
-                    exercises.map { e ->
+            if (activePlanPair != null) {
+                val (planObj, exercisesList) = activePlanPair
+                context?.let { SynapseFitForegroundService.startWorkoutService(it, planObj.title) }
+
+                val exercisesUi =
+                    exercisesList.map { ex ->
                         ExerciseUiModel(
-                            id = e.id,
-                            name = e.name,
-                            muscleGroup = e.muscleGroup,
-                            targetSets = e.targetSets,
-                            targetReps = e.targetReps,
-                            restSeconds = e.restSeconds,
-                            day = e.day,
-                            guideVideoUrl = e.guideVideoUrl,
-                            guideImageUrl = e.guideImageUrl,
+                            id = ex.id,
+                            name = ex.name,
+                            muscleGroup = ex.muscleGroup,
+                            targetSets = ex.targetSets,
+                            targetReps = ex.targetReps,
+                            restSeconds = ex.restSeconds,
+                            day = ex.day,
+                            guideVideoUrl = ex.guideVideoUrl,
+                            guideImageUrl = ex.guideImageUrl,
                         )
                     }
 
-                val totalPlanDays = mappedExercises.maxOfOrNull { it.day } ?: 1
-
-                val latestLogs =
-                    workoutLogRepositoryPort?.getLatestLogsForPlan(planId)?.let { flow ->
-                        flow.firstOrNull()
-                    } ?: emptyList()
-
-                val lastLog = latestLogs.firstOrNull()
-                val lastEx = mappedExercises.find { it.id == lastLog?.exerciseId }
-                val lastDay = lastEx?.day ?: 0
-
-                val activeDayNumber = if (lastDay == 0) 1 else (lastDay % totalPlanDays) + 1
-
-                val filteredForActiveDay =
-                    mappedExercises.filter { ex -> ex.day == activeDayNumber }
-                        .ifEmpty { mappedExercises }
-
-                val firstExercise = filteredForActiveDay.firstOrNull()
-                if (firstExercise != null) {
-                    exerciseStartTime[firstExercise.id] = System.currentTimeMillis()
-                    fetchExerciseMedia(firstExercise)
+                val firstEx = exercisesUi.firstOrNull()
+                firstEx?.let {
+                    exerciseStartTime[it.id] = System.currentTimeMillis()
+                    fetchExerciseMedia(it)
                 }
-
-                sessionStartTimestamp = System.currentTimeMillis()
-                val title = "${plan.title} (Día $activeDayNumber)"
 
                 _uiState.update {
                     it.copy(
-                        planTitle = title,
-                        exercises = filteredForActiveDay,
+                        planId = planObj.id,
+                        planTitle = planObj.title,
+                        exercises = exercisesUi,
                         currentExerciseIndex = 0,
-                        currentExerciseId = firstExercise?.id ?: "",
-                        currentExerciseName = firstExercise?.name ?: "",
+                        currentExerciseId = firstEx?.id ?: "",
+                        currentExerciseName = firstEx?.name ?: "",
                         currentSetIndex = 1,
-                        totalSetsForCurrentExercise = firstExercise?.targetSets ?: 3,
-                        targetRepsForCurrentSet = firstExercise?.targetReps ?: "10",
-                        currentSetReps = "",
-                        currentSetWeightKg = "",
-                        isCurrentSetCompleted = false,
+                        totalSetsForCurrentExercise = firstEx?.targetSets ?: 3,
+                        targetRepsForCurrentSet = firstEx?.targetReps ?: "10",
                     )
                 }
 
-                context?.let { SynapseFitForegroundService.startWorkoutService(it, title) }
+                wearStateMirrorPort?.sendEvent(
+                    LiveSyncEvent.StartSession(
+                        planId = planObj.id,
+                        day = 1,
+                        sessionStartTimestamp = sessionStartTimestamp,
+                    ),
+                )
                 saveStateToPrefs()
             }
-
-            startChronometer()
         }
     }
 
@@ -230,11 +295,10 @@ class ActiveWorkoutSessionViewModel(
         timerJob =
             viewModelScope.launch {
                 while (isActive) {
-                    delay(1000L.milliseconds)
                     val elapsed = DateTimeUtils.calculateElapsedTimeSeconds(sessionStartTimestamp)
                     _uiState.update { it.copy(elapsedTimeSeconds = elapsed) }
                     WorkoutTimerManager.updateElapsedTime(elapsed)
-                    saveStateToPrefs()
+                    delay(1000L.milliseconds)
                 }
             }
     }
@@ -243,15 +307,23 @@ class ActiveWorkoutSessionViewModel(
         setIndex: Int,
         reps: String,
     ) {
-        _uiState.update { it.copy(currentSetReps = reps) }
-        saveStateToPrefs()
+        updateCurrentSetReps(reps)
     }
 
     fun onSetWeightChange(
         setIndex: Int,
-        weight: String,
+        weightStr: String,
     ) {
-        _uiState.update { it.copy(currentSetWeightKg = weight) }
+        updateCurrentSetWeightKg(weightStr)
+    }
+
+    fun updateCurrentSetReps(reps: String) {
+        _uiState.update { it.copy(currentSetReps = reps) }
+        saveStateToPrefs()
+    }
+
+    fun updateCurrentSetWeightKg(weightStr: String) {
+        _uiState.update { it.copy(currentSetWeightKg = weightStr) }
         saveStateToPrefs()
     }
 
@@ -298,7 +370,23 @@ class ActiveWorkoutSessionViewModel(
                     state.exercises.getOrNull(state.currentExerciseIndex)?.restSeconds
                         ?: WorkoutSessionStateManager.DEFAULT_REST_TIME_SECONDS
                 }
-            startRestTimer(restTime)
+
+            val currentTimestamp = System.currentTimeMillis()
+            val targetTimestamp = currentTimestamp + (restTime * 1000L)
+
+            startRestTimer(restTime, targetTimestamp)
+
+            wearStateMirrorPort?.sendEvent(
+                LiveSyncEvent.CompleteSet(
+                    exerciseId = currentExId,
+                    setIndex = state.currentSetIndex,
+                    reps = reps,
+                    weightKg = weight,
+                    targetTimestamp = targetTimestamp,
+                    cooldownDurationSeconds = restTime,
+                ),
+            )
+
             saveStateToPrefs()
         }
     }
@@ -393,6 +481,15 @@ class ActiveWorkoutSessionViewModel(
             )
         }
         WorkoutTimerManager.updateRestTime(null)
+
+        viewModelScope.launch {
+            wearStateMirrorPort?.sendEvent(
+                LiveSyncEvent.SelectExercise(
+                    exerciseId = nextEx.id,
+                    exerciseName = nextEx.name,
+                ),
+            )
+        }
     }
 
     private fun nextSet(state: ActiveWorkoutUiState) {
@@ -486,6 +583,15 @@ class ActiveWorkoutSessionViewModel(
             it.copy(
                 isSessionComplete = true,
                 summary = workoutSummary,
+            )
+        }
+
+        viewModelScope.launch {
+            wearStateMirrorPort?.sendEvent(
+                LiveSyncEvent.FinishSession(
+                    planId = state.planId,
+                    totalDurationSeconds = state.elapsedTimeSeconds,
+                ),
             )
         }
 
