@@ -128,7 +128,7 @@ class ViewModelsTest {
     fun backupSyncViewModel_initialState_loaded() =
         runTest {
             val viewModel = BackupSyncViewModel()
-            assertEquals(false, viewModel.uiState.value.isSyncing)
+            assertEquals(co.japl.android.synapsefit.core.domain.model.SyncState.Idle, viewModel.uiState.value.syncState)
         }
 
     @Test
@@ -247,7 +247,6 @@ class ViewModelsTest {
             val state = viewModel.uiState.value
 
             assertEquals(10, state.sessionGroups.size)
-            // checking session groups count or weekly count
             assertEquals(10, state.weeklySessionsCount.coerceAtLeast(0))
         }
 }

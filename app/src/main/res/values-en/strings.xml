@@ -236,4 +236,7 @@
     <string name="fgs_workout_desc">Session: %1$s — Tap to return to application</string>
     <string name="fgs_llm_title">Processing AI Task</string>
     <string name="fgs_llm_desc">Generating data in background... Tap to open</string>
+    <string name="sign_in_google">Sign in with Google</string>
+    <string name="sign_out">Sign out</string>
+    <string name="restore_from_drive">Restore from Google Drive</string>
 </resources>

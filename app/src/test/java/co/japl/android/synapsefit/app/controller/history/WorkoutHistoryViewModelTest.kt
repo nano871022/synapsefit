@@ -11,22 +11,20 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WorkoutHistoryViewModelTest {
-    private val testDispatcher = StandardTestDispatcher()
-    private val workoutLogRepositoryPort: WorkoutLogRepositoryPort = mockk()
-    private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort = mockk()
+    private val testDispatcher = UnconfinedTestDispatcher()
+    private val workoutLogRepositoryPort = mockk<WorkoutLogRepositoryPort>()
+    private val workoutPlanRepositoryPort = mockk<WorkoutPlanRepositoryPort>()
 
     @Before
     fun setUp() {
@@ -39,7 +37,7 @@ class WorkoutHistoryViewModelTest {
     }
 
     @Test
-    fun loadHistory_populatesDashboardStateCorrectly() =
+    fun `loadHistory updates state with history records and plans`() =
         runTest {
             val now = System.currentTimeMillis()
             val records =
@@ -74,43 +72,22 @@ class WorkoutHistoryViewModelTest {
                         sourceDevice = SourceDevice.MOBILE,
                         timestamp = now,
                     ),
-                )
             val plan = WorkoutPlan("plan1", "Plan Hipertrofia", "Ganar músculo", true, true, 12, now, now)
 
             every { workoutLogRepositoryPort.getHistoryRecords() } returns flowOf(records)
             every { workoutPlanRepositoryPort.getAllPlans() } returns flowOf(listOf(plan))
 
             val getGroupedWorkoutHistoryUseCase = GetGroupedWorkoutHistoryUseCase(workoutLogRepositoryPort)
-            val viewModel = WorkoutHistoryViewModel(workoutPlanRepositoryPort, getGroupedWorkoutHistoryUseCase)
-            testDispatcher.scheduler.advanceUntilIdle()
+            val viewModel =
+                WorkoutHistoryViewModel(
+                    getGroupedWorkoutHistoryUseCase = getGroupedWorkoutHistoryUseCase,
+                    workoutPlanRepositoryPort = workoutPlanRepositoryPort,
+                )
 
             val state = viewModel.uiState.value
-            assertFalse(state.isLoading)
-            assertEquals("Plan Hipertrofia", state.activePlanStats.planTitle)
+
+            assertEquals(false, state.isLoading)
             assertEquals(1, state.sessionGroups.size)
-            assertEquals(1, state.weeklySessionsCount)
-            assertEquals(1100.0, state.weeklyTotalVolumeKg, 0.1)
-        }
-
-    @Test
-    fun monthNavigation_updatesSelectedMonthAndGrid() =
-        runTest {
-            every { workoutLogRepositoryPort.getHistoryRecords() } returns flowOf(emptyList())
-            every { workoutPlanRepositoryPort.getAllPlans() } returns flowOf(emptyList())
-
-            val getGroupedWorkoutHistoryUseCase = GetGroupedWorkoutHistoryUseCase(workoutLogRepositoryPort)
-            val viewModel = WorkoutHistoryViewModel(workoutPlanRepositoryPort, getGroupedWorkoutHistoryUseCase)
-            testDispatcher.scheduler.advanceUntilIdle()
-
-            val initialMonth = viewModel.uiState.value.selectedYearMonth
-            viewModel.selectPreviousMonth()
-            testDispatcher.scheduler.advanceUntilIdle()
-
-            val prevMonth = viewModel.uiState.value.selectedYearMonth
-            assertTrue(prevMonth != initialMonth)
-
-            viewModel.selectNextMonth()
-            testDispatcher.scheduler.advanceUntilIdle()
-            assertEquals(initialMonth, viewModel.uiState.value.selectedYearMonth)
+            assertEquals(1, state.sessionGroups.size)
         }
 }

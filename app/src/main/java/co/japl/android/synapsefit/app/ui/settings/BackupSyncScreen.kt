@@ -1,3 +1,4 @@
+@file:Suppress("LongParameterList")
 @file:Suppress("FunctionNaming", "LongMethod", "UnusedPrivateMember", "MagicNumber")
 
 package co.japl.android.synapsefit.app.ui.settings
@@ -18,6 +19,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,14 +31,19 @@ import co.com.japl.ui.theme.MaterialThemeComposeUI
 import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.settings.BackupSyncUiState
+import co.japl.android.synapsefit.core.domain.model.SyncState
 import co.japl.android.synapsefit.ui.components.NeonButton
 import co.japl.android.synapsefit.util.DateTimeUtils
 
+@Suppress("LongParameterList")
 @Composable
 fun BackupSyncScreen(
     state: BackupSyncUiState,
     onBackupNowClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onSignInClick: () -> Unit = {},
+    onSignOutClick: () -> Unit = {},
+    onRestoreNowClick: () -> Unit = {},
 ) {
     Column(
         modifier =
@@ -63,6 +70,8 @@ fun BackupSyncScreen(
         GoogleDriveAccountCard(
             connectedEmail = state.connectedAccountEmail,
             isConnected = state.isDriveConnected,
+            onSignInClick = onSignInClick,
+            onSignOutClick = onSignOutClick,
         )
 
         BackupMetadataCard(
@@ -70,11 +79,24 @@ fun BackupSyncScreen(
             sha256Hash = state.integrityHashSha256,
         )
 
+        val isLoading =
+            state.syncState is SyncState.Syncing ||
+                state.syncState is SyncState.Restoring ||
+                state.syncState is SyncState.Checking
+
         NeonButton(
             text = stringResource(R.string.backup_now),
             onClick = onBackupNowClick,
-            isLoading = state.isSyncing,
+            isLoading = isLoading,
         )
+
+        OutlinedButton(
+            onClick = onRestoreNowClick,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading && state.isDriveConnected,
+        ) {
+            Text(text = stringResource(R.string.restore_from_drive))
+        }
     }
 }
 
@@ -83,6 +105,8 @@ fun GoogleDriveAccountCard(
     connectedEmail: String?,
     isConnected: Boolean,
     modifier: Modifier = Modifier,
+    onSignInClick: () -> Unit = {},
+    onSignOutClick: () -> Unit = {},
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -92,41 +116,56 @@ fun GoogleDriveAccountCard(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             ),
     ) {
-        Row(
+        Column(
             modifier = Modifier.padding(MaterialTheme.spacing.medium).fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Column {
-                Text(
-                    text = stringResource(R.string.drive_appdata),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                val statusText =
-                    connectedEmail ?: if (isConnected) {
-                        stringResource(R.string.connected)
-                    } else {
-                        stringResource(R.string.not_connected)
-                    }
-                Text(
-                    text = statusText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column {
+                    Text(
+                        text = stringResource(R.string.drive_appdata),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    val statusText =
+                        connectedEmail ?: if (isConnected) {
+                            stringResource(R.string.connected)
+                        } else {
+                            stringResource(R.string.not_connected)
+                        }
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Icon(
+                    imageVector = if (isConnected) Icons.Default.CloudDone else Icons.Default.CloudOff,
+                    contentDescription = null,
+                    tint = if (isConnected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                 )
             }
-            Icon(
-                imageVector = if (isConnected) Icons.Default.CloudDone else Icons.Default.CloudOff,
-                contentDescription = null,
-                tint = if (isConnected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-            )
+
+            if (isConnected) {
+                OutlinedButton(onClick = onSignOutClick, modifier = Modifier.align(Alignment.End)) {
+                    Text(text = stringResource(R.string.sign_out))
+                }
+            } else {
+                OutlinedButton(onClick = onSignInClick, modifier = Modifier.align(Alignment.End)) {
+                    Text(text = stringResource(R.string.sign_in_google))
+                }
+            }
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun BackupSyncScreenPreview() {
+fun BackupSyncScreenPreview() {
     MaterialThemeComposeUI {
         BackupSyncScreen(
             state =

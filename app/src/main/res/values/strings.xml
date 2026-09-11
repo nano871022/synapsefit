@@ -236,4 +236,7 @@
     <string name="fgs_workout_desc">Sesión: %1$s — Toca para volver a la aplicación</string>
     <string name="fgs_llm_title">Procesando Consulta IA</string>
     <string name="fgs_llm_desc">Generando datos en segundo plano... Toca para abrir</string>
+    <string name="sign_in_google">Iniciar Sesión con Google</string>
+    <string name="sign_out">Cerrar Sesión</string>
+    <string name="restore_from_drive">Restaurar desde Google Drive</string>
 </resources>
