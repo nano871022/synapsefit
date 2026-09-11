@@ -12,8 +12,8 @@ android {
         applicationId = "co.japl.android.synapsefit"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 1_00_004
-        versionName = "1.00.004"
+        versionCode = 1_00_006
+        versionName = "1.00.006 Added login and more"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
