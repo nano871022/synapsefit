@@ -26,3 +26,8 @@ jobs:
     if: github.ref == 'refs/heads/master'
     uses: ./.github/workflows/build-release.yml
     secrets: inherit
+
+  tag-version:
+    name: Create Tag Version
+    needs: build-release
+    uses: ./.github/workflows/release-tagger.yml
