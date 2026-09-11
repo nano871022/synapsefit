@@ -239,4 +239,17 @@
     <string name="sign_in_google">Iniciar Sesión con Google</string>
     <string name="sign_out">Cerrar Sesión</string>
     <string name="restore_from_drive">Restaurar desde Google Drive</string>
+
+    <!-- Google Auth Interfaces -->
+    <string name="google_auth_title">Autenticación con Google</string>
+    <string name="google_auth_subtitle">Conecta tu cuenta de Google para sincronizar tus datos de entrenamiento y respaldar tu progreso en la nube.</string>
+    <string name="google_auth_sign_in_button">Continuar con Google</string>
+    <string name="google_auth_select_account_title">Seleccionar Cuenta de Google</string>
+    <string name="google_auth_add_another_account">Agregar otra cuenta</string>
+    <string name="google_auth_status_title">Cuenta de Google Conectada</string>
+    <string name="google_auth_status_active">CONECTADO</string>
+    <string name="google_auth_status_inactive">NO CONECTADO</string>
+    <string name="google_auth_authenticating">Autenticando con Google...</string>
+    <string name="google_auth_error_generic">Error de autenticación con Google. Intente nuevamente.</string>
+    <string name="google_auth_privacy_note">Tus datos están protegidos y sólo se sincronizan con tu Google Drive privado.</string>
 </resources>
