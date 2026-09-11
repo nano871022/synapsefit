@@ -26,6 +26,7 @@ dependencies {
     implementation(project(":util"))
 
     implementation(libs.kotlinx.coroutines.core)
+    api(libs.play.services.wearable)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
