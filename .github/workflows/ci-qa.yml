@@ -36,7 +36,7 @@ jobs:
 
   tag-version:
     name: Create Tag Version
-    needs: build-release
+    needs: deploy-release
     permissions:
       contents: write
     uses: ./.github/workflows/release-tagger.yml
