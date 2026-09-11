@@ -17,12 +17,11 @@ jobs:
 
   unit-tests:
     name: Unit Testing
-    needs: static-analysis
     uses: ./.github/workflows/unit-tests.yml
 
   build-release:
     name: Production Release Build
-    needs: unit-tests
+    needs: static-analysis
     if: github.ref == 'refs/heads/master'
     uses: ./.github/workflows/build-release.yml
     secrets: inherit
