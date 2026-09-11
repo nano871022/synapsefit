@@ -3,12 +3,16 @@ package co.japl.android.synapsefit
 import android.content.Context
 import androidx.room.Room
 import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryPort
+import co.japl.android.synapsefit.core.port.secondary.DatabaseManagerPort
 import co.japl.android.synapsefit.core.port.secondary.DriveSyncPort
+import co.japl.android.synapsefit.core.port.secondary.GoogleAuthRepository
 import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
 import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
+import co.japl.android.synapsefit.core.usecase.CheckAndRestoreBackupUseCase
+import co.japl.android.synapsefit.core.usecase.DownloadAndRestoreDatabaseUseCase
 import co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase
 import co.japl.android.synapsefit.core.usecase.GenerateWorkoutPlanUseCase
 import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
@@ -19,8 +23,11 @@ import co.japl.android.synapsefit.core.usecase.PerformDriveSyncUseCase
 import co.japl.android.synapsefit.core.usecase.RecordWorkoutSessionUseCase
 import co.japl.android.synapsefit.core.usecase.SaveBodyMeasurementUseCase
 import co.japl.android.synapsefit.core.usecase.SaveUserProfileUseCase
+import co.japl.android.synapsefit.core.usecase.UploadDatabaseBackupUseCase
 import co.japl.android.synapsefit.core.usecase.ValidateActivePlanSessionsUseCase
+import co.japl.android.synapsefit.services.database.RoomDatabaseManagerAdapter
 import co.japl.android.synapsefit.services.database.SynapseFitDatabase
+import co.japl.android.synapsefit.services.drive.GoogleAuthRepositoryImpl
 import co.japl.android.synapsefit.services.drive.GoogleDriveAppDataAdapter
 import co.japl.android.synapsefit.services.llm.MultiLlmClientAdapter
 import co.japl.android.synapsefit.services.repository.BodyMeasurementRepositoryAdapter
@@ -59,8 +66,16 @@ class DependencyContainer(context: Context) {
         WorkoutLogRepositoryAdapter(database.workoutLogDao())
     }
 
+    val googleAuthRepository: GoogleAuthRepository by lazy {
+        GoogleAuthRepositoryImpl()
+    }
+
     val driveSyncPort: DriveSyncPort by lazy {
         GoogleDriveAppDataAdapter()
+    }
+
+    val databaseManagerPort: DatabaseManagerPort by lazy {
+        RoomDatabaseManagerAdapter(context, database)
     }
 
     val llmClient: LlmClientPort by lazy {
@@ -97,6 +112,23 @@ class DependencyContainer(context: Context) {
 
     val performDriveSyncUseCase: PerformDriveSyncUseCase by lazy {
         PerformDriveSyncUseCase(driveSyncPort)
+    }
+
+    val downloadAndRestoreDatabaseUseCase: DownloadAndRestoreDatabaseUseCase by lazy {
+        DownloadAndRestoreDatabaseUseCase(driveSyncPort, databaseManagerPort)
+    }
+
+    val uploadDatabaseBackupUseCase: UploadDatabaseBackupUseCase by lazy {
+        UploadDatabaseBackupUseCase(databaseManagerPort, driveSyncPort)
+    }
+
+    val checkAndRestoreBackupUseCase: CheckAndRestoreBackupUseCase by lazy {
+        CheckAndRestoreBackupUseCase(
+            googleAuthRepository,
+            driveSyncPort,
+            downloadAndRestoreDatabaseUseCase,
+            databaseManagerPort,
+        )
     }
 
     val getExerciseMediaUseCase: GetExerciseMediaUseCase by lazy {

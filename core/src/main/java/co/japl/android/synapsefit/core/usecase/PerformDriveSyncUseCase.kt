@@ -1,5 +1,6 @@
 package co.japl.android.synapsefit.core.usecase
 
+import co.japl.android.synapsefit.core.domain.model.BackupMetadata
 import co.japl.android.synapsefit.core.port.secondary.DriveSyncPort
 
 class PerformDriveSyncUseCase(
@@ -16,7 +17,7 @@ class PerformDriveSyncUseCase(
         return driveSyncPort.restoreData()
     }
 
-    suspend fun getLastBackupMetadata(): Result<Pair<Long, String>?> {
+    suspend fun getLastBackupMetadata(): Result<BackupMetadata?> {
         return driveSyncPort.getLastBackupMetadata()
     }
 }

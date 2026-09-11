@@ -128,7 +128,7 @@ class ViewModelsTest {
     fun backupSyncViewModel_initialState_loaded() =
         runTest {
             val viewModel = BackupSyncViewModel()
-            assertEquals(false, viewModel.uiState.value.isSyncing)
+            assertEquals(co.japl.android.synapsefit.core.domain.model.SyncState.Idle, viewModel.uiState.value.syncState)
         }
 
     @Test

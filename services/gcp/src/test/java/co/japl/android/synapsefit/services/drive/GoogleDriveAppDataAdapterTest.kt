@@ -23,7 +23,7 @@ class GoogleDriveAppDataAdapterTest {
             val metadataResult = adapter.getLastBackupMetadata()
             assertTrue(metadataResult.isSuccess)
             val metadata = metadataResult.getOrNull()
-            assertEquals(expectedHash, metadata?.second)
+            assertEquals(expectedHash, metadata?.sha256Hash)
         }
 
     @Test
