@@ -1,8 +1,8 @@
 package co.japl.android.synapsefit.app.controller.history
 
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
-import co.japl.android.synapsefit.core.domain.model.WorkoutLog
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
@@ -42,14 +42,14 @@ class WorkoutHistoryViewModelTest {
     fun loadHistory_populatesDashboardStateCorrectly() =
         runTest {
             val now = System.currentTimeMillis()
-            val logs =
+            val records =
                 listOf(
-                    WorkoutLog("1", "ex1", 10, 50.0, 120, SourceDevice.MOBILE, 60L, now, now, now),
-                    WorkoutLog("2", "ex1", 10, 60.0, 125, SourceDevice.MOBILE, 60L, now, now, now),
+                    WorkoutHistoryRecord("1", "ex1", "plan1", "Plan Hipertrofia", 1, "Ex 1", "Pecho", 10, 50.0, 120, 60L, SourceDevice.MOBILE, now),
+                    WorkoutHistoryRecord("2", "ex1", "plan1", "Plan Hipertrofia", 1, "Ex 1", "Pecho", 10, 60.0, 125, 60L, SourceDevice.MOBILE, now),
                 )
             val plan = WorkoutPlan("plan1", "Plan Hipertrofia", "Ganar músculo", true, true, 12, now, now)
 
-            every { workoutLogRepositoryPort.getAllLogs() } returns flowOf(logs)
+            every { workoutLogRepositoryPort.getHistoryRecords() } returns flowOf(records)
             every { workoutPlanRepositoryPort.getAllPlans() } returns flowOf(listOf(plan))
 
             val getGroupedWorkoutHistoryUseCase = GetGroupedWorkoutHistoryUseCase(workoutLogRepositoryPort)
@@ -67,7 +67,7 @@ class WorkoutHistoryViewModelTest {
     @Test
     fun monthNavigation_updatesSelectedMonthAndGrid() =
         runTest {
-            every { workoutLogRepositoryPort.getAllLogs() } returns flowOf(emptyList())
+            every { workoutLogRepositoryPort.getHistoryRecords() } returns flowOf(emptyList())
             every { workoutPlanRepositoryPort.getAllPlans() } returns flowOf(emptyList())
 
             val getGroupedWorkoutHistoryUseCase = GetGroupedWorkoutHistoryUseCase(workoutLogRepositoryPort)

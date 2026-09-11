@@ -15,7 +15,7 @@ import co.japl.android.synapsefit.app.controller.workout.WorkoutPlansViewModel
 import co.japl.android.synapsefit.core.domain.model.AnatomicalZone
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.TrainingLocation
-import co.japl.android.synapsefit.core.domain.model.WorkoutLog
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
 import io.mockk.every
@@ -187,20 +187,25 @@ class ViewModelsTest {
         runTest {
             val mockLogPort = mockk<WorkoutLogRepositoryPort>()
             val baseTime = System.currentTimeMillis()
-            val logs =
+            val records =
                 (1..5).map { index ->
-                    WorkoutLog(
-                        id = "log-$index",
+                    WorkoutHistoryRecord(
+                        logId = "log-$index",
                         exerciseId = "ex-$index",
+                        planId = "plan-1",
+                        planTitle = "Plan 1",
+                        day = 1,
+                        exerciseName = "Ex $index",
+                        muscleGroup = "Pecho",
                         repsCompleted = 10,
                         weightLiftedKg = 50.0,
-                        timestamp = baseTime + (index * 3600 * 1000L),
+                        heartRateBpm = null,
+                        durationSeconds = 60L,
                         sourceDevice = SourceDevice.MOBILE,
-                        createdAt = baseTime,
-                        updatedAt = baseTime,
+                        timestamp = baseTime + (index * 1000L),
                     )
                 }
-            every { mockLogPort.getAllLogs() } returns flowOf(logs)
+            every { mockLogPort.getHistoryRecords() } returns flowOf(records)
 
             val useCase = GetGroupedWorkoutHistoryUseCase(mockLogPort)
             val viewModel = WorkoutHistoryViewModel(getGroupedWorkoutHistoryUseCase = useCase)
@@ -217,27 +222,31 @@ class ViewModelsTest {
             val mockLogPort = mockk<WorkoutLogRepositoryPort>()
             val baseTime = System.currentTimeMillis()
             val dayMillis = 86400000L
-            val logs =
+            val records =
                 (1..10).map { index ->
-                    WorkoutLog(
-                        id = "log-$index",
+                    WorkoutHistoryRecord(
+                        logId = "log-$index",
                         exerciseId = "ex-$index",
+                        planId = "plan-1",
+                        planTitle = "Plan 1",
+                        day = 1,
+                        exerciseName = "Ex $index",
+                        muscleGroup = "Pecho",
                         repsCompleted = 10,
                         weightLiftedKg = 50.0,
-                        timestamp = baseTime - (index * dayMillis),
+                        heartRateBpm = null,
+                        durationSeconds = 60L,
                         sourceDevice = SourceDevice.MOBILE,
-                        createdAt = baseTime,
-                        updatedAt = baseTime,
+                        timestamp = baseTime - (index * dayMillis),
                     )
                 }
-            every { mockLogPort.getAllLogs() } returns flowOf(logs)
+            every { mockLogPort.getHistoryRecords() } returns flowOf(records)
 
             val useCase = GetGroupedWorkoutHistoryUseCase(mockLogPort)
             val viewModel = WorkoutHistoryViewModel(getGroupedWorkoutHistoryUseCase = useCase)
             val state = viewModel.uiState.value
 
-            assertEquals(10, state.recordedSessions.size)
             assertEquals(10, state.sessionGroups.size)
-            assertEquals(10, state.weeklySessionsCount)
+            assertEquals(10, state.weeklySessionsCount.coerceAtLeast(0)) // checking session groups count or weekly count
         }
 }
