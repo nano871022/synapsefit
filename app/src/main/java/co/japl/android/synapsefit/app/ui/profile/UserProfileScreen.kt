@@ -39,6 +39,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
@@ -311,7 +312,10 @@ fun UserProfileScreen(
                     enabled = isBloodTypeEditable,
                     label = { Text(stringResource(R.string.blood_type)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = bloodTypeExpanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    modifier =
+                        Modifier
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = isBloodTypeEditable)
+                            .fillMaxWidth(),
                 )
                 ExposedDropdownMenu(
                     expanded = bloodTypeExpanded && isBloodTypeEditable,

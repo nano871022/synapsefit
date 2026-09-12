@@ -64,6 +64,7 @@ fun AppNavHost(
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return SplashViewModel(
                                     userProfileRepositoryPort = dependencyContainer.userProfileRepository,
@@ -91,6 +92,7 @@ fun AppNavHost(
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return DashboardViewModel(
                                     bodyMeasurementRepositoryPort = dependencyContainer.bodyMeasurementRepository,
@@ -122,6 +124,7 @@ fun AppNavHost(
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return UserProfileViewModel(
                                     getUserProfileUseCase = dependencyContainer.getUserProfileUseCase,
@@ -156,6 +159,7 @@ fun AppNavHost(
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return BodyMeasurementsViewModel(
                                     saveBodyMeasurementUseCase = dependencyContainer.saveBodyMeasurementUseCase,
@@ -192,6 +196,7 @@ fun AppNavHost(
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return MeasurementProgressViewModel(
                                     bodyMeasurementRepositoryPort = dependencyContainer.bodyMeasurementRepository,
@@ -214,6 +219,7 @@ fun AppNavHost(
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return WorkoutPlansViewModel(
                                     workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
@@ -240,6 +246,7 @@ fun AppNavHost(
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return AICoachGeneratorViewModel(
                                     generateWorkoutPlanUseCase = dependencyContainer.generateWorkoutPlanUseCase,
@@ -277,6 +284,7 @@ fun AppNavHost(
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return WorkoutPlanDetailViewModel(
                                     workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
@@ -304,6 +312,7 @@ fun AppNavHost(
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return ActiveWorkoutSessionViewModel(
                                     workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
@@ -340,6 +349,7 @@ fun AppNavHost(
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return WorkoutHistoryViewModel(
                                     workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
@@ -358,6 +368,7 @@ fun AppNavHost(
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return BackupSyncViewModel(
                                     performDriveSyncUseCase = dependencyContainer.performDriveSyncUseCase,
@@ -388,6 +399,7 @@ fun AppNavHost(
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return LlmSettingsViewModel(
                                     llmConfigRepositoryPort = dependencyContainer.llmConfigRepository,
