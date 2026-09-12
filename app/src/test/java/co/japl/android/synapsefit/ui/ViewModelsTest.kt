@@ -188,7 +188,7 @@ class ViewModelsTest {
             val mockLogPort = mockk<WorkoutLogRepositoryPort>()
             val baseTime = System.currentTimeMillis()
             val records =
-                (1..5).map { index ->
+                (1..10).map { index ->
                     WorkoutHistoryRecord(
                         logId = "log-$index",
                         exerciseId = "ex-$index",
@@ -212,8 +212,8 @@ class ViewModelsTest {
             val groups = viewModel.uiState.value.sessionGroups
 
             assertEquals(1, groups.size)
-            assertEquals(5, groups.first().totalExercisesCount)
-            assertEquals(5, groups.first().exercises.size)
+            assertEquals(10, groups.first().totalExercisesCount)
+            assertEquals(10, groups.first().exercises.size)
         }
 
     @Test
@@ -247,6 +247,6 @@ class ViewModelsTest {
             val state = viewModel.uiState.value
 
             assertEquals(10, state.sessionGroups.size)
-            assertEquals(10, state.weeklySessionsCount.coerceAtLeast(0))
+            assertEquals(10, state.globalHistoryStats.totalWorkoutsCount)
         }
 }
