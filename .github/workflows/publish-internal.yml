@@ -39,12 +39,15 @@ jobs:
             find ./bundle/ -type f -name "*.aab" 2>/dev/null || echo "No .aab files found"
             ls -la ./bundle/ || echo "outputs directory not found"
 
-      - name: Upload Mobile and wear to Google Play Console (Internal Track)
+      - name: Upload Mobile and Wear to Google Play Console
         uses: r0adkll/upload-google-play@v1.1.5
         with:
-          serviceAccountJson: ${{ github.workspace }}/private-props/synapseefit/synapsefit-507614-2b30a67ac3fb.json
-          packageName: 'co.japl.android.synapsefit'
-          releaseFiles: |
-            ./bundle/app-release.aab
-            ./bundle/wear-release.aab
-          track: internal
+            serviceAccountJson: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+            packageName: co.japl.android.synapsefit
+            releaseFiles: |
+              ./bundle/app-release.aab
+              ./bundle/wear-release.aab
+            track: internal
+            inAppUpdatePriority: 0
+            status: completed
+            changesNotSentForReview: false
