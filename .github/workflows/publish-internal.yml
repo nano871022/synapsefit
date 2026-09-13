@@ -26,18 +26,18 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app-bundle
-          path: ./
+          path: ./bundle/
 
       - name: Download build artifact WearOS
         uses: actions/download-artifact@v4
         with:
           name: wear-bundle
-          path: ./
+          path: ./bundle/
 
       - name: List build outputs
         run: |
-            find ./ -type f -name "*.aab" 2>/dev/null || echo "No .aab files found"
-            ls -la ./ || echo "outputs directory not found"
+            find ./bundle/ -type f -name "*.aab" 2>/dev/null || echo "No .aab files found"
+            ls -la ./bundle/ || echo "outputs directory not found"
 
       - name: Upload Mobile and wear to Google Play Console (Internal Track)
         uses: r0adkll/upload-google-play@v1.1.5
@@ -45,6 +45,6 @@ jobs:
           serviceAccountJson: ${{ github.workspace }}/private-props/synapseefit/synapsefit-507614-2b30a67ac3fb.json
           packageName: 'co.japl.android.synapsefit'
           releaseFiles: |
-            ./app-release.aab
-            ./wear-release.aab
+            ./bundle/app-release.aab
+            ./bundle/wear-release.aab
           track: internal
