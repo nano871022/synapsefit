@@ -46,7 +46,6 @@ jobs:
           packageName: 'co.japl.android.synapsefit'
           releaseFiles: ./app-release.aab
           track: internal
-          whatsNewDirectory: distribution/whats-new
 
       - name: Upload WearOS to Google Play Console (Internal Track)
         uses: r0adkll/upload-google-play@v1.1.5
@@ -55,4 +54,3 @@ jobs:
           packageName: 'co.japl.android.synapsefit'
           releaseFiles: ./wear-release.aab
           track: internal
-          whatsNewDirectory: distribution/whats-new
