@@ -25,13 +25,13 @@ jobs:
       - name: Download build artifact Mobile
         uses: actions/download-artifact@v4
         with:
-          name: app-release
+          name: app-bundle
           path: ./
 
       - name: Download build artifact WearOS
         uses: actions/download-artifact@v4
         with:
-          name: wear-release
+          name: wear-bundle
           path: ./
 
       - name: Upload Mobile to Google Play Console (Internal Track)
@@ -39,7 +39,7 @@ jobs:
         with:
           serviceAccountJson: ${{ github.workspace }}/private-props/synapseefit/synapsefit-507614-2b30a67ac3fb.json
           packageName: 'co.japl.android.synapsefit'
-          releaseFiles: ./app-release.aab
+          releaseFiles: ./app-bundle.aab
           track: internal
           whatsNewDirectory: distribution/whats-new
 
@@ -48,6 +48,6 @@ jobs:
         with:
           serviceAccountJson: ${{ github.workspace }}/private-props/synapseefit/synapsefit-507614-2b30a67ac3fb.json
           packageName: 'co.japl.android.synapsefit'
-          releaseFiles: ./wear-release.aab
+          releaseFiles: ./wear-bundle.aab
           track: internal
           whatsNewDirectory: distribution/whats-new
