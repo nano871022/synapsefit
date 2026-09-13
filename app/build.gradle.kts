@@ -12,8 +12,8 @@ android {
         applicationId = "co.japl.android.synapsefit"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 11_00_008
-        versionName = "1.00.008"
+        versionCode = 11_00_009
+        versionName = "1.00.009"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
