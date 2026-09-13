@@ -39,27 +39,27 @@ jobs:
       - name: Upload Mobile Release Bundle Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: synapsefit-app-release-bundle
+          name: app-bundle
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: warn
 
       - name: Upload Mobile Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: synapsefit-app-release-apk
+          name: app-apk
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: warn
 
       - name: Upload Wear OS Release Bundle Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: synapsefit-wear-release-bundle
+          name: wear-bundle
           path: wear/build/outputs/bundle/release/wear-release.aab
           if-no-files-found: warn
 
       - name: Upload Wear OS Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: synapsefit-wear-release-apk
+          name: wear-apk
           path: wear/build/outputs/apk/release/wear-release.apk
           if-no-files-found: warn
