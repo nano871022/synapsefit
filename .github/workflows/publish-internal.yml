@@ -46,6 +46,6 @@ jobs:
             packageName: co.japl.android.synapsefit
             releaseFiles: ./bundle/app-release.aab, ./bundle/wear-release.aab
             track: internal
-            inAppUpdatePriority: 0
-            status: completed
-            changesNotSentForReview: false
+          #  inAppUpdatePriority: 0
+            #status: completed
+           # changesNotSentForReview: false
