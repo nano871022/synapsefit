@@ -11,10 +11,6 @@ on:
         description: 'New Version Code (e.g. 2)'
         required: true
         default: '2'
-      target_branch:
-        description: 'Target branch to apply version bump (e.g. develop or active PR branch)'
-        required: true
-        default: 'master'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -32,7 +28,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.target_branch }}
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - name: Set up JDK 17
@@ -60,5 +56,5 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "chore(release): bump version to ${{ github.event.inputs.version_name }} (${{ github.event.inputs.version_code }})"
-            git push origin ${{ github.event.inputs.target_branch }}
+            git push origin ${{ github.ref_name }}
           fi
