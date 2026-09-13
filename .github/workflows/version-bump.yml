@@ -43,12 +43,12 @@ jobs:
 
       - name: Update Version in app/build.gradle.kts
         run: |
-          sed -i "s/versionCode = .*/versionCode = ${{ github.event.inputs.version_code }}/" app/build.gradle.kts
+          sed -i "s/versionCode = .*/versionCode = 1${{ github.event.inputs.version_code }}/" app/build.gradle.kts
           sed -i 's/versionName = .*/versionName = "${{ github.event.inputs.version_name }}"/' app/build.gradle.kts
 
       - name: Update Version in wear/build.gradle.kts
         run: |
-          sed -i "s/versionCode = .*/versionCode = ${{ github.event.inputs.version_code }}/" wear/build.gradle.kts
+          sed -i "s/versionCode = .*/versionCode = 2${{ github.event.inputs.version_code }}/" wear/build.gradle.kts
           sed -i 's/versionName = .*/versionName = "${{ github.event.inputs.version_name }}"/' wear/build.gradle.kts
 
       - name: Commit and Push Changes
