@@ -1,16 +1,21 @@
 name: Version Change
-
 on:
   workflow_dispatch:
     inputs:
-      version_name:
-        description: 'New Version Name (e.g. 1.1.0)'
+      bump_type:
+        description: 'Tipo de incremento base'
         required: true
-        default: '1.1.0'
-      version_code:
-        description: 'New Version Code (e.g. 2)'
-        required: true
-        default: '2'
+        type: choice
+        default: 'patch'
+        options:
+          - patch
+          - minor
+          - major
+      version_suffix:
+        description: 'Sufijo para agregar al nombre (ej. -beta, -rc1) [Opcional]'
+        required: false
+        type: string
+        default: ''
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -37,15 +42,61 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Calculate New Version
+        id: calc_version
+        run: |
+          # 1. Leer las versiones actuales del archivo app/build.gradle.kts
+          CURRENT_VNAME_FULL=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts)
+          CURRENT_VCODE_FULL=$(grep -oP 'versionCode\s*=\s*\K\d+' app/build.gradle.kts)
+          
+          echo "Versión actual en código: $CURRENT_VNAME_FULL (versionCode: $CURRENT_VCODE_FULL)"
+
+          # 2. Limpiar la versión base actual (quitar sufijos anteriores si los hay, ej: 1.1.1-beta -> 1.1.1)
+          BASE_VNAME=$(echo "$CURRENT_VNAME_FULL" | cut -d'-' -f1)
+          # Quitar el prefijo '1' del versionCode de la app
+          CURRENT_VCODE=${CURRENT_VCODE_FULL#1}
+
+          # 3. Calcular la nueva versión numérica (mayor, minor o patch)
+          BUMP_TYPE="${{ github.event.inputs.bump_type }}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VNAME"
+          
+          if [ "$BUMP_TYPE" == "patch" ]; then
+            PATCH=$((PATCH + 1))
+          elif [ "$BUMP_TYPE" == "minor" ]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          elif [ "$BUMP_TYPE" == "major" ]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          fi
+          
+          CALCULATED_VNAME="${MAJOR}.${MINOR}.${PATCH}"
+          NEW_VCODE=$((CURRENT_VCODE + 1))
+
+          # 4. Agregar el sufijo si el usuario escribió algo en el campo
+          SUFFIX="${{ github.event.inputs.version_suffix }}"
+          if [ -n "$SUFFIX" ]; then
+            NEW_VNAME="${CALCULATED_VNAME}${SUFFIX}"
+          else
+            NEW_VNAME="${CALCULATED_VNAME}"
+          fi
+
+          echo "La nueva versión será: $NEW_VNAME (Code base: $NEW_VCODE)"
+
+          # 5. Exportar variables al entorno de GitHub Actions
+          echo "NEW_VNAME=$NEW_VNAME" >> $GITHUB_ENV
+          echo "NEW_VCODE=$NEW_VCODE" >> $GITHUB_ENV
+
       - name: Update Version in app/build.gradle.kts
         run: |
-          sed -i "s/versionCode = .*/versionCode = 1${{ github.event.inputs.version_code }}/" app/build.gradle.kts
-          sed -i 's/versionName = .*/versionName = "${{ github.event.inputs.version_name }}"/' app/build.gradle.kts
+          sed -i "s/versionCode = .*/versionCode = 1${{ env.NEW_VCODE }}/" app/build.gradle.kts
+          sed -i 's/versionName = .*/versionName = "${{ env.NEW_VNAME }}"/' app/build.gradle.kts
 
       - name: Update Version in wear/build.gradle.kts
         run: |
-          sed -i "s/versionCode = .*/versionCode = 2${{ github.event.inputs.version_code }}/" wear/build.gradle.kts
-          sed -i 's/versionName = .*/versionName = "${{ github.event.inputs.version_name }}"/' wear/build.gradle.kts
+          sed -i "s/versionCode = .*/versionCode = 2${{ env.NEW_VCODE }}/" wear/build.gradle.kts
+          sed -i 's/versionName = .*/versionName = "${{ env.NEW_VNAME }}"/' wear/build.gradle.kts
 
       - name: Commit and Push Changes
         run: |
@@ -55,6 +106,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore(release): bump version to ${{ github.event.inputs.version_name }} (${{ github.event.inputs.version_code }})"
+            git commit -m "chore(release): bump version to ${{ env.NEW_VNAME }} (${{ env.NEW_VCODE }})"
             git push origin ${{ github.ref_name }}
           fi
