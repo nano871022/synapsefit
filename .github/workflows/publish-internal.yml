@@ -39,7 +39,7 @@ jobs:
         with:
           serviceAccountJson: ${{ github.workspace }}/private-props/synapseefit/synapsefit-507614-2b30a67ac3fb.json
           packageName: 'co.japl.android.synapsefit'
-          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          releaseFiles: ${{ github.workspace }}/app/build/outputs/bundle/release/app-release.aab
           track: internal
           whatsNewDirectory: distribution/whats-new
 
@@ -48,6 +48,6 @@ jobs:
         with:
           serviceAccountJson: ${{ github.workspace }}/private-props/synapseefit/synapsefit-507614-2b30a67ac3fb.json
           packageName: 'co.japl.android.synapsefit'
-          releaseFiles: wear/build/outputs/bundle/release/wear-release.aab
+          releaseFiles: ${{ github.workspace }}/wear/build/outputs/bundle/release/wear-release.aab
           track: internal
           whatsNewDirectory: distribution/whats-new
