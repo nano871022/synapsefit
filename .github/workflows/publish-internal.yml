@@ -37,7 +37,7 @@ jobs:
       - name: Upload Mobile to Google Play Console (Internal Track)
         uses: r0adkll/upload-google-play@v1.1.5
         with:
-          service-account-json: ${{ github.workspace }}/private-props/synapseefit/synapsefit-507614-2b30a67ac3fb.json
+          serviceAccountJson: ${{ github.workspace }}/private-props/synapseefit/synapsefit-507614-2b30a67ac3fb.json
           packageName: 'co.japl.android.synapsefit'
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
           track: internal
@@ -46,7 +46,7 @@ jobs:
       - name: Upload WearOS to Google Play Console (Internal Track)
         uses: r0adkll/upload-google-play@v1.1.5
         with:
-          service-account-json: ${{ github.workspace }}/private-props/synapseefit/synapsefit-507614-2b30a67ac3fb.json
+          serviceAccountJson: ${{ github.workspace }}/private-props/synapseefit/synapsefit-507614-2b30a67ac3fb.json
           packageName: 'co.japl.android.synapsefit'
           releaseFiles: wear/build/outputs/bundle/release/wear-release.aab
           track: internal
