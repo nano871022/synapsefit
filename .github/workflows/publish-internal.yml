@@ -42,7 +42,7 @@ jobs:
       - name: Upload Mobile and Wear to Google Play Console
         uses: r0adkll/upload-google-play@v1.1.5
         with:
-            serviceAccountJson: ${{ github.workspace }}/private-props/synapseefit/synapsefit-507614-2b30a67ac3fb.json
+            serviceAccountJson: ${{ github.workspace }}/private-props/synapseefit/${{ vars.JSON_CREDENTIALS_PLAY_STORE }}
             packageName: co.japl.android.synapsefit
             releaseFiles: ./bundle/*.aab
             track: internal
