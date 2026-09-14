@@ -44,7 +44,7 @@ jobs:
         with:
             serviceAccountJson: ${{ github.workspace }}/private-props/synapseefit/${{ vars.JSON_CREDENTIALS_PLAY_STORE }}
             packageName: co.japl.android.synapsefit
-            releaseFiles: ./bundle/app_release.aab
+            releaseFiles: ./bundle/app-release.aab
             track: internal
             inAppUpdatePriority: 2
             status: completed
@@ -54,7 +54,7 @@ jobs:
         with:
             serviceAccountJson: ${{ github.workspace }}/private-props/synapseefit/${{ vars.JSON_CREDENTIALS_PLAY_STORE }}
             packageName: co.japl.android.synapsefit
-            releaseFiles: ./bundle/wear_release.aab
+            releaseFiles: ./bundle/wear-release.aab
             track: wear:internal
             inAppUpdatePriority: 2
             status: completed
