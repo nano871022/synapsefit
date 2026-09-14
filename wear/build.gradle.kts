@@ -12,8 +12,8 @@ android {
         applicationId = "co.japl.android.synapsefit"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 22
-        versionName = "1.00.009Integracion entre wear y app"
+        versionCode = 21_00_010
+        versionName = "1.00.010 Integracion entre wear y app"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
