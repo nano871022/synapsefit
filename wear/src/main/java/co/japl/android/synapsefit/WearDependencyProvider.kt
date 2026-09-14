@@ -35,12 +35,13 @@ object WearDependencyProvider {
         if (isInitialized) return
 
         val appContext = context.applicationContext
-        database = Room.databaseBuilder(
-            appContext,
-            SynapseFitDatabase::class.java,
-            "synapsefit_database.db"
-        ).addMigrations(SynapseFitDatabase.MIGRATION_6_7)
-            .build()
+        database =
+            Room.databaseBuilder(
+                appContext,
+                SynapseFitDatabase::class.java,
+                "synapsefit_database.db",
+            ).addMigrations(SynapseFitDatabase.MIGRATION_6_7)
+                .build()
 
         workoutPlanRepository = WorkoutPlanRepositoryAdapter(database.workoutPlanDao())
         workoutLogRepository = WorkoutLogRepositoryAdapter(database.workoutLogDao())
@@ -53,6 +54,7 @@ object WearDependencyProvider {
         isInitialized = true
     }
 
+    @Suppress("TooGenericExceptionCaught")
     fun requestActivePlanFromPhone(context: Context) {
         val appContext = context.applicationContext
         CoroutineScope(Dispatchers.IO).launch {
