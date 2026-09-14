@@ -1,5 +1,7 @@
 package co.japl.android.synapsefit.core.port.secondary
 
+import co.japl.android.synapsefit.core.domain.model.DatabaseMetadata
+import co.japl.android.synapsefit.core.domain.model.TableSummary
 import java.io.File
 
 interface DatabaseManagerPort {
@@ -12,4 +14,8 @@ interface DatabaseManagerPort {
     fun getDatabaseVersion(): Int
 
     fun getLastLocalModifiedTimestamp(): Long
+
+    suspend fun getTableSummaries(): Result<List<TableSummary>>
+
+    suspend fun getDatabaseMetadata(): Result<DatabaseMetadata>
 }
