@@ -16,6 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import co.japl.android.synapsefit.DependencyContainer
+import co.japl.android.synapsefit.app.controller.auth.GoogleAuthViewModel
 import co.japl.android.synapsefit.app.controller.dashboard.DashboardViewModel
 import co.japl.android.synapsefit.app.controller.history.WorkoutHistoryViewModel
 import co.japl.android.synapsefit.app.controller.measurements.BodyMeasurementsViewModel
@@ -23,6 +24,7 @@ import co.japl.android.synapsefit.app.controller.measurements.MeasurementProgres
 import co.japl.android.synapsefit.app.controller.profile.UserProfileViewModel
 import co.japl.android.synapsefit.app.controller.settings.AboutDeveloperViewModel
 import co.japl.android.synapsefit.app.controller.settings.BackupSyncViewModel
+import co.japl.android.synapsefit.app.controller.settings.DatabaseExplorerViewModel
 import co.japl.android.synapsefit.app.controller.settings.LlmSettingsViewModel
 import co.japl.android.synapsefit.app.controller.splash.SplashViewModel
 import co.japl.android.synapsefit.app.controller.workout.AICoachGeneratorViewModel
@@ -33,9 +35,10 @@ import co.japl.android.synapsefit.app.ui.dashboard.DashboardScreen
 import co.japl.android.synapsefit.app.ui.history.WorkoutHistoryScreen
 import co.japl.android.synapsefit.app.ui.measurements.BodyMeasurementsScreen
 import co.japl.android.synapsefit.app.ui.measurements.MeasurementProgressGraphScreen
-import co.japl.android.synapsefit.app.ui.profile.UserProfileScreen
+import co.japl.android.synapsefit.app.ui.profile.ProfileConnectionScreen
 import co.japl.android.synapsefit.app.ui.settings.AboutDeveloperScreen
 import co.japl.android.synapsefit.app.ui.settings.BackupSyncScreen
+import co.japl.android.synapsefit.app.ui.settings.DatabaseExplorerScreen
 import co.japl.android.synapsefit.app.ui.settings.LLMSettingsScreen
 import co.japl.android.synapsefit.app.ui.splash.SplashScreen
 import co.japl.android.synapsefit.app.ui.workout.AICoachGeneratorScreen
@@ -118,9 +121,9 @@ fun AppNavHost(
             )
         }
 
-        // User Profile
+        // Perfil y Conexión
         composable(Routes.USER_PROFILE) {
-            val viewModel: UserProfileViewModel =
+            val profileViewModel: UserProfileViewModel =
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
@@ -137,19 +140,63 @@ fun AppNavHost(
                             }
                         },
                 )
+            val authViewModel: GoogleAuthViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return GoogleAuthViewModel(
+                                    googleAuthRepository = dependencyContainer.googleAuthRepository,
+                                ) as T
+                            }
+                        },
+                )
+
+            val profileState by profileViewModel.uiState.collectAsState()
+            val authState by authViewModel.uiState.collectAsState()
+
+            ProfileConnectionScreen(
+                googleAuthState = authState,
+                profileState = profileState,
+                onGoogleLoginClick = { authViewModel.onGoogleLoginClicked(appContext) },
+                onSignOutClick = authViewModel::onSignOutClicked,
+                onSelectAccountClick = authViewModel::onSelectAccountClicked,
+                onAddAnotherAccountClick = authViewModel::onAddAnotherAccountClicked,
+                onDismissAccountSelection = authViewModel::onErrorDismissed,
+                onNavigateBackup = { navController.navigate(Routes.SETTINGS_BACKUP) },
+                onNavigateDbExplorer = { navController.navigate(Routes.DATABASE_EXPLORER) },
+                onFullNameChange = profileViewModel::onFullNameChange,
+                onBirthDateChange = profileViewModel::onBirthDateChange,
+                onGenderChange = profileViewModel::onGenderChange,
+                onHeightCmChange = profileViewModel::onHeightCmChange,
+                onBloodTypeChange = profileViewModel::onBloodTypeChange,
+                onMedicalConditionsChange = profileViewModel::onMedicalConditionsChange,
+                onSaveProfileClick = profileViewModel::saveProfile,
+                onRecalculateMedicalEvaluation = profileViewModel::recalculateMedicalEvaluation,
+                onRetryMedicalConditions = profileViewModel::retryMedicalEvaluation,
+                onDismissMedicalDialog = profileViewModel::dismissMedicalDialog,
+            )
+        }
+
+        // Explorador de Base de Datos
+        composable(Routes.DATABASE_EXPLORER) {
+            val viewModel: DatabaseExplorerViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return DatabaseExplorerViewModel(
+                                    getDatabaseSummaryUseCase = dependencyContainer.getDatabaseSummaryUseCase,
+                                ) as T
+                            }
+                        },
+                )
             val state by viewModel.uiState.collectAsState()
-            UserProfileScreen(
+            DatabaseExplorerScreen(
                 state = state,
-                onFullNameChange = viewModel::onFullNameChange,
-                onBirthDateChange = viewModel::onBirthDateChange,
-                onGenderChange = viewModel::onGenderChange,
-                onHeightCmChange = viewModel::onHeightCmChange,
-                onBloodTypeChange = viewModel::onBloodTypeChange,
-                onMedicalConditionsChange = viewModel::onMedicalConditionsChange,
-                onSaveClick = viewModel::saveProfile,
-                onRecalculateMedicalEvaluation = viewModel::recalculateMedicalEvaluation,
-                onRetryMedicalConditions = viewModel::retryMedicalEvaluation,
-                onDismissMedicalDialog = viewModel::dismissMedicalDialog,
+                onRefreshClick = viewModel::loadDatabaseSummary,
             )
         }
 

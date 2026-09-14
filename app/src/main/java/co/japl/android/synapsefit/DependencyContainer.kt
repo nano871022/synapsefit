@@ -15,6 +15,7 @@ import co.japl.android.synapsefit.core.usecase.CheckAndRestoreBackupUseCase
 import co.japl.android.synapsefit.core.usecase.DownloadAndRestoreDatabaseUseCase
 import co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase
 import co.japl.android.synapsefit.core.usecase.GenerateWorkoutPlanUseCase
+import co.japl.android.synapsefit.core.usecase.GetDatabaseSummaryUseCase
 import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
 import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
 import co.japl.android.synapsefit.core.usecase.GetMedicalRecommendationsUseCase
@@ -145,6 +146,10 @@ class DependencyContainer(context: Context) {
 
     val getMedicalRecommendationsUseCase: GetMedicalRecommendationsUseCase by lazy {
         GetMedicalRecommendationsUseCase(userProfileRepository)
+    }
+
+    val getDatabaseSummaryUseCase: GetDatabaseSummaryUseCase by lazy {
+        GetDatabaseSummaryUseCase(databaseManagerPort)
     }
 
     val getGroupedWorkoutHistoryUseCase: GetGroupedWorkoutHistoryUseCase by lazy {

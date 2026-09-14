@@ -18,6 +18,7 @@ object Routes {
 
     const val WORKOUT_HISTORY = "workout/history"
     const val SETTINGS_BACKUP = "settings/backup"
+    const val DATABASE_EXPLORER = "settings/db-explorer"
     const val SETTINGS_LLM = "settings/llm"
 
     fun settingsLlm(openForm: Boolean = false) = "settings/llm?openForm=$openForm"

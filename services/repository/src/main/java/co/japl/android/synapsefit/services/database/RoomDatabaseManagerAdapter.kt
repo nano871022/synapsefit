@@ -2,12 +2,15 @@ package co.japl.android.synapsefit.services.database
 
 import android.content.Context
 import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.sqlite.db.SupportSQLiteDatabase
+import co.japl.android.synapsefit.core.domain.model.DatabaseMetadata
+import co.japl.android.synapsefit.core.domain.model.TableSummary
 import co.japl.android.synapsefit.core.port.secondary.DatabaseManagerPort
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
-@Suppress("TooGenericExceptionCaught")
+@Suppress("TooGenericExceptionCaught", "MagicNumber", "NestedBlockDepth")
 class RoomDatabaseManagerAdapter(
     private val context: Context,
     private val database: SynapseFitDatabase,
@@ -71,5 +74,78 @@ class RoomDatabaseManagerAdapter(
     override fun getLastLocalModifiedTimestamp(): Long {
         val dbFile = context.getDatabasePath(databaseName)
         return if (dbFile.exists()) dbFile.lastModified() else System.currentTimeMillis()
+    }
+
+    override suspend fun getTableSummaries(): Result<List<TableSummary>> {
+        return try {
+            val db = database.openHelper.readableDatabase
+            val knownTables =
+                listOf(
+                    "user_profile",
+                    "tbl_medical_result",
+                    "workout_plans",
+                    "exercises",
+                    "workout_logs",
+                    "body_measurements",
+                    "llm_configs",
+                )
+            val summaries =
+                knownTables.map { tableName ->
+                    buildTableSummary(db, tableName)
+                }
+            Result.success(summaries)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private fun buildTableSummary(
+        db: SupportSQLiteDatabase,
+        tableName: String,
+    ): TableSummary {
+        var count = 0L
+        val countCursor = db.query(SimpleSQLiteQuery("SELECT COUNT(*) FROM `$tableName`"))
+        if (countCursor.moveToFirst()) {
+            count = countCursor.getLong(0)
+        }
+        countCursor.close()
+
+        val columns = mutableListOf<String>()
+        val pragmaCursor = db.query(SimpleSQLiteQuery("PRAGMA table_info(`$tableName`)"))
+        while (pragmaCursor.moveToNext()) {
+            val nameIndex = pragmaCursor.getColumnIndex("name")
+            if (nameIndex >= 0) {
+                columns.add(pragmaCursor.getString(nameIndex))
+            }
+        }
+        pragmaCursor.close()
+
+        return TableSummary(
+            tableName = tableName,
+            recordCount = count,
+            columnCount = columns.size,
+            columns = columns,
+        )
+    }
+
+    override suspend fun getDatabaseMetadata(): Result<DatabaseMetadata> {
+        return try {
+            val dbFile = context.getDatabasePath(databaseName)
+            val fileSize = if (dbFile.exists()) dbFile.length() else 0L
+            val lastModified = if (dbFile.exists()) dbFile.lastModified() else System.currentTimeMillis()
+            val version = getDatabaseVersion()
+            val tables = getTableSummaries().getOrDefault(emptyList())
+
+            Result.success(
+                DatabaseMetadata(
+                    databaseVersion = version,
+                    fileSizeBytes = fileSize,
+                    lastModifiedTimestamp = lastModified,
+                    tables = tables,
+                ),
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }
