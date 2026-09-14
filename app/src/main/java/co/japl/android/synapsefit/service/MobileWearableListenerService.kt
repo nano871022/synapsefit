@@ -18,6 +18,7 @@ import java.util.UUID
 class MobileWearableListenerService : WearableListenerService() {
     private val scope = CoroutineScope(Dispatchers.IO)
 
+    @Suppress("LongMethod", "TooGenericExceptionCaught")
     override fun onMessageReceived(messageEvent: MessageEvent) {
         super.onMessageReceived(messageEvent)
         val container = DependencyContainer(applicationContext)
@@ -67,23 +68,25 @@ class MobileWearableListenerService : WearableListenerService() {
                     val jsonArray = JSONArray(logsJson)
                     for (i in 0 until jsonArray.length()) {
                         val obj = jsonArray.getJSONObject(i)
-                        val hr = if (obj.has("heartRateBpm") && !obj.isNull("heartRateBpm")) {
-                            obj.getInt("heartRateBpm")
-                        } else {
-                            null
-                        }
-                        val log = WorkoutLog(
-                            id = obj.optString("id", UUID.randomUUID().toString()),
-                            exerciseId = obj.getString("exerciseId"),
-                            repsCompleted = obj.getInt("repsCompleted"),
-                            weightLiftedKg = obj.optDouble("weightLiftedKg", 0.0),
-                            heartRateBpm = hr,
-                            sourceDevice = SourceDevice.WEAR_OS,
-                            durationSeconds = obj.optLong("durationSeconds", 0L),
-                            timestamp = obj.optLong("timestamp", System.currentTimeMillis()),
-                            createdAt = obj.optLong("createdAt", System.currentTimeMillis()),
-                            updatedAt = obj.optLong("updatedAt", System.currentTimeMillis())
-                        )
+                        val hr =
+                            if (obj.has("heartRateBpm") && !obj.isNull("heartRateBpm")) {
+                                obj.getInt("heartRateBpm")
+                            } else {
+                                null
+                            }
+                        val log =
+                            WorkoutLog(
+                                id = obj.optString("id", UUID.randomUUID().toString()),
+                                exerciseId = obj.getString("exerciseId"),
+                                repsCompleted = obj.getInt("repsCompleted"),
+                                weightLiftedKg = obj.optDouble("weightLiftedKg", 0.0),
+                                heartRateBpm = hr,
+                                sourceDevice = SourceDevice.WEAR_OS,
+                                durationSeconds = obj.optLong("durationSeconds", 0L),
+                                timestamp = obj.optLong("timestamp", System.currentTimeMillis()),
+                                createdAt = obj.optLong("createdAt", System.currentTimeMillis()),
+                                updatedAt = obj.optLong("updatedAt", System.currentTimeMillis()),
+                            )
                         container.workoutLogRepository.saveLog(log)
                     }
                 } catch (e: Exception) {

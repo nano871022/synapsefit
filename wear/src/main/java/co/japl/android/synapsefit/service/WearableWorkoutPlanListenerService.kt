@@ -5,9 +5,6 @@ import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
-import co.japl.android.synapsefit.services.database.SynapseFitDatabase
-import co.japl.android.synapsefit.services.repository.WorkoutLogRepositoryAdapter
-import co.japl.android.synapsefit.services.repository.WorkoutPlanRepositoryAdapter
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem

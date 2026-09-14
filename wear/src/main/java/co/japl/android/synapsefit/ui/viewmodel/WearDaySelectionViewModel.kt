@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+private const val UPDATE_REQUEST_CODE = 9999
+
 class WearDaySelectionViewModel(
     private val getTodayRoutineUseCase: GetTodayRoutineUseCase? = null,
 ) : ViewModel() {
@@ -45,13 +47,14 @@ class WearDaySelectionViewModel(
             }
     }
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     fun checkForUpdates(context: Context) {
         if (_uiState.value.checkingUpdate) return
 
         _uiState.update {
             it.copy(
                 checkingUpdate = true,
-                updateMessageResId = co.japl.android.synapsefit.R.string.wear_update_checking
+                updateMessageResId = co.japl.android.synapsefit.R.string.wear_update_checking,
             )
         }
 
@@ -66,7 +69,7 @@ class WearDaySelectionViewModel(
                         it.copy(
                             checkingUpdate = false,
                             isUpdateAvailable = true,
-                            updateMessageResId = co.japl.android.synapsefit.R.string.wear_update_available
+                            updateMessageResId = co.japl.android.synapsefit.R.string.wear_update_available,
                         )
                     }
                 } else {
@@ -75,7 +78,7 @@ class WearDaySelectionViewModel(
                         it.copy(
                             checkingUpdate = false,
                             isUpdateAvailable = false,
-                            updateMessageResId = co.japl.android.synapsefit.R.string.wear_no_update
+                            updateMessageResId = co.japl.android.synapsefit.R.string.wear_no_update,
                         )
                     }
                 }
@@ -85,7 +88,7 @@ class WearDaySelectionViewModel(
                     it.copy(
                         checkingUpdate = false,
                         isUpdateAvailable = false,
-                        updateMessageResId = co.japl.android.synapsefit.R.string.wear_update_error
+                        updateMessageResId = co.japl.android.synapsefit.R.string.wear_update_error,
                     )
                 }
             }
@@ -94,12 +97,13 @@ class WearDaySelectionViewModel(
                 it.copy(
                     checkingUpdate = false,
                     isUpdateAvailable = false,
-                    updateMessageResId = co.japl.android.synapsefit.R.string.wear_update_error
+                    updateMessageResId = co.japl.android.synapsefit.R.string.wear_update_error,
                 )
             }
         }
     }
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     fun performImmediateUpdate(activity: android.app.Activity) {
         val info = cachedAppUpdateInfo ?: return
         try {
@@ -108,7 +112,7 @@ class WearDaySelectionViewModel(
                 info,
                 activity,
                 com.google.android.play.core.appupdate.AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build(),
-                9999
+                UPDATE_REQUEST_CODE,
             )
         } catch (_: Exception) {
         }

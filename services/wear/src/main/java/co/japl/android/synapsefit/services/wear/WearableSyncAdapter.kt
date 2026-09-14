@@ -35,34 +35,37 @@ class WearableSyncAdapter(private val context: Context? = null) : WearSyncPort {
         _pendingSyncDataCount.value = pendingLogsQueue.size
     }
 
+    @Suppress("TooGenericExceptionCaught")
     override fun flushSyncQueue() {
         if (pendingLogsQueue.isEmpty()) return
 
         if (_isPhoneConnected.value) {
-            val ctx = context ?: return
-            val jsonArray = JSONArray()
-            for (item in pendingLogsQueue) {
-                val obj = JSONObject()
-                obj.put("exerciseId", item.first)
-                obj.put("repsCompleted", item.second)
-                obj.put("heartRateBpm", item.third)
-                obj.put("timestamp", System.currentTimeMillis())
-                jsonArray.put(obj)
-            }
+            val ctx = context
+            if (ctx != null) {
+                val jsonArray = JSONArray()
+                for (item in pendingLogsQueue) {
+                    val obj = JSONObject()
+                    obj.put("exerciseId", item.first)
+                    obj.put("repsCompleted", item.second)
+                    obj.put("heartRateBpm", item.third)
+                    obj.put("timestamp", System.currentTimeMillis())
+                    jsonArray.put(obj)
+                }
 
-            val payloadBytes = jsonArray.toString().toByteArray(StandardCharsets.UTF_8)
+                val payloadBytes = jsonArray.toString().toByteArray(StandardCharsets.UTF_8)
 
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val nodeClient = Wearable.getNodeClient(ctx)
-                    val messageClient = Wearable.getMessageClient(ctx)
-                    nodeClient.connectedNodes.addOnSuccessListener { nodes ->
-                        for (node in nodes) {
-                            messageClient.sendMessage(node.id, "/workout_logs", payloadBytes)
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val nodeClient = Wearable.getNodeClient(ctx)
+                        val messageClient = Wearable.getMessageClient(ctx)
+                        nodeClient.connectedNodes.addOnSuccessListener { nodes ->
+                            for (node in nodes) {
+                                messageClient.sendMessage(node.id, "/workout_logs", payloadBytes)
+                            }
                         }
+                    } catch (e: Exception) {
+                        android.util.Log.e("WearableSyncAdapter", "Error flushing sync queue", e)
                     }
-                } catch (e: Exception) {
-                    android.util.Log.e("WearableSyncAdapter", "Error flushing sync queue", e)
                 }
             }
 

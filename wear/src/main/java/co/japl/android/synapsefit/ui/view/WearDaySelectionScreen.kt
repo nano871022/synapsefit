@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
-import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.CardDefaults
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
@@ -41,6 +40,7 @@ import co.com.japl.ui.theme.SurfaceContainerHigh
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.core.domain.model.WorkoutSessionItem
 
+@Suppress("LongParameterList")
 @Composable
 fun WearDaySelectionScreen(
     sessions: List<WorkoutSessionItem>,
@@ -111,30 +111,31 @@ fun WearDaySelectionScreen(
                         Text(
                             text = stringResource(updateMessageResId),
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
                         )
                     },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(16.dp),
                         )
                     },
-                    colors = if (isUpdateAvailable) {
-                        ChipDefaults.chipColors(
-                            backgroundColor = PrimaryCyan,
-                            contentColor = OnPrimaryDark,
-                            iconColor = OnPrimaryDark
-                        )
-                    } else {
-                        ChipDefaults.chipColors(
-                            backgroundColor = SurfaceContainerHigh,
-                            contentColor = OnSurfaceDark,
-                            iconColor = OnSurfaceDark
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                    colors =
+                        if (isUpdateAvailable) {
+                            ChipDefaults.chipColors(
+                                backgroundColor = PrimaryCyan,
+                                contentColor = OnPrimaryDark,
+                                iconColor = OnPrimaryDark,
+                            )
+                        } else {
+                            ChipDefaults.chipColors(
+                                backgroundColor = SurfaceContainerHigh,
+                                contentColor = OnSurfaceDark,
+                                iconColor = OnSurfaceDark,
+                            )
+                        },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 )
             }
         }
