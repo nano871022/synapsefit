@@ -43,11 +43,9 @@ fun GoogleSignInPromptScreen(
     Column(
         modifier =
             modifier
-                .fillMaxSize()
-                .padding(MaterialTheme.spacing.marginEdge)
-                .verticalScroll(rememberScrollState()),
+                .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
     ) {
         KineticCard(
             modifier = Modifier.fillMaxWidth(),

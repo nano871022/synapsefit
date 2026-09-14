@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Suppress("TooManyFunctions")
 object DateTimeUtils {
@@ -43,24 +44,27 @@ object DateTimeUtils {
         epochMilli: Long,
         pattern: String = "yyyy-MM-dd HH:mm",
         zoneId: ZoneId = DEFAULT_ZONE_ID,
+        locale: Locale = Locale.getDefault(),
     ): String {
-        val formatter = DateTimeFormatter.ofPattern(pattern)
+        val formatter = DateTimeFormatter.ofPattern(pattern, locale)
         return epochToLocalDateTime(epochMilli, zoneId).format(formatter)
     }
 
     fun formatLocalDate(
         localDate: LocalDate,
         pattern: String = "yyyy-MM-dd",
+        locale: Locale = Locale.getDefault(),
     ): String {
-        val formatter = DateTimeFormatter.ofPattern(pattern)
+        val formatter = DateTimeFormatter.ofPattern(pattern, locale)
         return localDate.format(formatter)
     }
 
     fun formatYearMonth(
         yearMonth: YearMonth,
         pattern: String = "yyyy-MM",
+        locale: Locale = Locale.getDefault(),
     ): String {
-        val formatter = DateTimeFormatter.ofPattern(pattern)
+        val formatter = DateTimeFormatter.ofPattern(pattern, locale)
         return yearMonth.format(formatter)
     }
 

@@ -5,9 +5,11 @@ import org.junit.Test
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
+import java.util.Locale
 
 class DateTimeUtilsTest {
     private val testZoneId = ZoneId.of("UTC")
+    private val testLocale = Locale.US
 
     @Test
     fun testEpochAndLocalDateTimeConversion() {
@@ -35,21 +37,21 @@ class DateTimeUtilsTest {
     @Test
     fun testFormatEpoch() {
         val epochMilli = 1700000000000L
-        val formatted = DateTimeUtils.formatEpoch(epochMilli, "yyyy-MM-dd HH:mm", testZoneId)
+        val formatted = DateTimeUtils.formatEpoch(epochMilli, "yyyy-MM-dd HH:mm", testZoneId, testLocale)
         assertEquals("2023-11-14 22:13", formatted)
     }
 
     @Test
     fun testFormatLocalDate() {
         val date = LocalDate.of(2025, 1, 15)
-        val formatted = DateTimeUtils.formatLocalDate(date, "dd/MM/yyyy")
+        val formatted = DateTimeUtils.formatLocalDate(date, "dd/MM/yyyy", testLocale)
         assertEquals("15/01/2025", formatted)
     }
 
     @Test
     fun testFormatYearMonth() {
         val yearMonth = YearMonth.of(2025, 3)
-        val formatted = DateTimeUtils.formatYearMonth(yearMonth, "MMMM yyyy")
+        val formatted = DateTimeUtils.formatYearMonth(yearMonth, "MMMM yyyy", testLocale)
         assertEquals("March 2025", formatted)
     }
 }
