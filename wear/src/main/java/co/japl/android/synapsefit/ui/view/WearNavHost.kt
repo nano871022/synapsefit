@@ -5,7 +5,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -23,10 +26,45 @@ import co.japl.android.synapsefit.ui.viewmodel.WearPostWorkoutSummaryViewModel
 fun WearNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberSwipeDismissableNavController(),
-    daySelectionViewModel: WearDaySelectionViewModel = viewModel(),
-    activeWorkoutViewModel: WearActiveWorkoutViewModel = viewModel(),
-    postWorkoutSummaryViewModel: WearPostWorkoutSummaryViewModel = viewModel(),
 ) {
+    val context = LocalContext.current.applicationContext
+    co.japl.android.synapsefit.WearDependencyProvider.initialize(context)
+
+    LaunchedEffect(Unit) {
+        co.japl.android.synapsefit.WearDependencyProvider.requestActivePlanFromPhone(context)
+    }
+
+    val daySelectionViewModel: WearDaySelectionViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                WearDaySelectionViewModel(co.japl.android.synapsefit.WearDependencyProvider.getTodayRoutineUseCase)
+            }
+        }
+    )
+
+    val activeWorkoutViewModel: WearActiveWorkoutViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                WearActiveWorkoutViewModel(
+                    sensorPort = co.japl.android.synapsefit.WearDependencyProvider.wearSensorPort,
+                    syncPort = co.japl.android.synapsefit.WearDependencyProvider.wearSyncPort,
+                    workoutPlanRepositoryPort = co.japl.android.synapsefit.WearDependencyProvider.workoutPlanRepository
+                )
+            }
+        }
+    )
+
+    val postWorkoutSummaryViewModel: WearPostWorkoutSummaryViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                WearPostWorkoutSummaryViewModel(
+                    getGroupedWorkoutHistoryUseCase = co.japl.android.synapsefit.WearDependencyProvider.getGroupedWorkoutHistoryUseCase,
+                    syncPort = co.japl.android.synapsefit.WearDependencyProvider.wearSyncPort
+                )
+            }
+        }
+    )
+
     SwipeDismissableNavHost(
         navController = navController,
         startDestination = WearRoutes.DAY_SELECTION,
@@ -34,12 +72,23 @@ fun WearNavHost(
     ) {
         composable(WearRoutes.DAY_SELECTION) {
             val daySelectionState by daySelectionViewModel.uiState.collectAsState()
+            val localContext = LocalContext.current
 
             WearDaySelectionScreen(
                 sessions = daySelectionState.sessions,
                 onSelectSession = { planId, day ->
                     navController.navigate(WearRoutes.preWorkout(planId, day))
                 },
+                checkingUpdate = daySelectionState.checkingUpdate,
+                updateMessageResId = daySelectionState.updateMessageResId,
+                isUpdateAvailable = daySelectionState.isUpdateAvailable,
+                onCheckUpdate = { daySelectionViewModel.checkForUpdates(localContext) },
+                onPerformUpdate = {
+                    val activity = localContext as? android.app.Activity
+                    if (activity != null) {
+                        daySelectionViewModel.performImmediateUpdate(activity)
+                    }
+                }
             )
         }
 

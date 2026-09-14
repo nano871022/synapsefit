@@ -65,6 +65,8 @@ class WearPostWorkoutSummaryViewModel(
 
                     if (targetGroup != null) {
                         populateStateFromGroup(targetGroup)
+                        transmitWorkoutLogsToMobile(targetGroup)
+                        syncPort?.flushSyncQueue()
                     } else {
                         _uiState.update { it.copy(isLoading = false) }
                     }
@@ -89,6 +91,7 @@ class WearPostWorkoutSummaryViewModel(
                     if (targetGroup != null) {
                         populateStateFromGroup(targetGroup)
                         transmitWorkoutLogsToMobile(targetGroup)
+                        syncPort?.flushSyncQueue()
                     } else {
                         _uiState.update { it.copy(isLoading = false) }
                     }

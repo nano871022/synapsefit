@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,7 +22,10 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
+import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.CardDefaults
+import androidx.wear.compose.material.Chip
+import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.PositionIndicator
@@ -42,6 +46,11 @@ fun WearDaySelectionScreen(
     sessions: List<WorkoutSessionItem>,
     onSelectSession: (planId: String, day: Int) -> Unit,
     modifier: Modifier = Modifier,
+    checkingUpdate: Boolean = false,
+    updateMessageResId: Int = R.string.wear_check_update,
+    isUpdateAvailable: Boolean = false,
+    onCheckUpdate: () -> Unit = {},
+    onPerformUpdate: () -> Unit = {},
 ) {
     val listState = rememberScalingLazyListState()
 
@@ -82,6 +91,51 @@ fun WearDaySelectionScreen(
                         onClick = { onSelectSession(sessionItem.planId, sessionItem.day) },
                     )
                 }
+            }
+
+            item {
+                Spacer(modifier = Modifier.size(8.dp))
+            }
+
+            item {
+                Chip(
+                    onClick = {
+                        if (isUpdateAvailable) {
+                            onPerformUpdate()
+                        } else {
+                            onCheckUpdate()
+                        }
+                    },
+                    enabled = !checkingUpdate,
+                    label = {
+                        Text(
+                            text = stringResource(updateMessageResId),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    },
+                    colors = if (isUpdateAvailable) {
+                        ChipDefaults.chipColors(
+                            backgroundColor = PrimaryCyan,
+                            contentColor = OnPrimaryDark,
+                            iconColor = OnPrimaryDark
+                        )
+                    } else {
+                        ChipDefaults.chipColors(
+                            backgroundColor = SurfaceContainerHigh,
+                            contentColor = OnSurfaceDark,
+                            iconColor = OnSurfaceDark
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                )
             }
         }
     }

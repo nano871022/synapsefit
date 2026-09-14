@@ -44,4 +44,10 @@
     <string name="wear_summary_kg">%1$.1f kg</string>
     <string name="wear_summary_bpm_value">%1$d BPM</string>
     <string name="wear_summary_sets_count">%1$d series</string>
+
+    <string name="wear_check_update">Buscar actualización</string>
+    <string name="wear_update_available">¡Actualización disponible!</string>
+    <string name="wear_no_update">App actualizada</string>
+    <string name="wear_update_checking">Buscando…</string>
+    <string name="wear_update_error">Error de Play Store</string>
 </resources>

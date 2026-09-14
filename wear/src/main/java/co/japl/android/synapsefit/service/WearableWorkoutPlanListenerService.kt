@@ -1,7 +1,6 @@
 package co.japl.android.synapsefit.service
 
 import android.net.Uri
-import androidx.room.Room
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
@@ -31,20 +30,12 @@ class WearableWorkoutPlanListenerService(
 
     override fun onCreate() {
         super.onCreate()
-        if (customPlanRepository == null || customLogRepository == null) {
-            val db =
-                Room.databaseBuilder(
-                    applicationContext,
-                    SynapseFitDatabase::class.java,
-                    "synapsefit_database.db",
-                ).addMigrations(SynapseFitDatabase.MIGRATION_6_7)
-                    .build()
-            if (customPlanRepository == null) {
-                customPlanRepository = WorkoutPlanRepositoryAdapter(db.workoutPlanDao())
-            }
-            if (customLogRepository == null) {
-                customLogRepository = WorkoutLogRepositoryAdapter(db.workoutLogDao())
-            }
+        co.japl.android.synapsefit.WearDependencyProvider.initialize(applicationContext)
+        if (customPlanRepository == null) {
+            customPlanRepository = co.japl.android.synapsefit.WearDependencyProvider.workoutPlanRepository
+        }
+        if (customLogRepository == null) {
+            customLogRepository = co.japl.android.synapsefit.WearDependencyProvider.workoutLogRepository
         }
         requestActivePlanStartupIngestion()
     }
