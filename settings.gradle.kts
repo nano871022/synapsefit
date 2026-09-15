@@ -27,11 +27,24 @@ include(":ui")
 include(":util")
 include(":wear")
 
-val aboutFolder = file("../japl-android-about-module")
-if(aboutFolder.exists()) {
+fun configureAboutProject(aboutFolder: File, buildFileName: String) {
     include(":about")
     project(":about").projectDir = aboutFolder
-    project(":about").buildFileName = "../synapsefit/about-consumer.gradle.kts"
-}else{
-  include(":about")
+    project(":about").buildFileName = buildFileName
+}
+
+val localAboutFolder = file("../japl-android-about-module")
+val actionsAboutFolder = file("about")
+when {
+    localAboutFolder.exists() -> configureAboutProject(
+        localAboutFolder,
+        "../synapsefit/about-consumer.gradle.kts",
+    )
+    actionsAboutFolder.exists() -> configureAboutProject(
+        actionsAboutFolder,
+        "../about-consumer.gradle.kts",
+    )
+    else -> {
+        include(":about")
+    }
 }

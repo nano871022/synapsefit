@@ -11,6 +11,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Checkout japl about module
+        uses: actions/checkout@v4
+        with:
+          repository: nano871022/japl-android-about-module
+          path: about
+
       - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
