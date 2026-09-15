@@ -34,9 +34,7 @@ import co.japl.android.synapsefit.app.ui.dashboard.DashboardScreen
 import co.japl.android.synapsefit.app.ui.history.WorkoutHistoryScreen
 import co.japl.android.synapsefit.app.ui.measurements.BodyMeasurementsScreen
 import co.japl.android.synapsefit.app.ui.measurements.MeasurementProgressGraphScreen
-import co.japl.android.synapsefit.app.ui.profile.ProfileConnectionScreen
 import co.japl.android.synapsefit.app.ui.profile.UserProfileScreen
-import co.japl.android.synapsefit.app.ui.settings.AboutDeveloperScreen
 import co.japl.android.synapsefit.app.ui.settings.BackupSyncScreen
 import co.japl.android.synapsefit.app.ui.settings.DatabaseExplorerScreen
 import co.japl.android.synapsefit.app.ui.settings.LLMSettingsScreen
