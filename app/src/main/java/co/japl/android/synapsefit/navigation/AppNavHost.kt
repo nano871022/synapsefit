@@ -36,7 +36,7 @@ import co.japl.android.synapsefit.app.ui.history.WorkoutHistoryScreen
 import co.japl.android.synapsefit.app.ui.measurements.BodyMeasurementsScreen
 import co.japl.android.synapsefit.app.ui.measurements.MeasurementProgressGraphScreen
 import co.japl.android.synapsefit.app.ui.profile.UserProfileScreen
-import co.japl.android.synapsefit.app.ui.settings.BackupSyncScreen
+import co.japl.android.synapsefit.app.ui.settings.GoogleAccountScreen
 import co.japl.android.synapsefit.app.ui.settings.DatabaseExplorerScreen
 import co.japl.android.synapsefit.app.ui.settings.LLMSettingsScreen
 import co.japl.android.synapsefit.app.ui.splash.SplashScreen
@@ -420,7 +420,7 @@ fun AppNavHost(
             val syncState by syncViewModel.uiState.collectAsState()
             val authState by authViewModel.uiState.collectAsState()
 
-            BackupSyncScreen(
+            GoogleAccountScreen(
                 googleAuthState = authState,
                 syncState = syncState,
                 onGoogleLoginClick = { authViewModel.onGoogleLoginClicked(appContext) },

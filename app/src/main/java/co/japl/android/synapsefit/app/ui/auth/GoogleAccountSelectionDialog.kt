@@ -175,7 +175,7 @@ private fun AddAccountRow(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun GoogleAccountSelectionDialogPreview() {
     MaterialThemeComposeUI {

@@ -47,7 +47,7 @@ import co.japl.android.synapsefit.util.DateTimeUtils
 
 @Suppress("LongParameterList")
 @Composable
-fun BackupSyncScreen(
+fun GoogleAccountScreen(
     googleAuthState: GoogleAuthUiState,
     syncState: BackupSyncUiState,
     onGoogleLoginClick: () -> Unit,
@@ -88,6 +88,13 @@ fun BackupSyncScreen(
                             null
                         },
                 )
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                )
+
+                BackupAndRestore( syncState,onBackupNowClick,onRestoreNowClick, googleAuthState)
             }
             else -> {
                 GoogleSignInPromptScreen(
@@ -102,65 +109,9 @@ fun BackupSyncScreen(
             color = MaterialTheme.colorScheme.outlineVariant,
         )
 
-        // Section 2: Backup and Restore Controls
-        Text(
-            text = stringResource(R.string.backup_sync),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+        DriveAndTools(onNavigateDbExplorer)
 
-        syncState.errorMessage?.let { err ->
-            Text(
-                text = err,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-            )
-        }
 
-        BackupMetadataCard(
-            lastBackupTimestamp = syncState.lastBackupTimestamp,
-            sha256Hash = syncState.integrityHashSha256,
-        )
-
-        val isLoading =
-            syncState.syncState is SyncState.Syncing ||
-                syncState.syncState is SyncState.Restoring ||
-                syncState.syncState is SyncState.Checking
-
-        val isConnected = googleAuthState is GoogleAuthUiState.Authenticated || syncState.isDriveConnected
-
-        NeonButton(
-            text = stringResource(R.string.backup_now),
-            onClick = onBackupNowClick,
-            isLoading = isLoading,
-        )
-
-        OutlinedButton(
-            onClick = onRestoreNowClick,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading && isConnected,
-        ) {
-            Text(text = stringResource(R.string.restore_from_drive))
-        }
-
-        HorizontalDivider(
-            modifier = Modifier.padding(vertical = 4.dp),
-            color = MaterialTheme.colorScheme.outlineVariant,
-        )
-
-        // Section 3: Database Explorer Shortcut
-        Text(
-            text = stringResource(R.string.tools_and_storage),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-
-        NavigationShortcutCard(
-            title = stringResource(R.string.db_explorer_title),
-            description = stringResource(R.string.db_explorer_desc),
-            icon = Icons.Default.Storage,
-            onClick = onNavigateDbExplorer,
-        )
     }
 
     if (googleAuthState is GoogleAuthUiState.AccountSelectionRequired) {
@@ -171,6 +122,73 @@ fun BackupSyncScreen(
             onDismissRequest = onDismissAccountSelection,
         )
     }
+}
+
+@Composable
+private fun BackupAndRestore(
+    syncState: BackupSyncUiState,
+    onBackupNowClick: () -> Unit,
+    onRestoreNowClick: () -> Unit,
+    googleAuthState: GoogleAuthUiState
+){
+    // Section 2: Backup and Restore Controls
+    Text(
+        text = stringResource(R.string.backup_sync),
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onBackground,
+    )
+
+    syncState.errorMessage?.let { err ->
+        Text(
+            text = err,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
+
+    BackupMetadataCard(
+        lastBackupTimestamp = syncState.lastBackupTimestamp,
+        sha256Hash = syncState.integrityHashSha256,
+    )
+
+    val isLoading =
+        syncState.syncState is SyncState.Syncing ||
+            syncState.syncState is SyncState.Restoring ||
+            syncState.syncState is SyncState.Checking
+
+    val isConnected = googleAuthState is GoogleAuthUiState.Authenticated || syncState.isDriveConnected
+
+    NeonButton(
+        text = stringResource(R.string.backup_now),
+        onClick = onBackupNowClick,
+        isLoading = isLoading,
+    )
+
+    OutlinedButton(
+        onClick = onRestoreNowClick,
+        modifier = Modifier.fillMaxWidth(),
+        enabled = !isLoading && isConnected,
+    ) {
+        Text(text = stringResource(R.string.restore_from_drive))
+    }
+}
+
+
+@Composable
+private fun DriveAndTools(onNavigateDbExplorer: () -> Unit){
+    // Section 3: Database Explorer Shortcut
+    Text(
+        text = stringResource(R.string.tools_and_storage),
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onBackground,
+    )
+
+    NavigationShortcutCard(
+        title = stringResource(R.string.db_explorer_title),
+        description = stringResource(R.string.db_explorer_desc),
+        icon = Icons.Default.Storage,
+        onClick = onNavigateDbExplorer,
+    )
 }
 
 @Composable
@@ -192,104 +210,41 @@ private fun NavigationShortcutCard(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
             ),
     ) {
-        Row(
-            modifier = Modifier.padding(MaterialTheme.spacing.medium),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        Column(
+            modifier = Modifier.padding(MaterialTheme.spacing.medium)
         ) {
             KineticCard(
                 modifier = Modifier,
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.padding(12.dp),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
-
-            Column(
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-fun GoogleDriveAccountCard(
-    connectedEmail: String?,
-    isConnected: Boolean,
-    modifier: Modifier = Modifier,
-    onSignInClick: () -> Unit = {},
-    onSignOutClick: () -> Unit = {},
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
-    ) {
-        Column(
-            modifier = Modifier.padding(MaterialTheme.spacing.medium).fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.drive_appdata),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
+                Row() {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.padding(12.dp),
+                        tint = MaterialTheme.colorScheme.primary,
                     )
-                    val statusText =
-                        connectedEmail ?: if (isConnected) {
-                            stringResource(R.string.connected)
-                        } else {
-                            stringResource(R.string.not_connected)
-                        }
-                    Text(
-                        text = statusText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Icon(
-                    imageVector = if (isConnected) Icons.Default.CloudDone else Icons.Default.CloudOff,
-                    contentDescription = null,
-                    tint = if (isConnected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                )
-            }
 
-            if (isConnected) {
-                OutlinedButton(onClick = onSignOutClick, modifier = Modifier.align(Alignment.End)) {
-                    Text(text = stringResource(R.string.sign_out))
-                }
-            } else {
-                OutlinedButton(onClick = onSignInClick, modifier = Modifier.align(Alignment.End)) {
-                    Text(text = stringResource(R.string.sign_in_google))
+                    Column(
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = description,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
@@ -348,9 +303,9 @@ fun BackupMetadataCard(
 
 @Preview(showBackground = true)
 @Composable
-fun BackupSyncScreenPreview() {
+fun GoogleAccountScreenSyncPreview() {
     MaterialThemeComposeUI {
-        BackupSyncScreen(
+        GoogleAccountScreen(
             googleAuthState = GoogleAuthUiState.Authenticated("usuario@gmail.com", "Atleta Synapse"),
             syncState =
                 BackupSyncUiState(
@@ -359,6 +314,48 @@ fun BackupSyncScreenPreview() {
                     lastBackupTimestamp = System.currentTimeMillis(),
                     integrityHashSha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                 ),
+            onGoogleLoginClick = {},
+            onSignOutClick = {},
+            onSelectAccountClick = {},
+            onAddAnotherAccountClick = {},
+            onDismissAccountSelection = {},
+            onBackupNowClick = {},
+            onRestoreNowClick = {},
+            onNavigateDbExplorer = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GoogleAccountScreenAuthingPreview() {
+    val auth = GoogleAuthUiState.Authenticating
+    MaterialThemeComposeUI {
+        GoogleAccountScreen(
+            googleAuthState = auth,
+            syncState =
+                BackupSyncUiState(),
+            onGoogleLoginClick = {},
+            onSignOutClick = {},
+            onSelectAccountClick = {},
+            onAddAnotherAccountClick = {},
+            onDismissAccountSelection = {},
+            onBackupNowClick = {},
+            onRestoreNowClick = {},
+            onNavigateDbExplorer = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GoogleAccountScreenNoSyncPreview() {
+    val auth = GoogleAuthUiState.Idle
+    MaterialThemeComposeUI {
+        GoogleAccountScreen(
+            googleAuthState = auth,
+            syncState =
+                BackupSyncUiState(),
             onGoogleLoginClick = {},
             onSignOutClick = {},
             onSelectAccountClick = {},
