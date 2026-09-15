@@ -35,7 +35,7 @@ import co.japl.android.synapsefit.app.ui.dashboard.DashboardScreen
 import co.japl.android.synapsefit.app.ui.history.WorkoutHistoryScreen
 import co.japl.android.synapsefit.app.ui.measurements.BodyMeasurementsScreen
 import co.japl.android.synapsefit.app.ui.measurements.MeasurementProgressGraphScreen
-import co.japl.android.synapsefit.app.ui.profile.ProfileConnectionScreen
+import co.japl.android.synapsefit.app.ui.profile.UserProfileScreen
 import co.japl.android.synapsefit.app.ui.settings.AboutDeveloperScreen
 import co.japl.android.synapsefit.app.ui.settings.BackupSyncScreen
 import co.japl.android.synapsefit.app.ui.settings.DatabaseExplorerScreen
@@ -121,7 +121,7 @@ fun AppNavHost(
             )
         }
 
-        // Perfil y Conexión
+        // Perfil de Usuario
         composable(Routes.USER_PROFILE) {
             val profileViewModel: UserProfileViewModel =
                 viewModel(
@@ -140,39 +140,18 @@ fun AppNavHost(
                             }
                         },
                 )
-            val authViewModel: GoogleAuthViewModel =
-                viewModel(
-                    factory =
-                        object : ViewModelProvider.Factory {
-                            @Suppress("UNCHECKED_CAST")
-                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                return GoogleAuthViewModel(
-                                    googleAuthRepository = dependencyContainer.googleAuthRepository,
-                                ) as T
-                            }
-                        },
-                )
 
             val profileState by profileViewModel.uiState.collectAsState()
-            val authState by authViewModel.uiState.collectAsState()
 
-            ProfileConnectionScreen(
-                googleAuthState = authState,
-                profileState = profileState,
-                onGoogleLoginClick = { authViewModel.onGoogleLoginClicked(appContext) },
-                onSignOutClick = authViewModel::onSignOutClicked,
-                onSelectAccountClick = authViewModel::onSelectAccountClicked,
-                onAddAnotherAccountClick = authViewModel::onAddAnotherAccountClicked,
-                onDismissAccountSelection = authViewModel::onErrorDismissed,
-                onNavigateBackup = { navController.navigate(Routes.SETTINGS_BACKUP) },
-                onNavigateDbExplorer = { navController.navigate(Routes.DATABASE_EXPLORER) },
+            UserProfileScreen(
+                state = profileState,
                 onFullNameChange = profileViewModel::onFullNameChange,
                 onBirthDateChange = profileViewModel::onBirthDateChange,
                 onGenderChange = profileViewModel::onGenderChange,
                 onHeightCmChange = profileViewModel::onHeightCmChange,
                 onBloodTypeChange = profileViewModel::onBloodTypeChange,
                 onMedicalConditionsChange = profileViewModel::onMedicalConditionsChange,
-                onSaveProfileClick = profileViewModel::saveProfile,
+                onSaveClick = profileViewModel::saveProfile,
                 onRecalculateMedicalEvaluation = profileViewModel::recalculateMedicalEvaluation,
                 onRetryMedicalConditions = profileViewModel::retryMedicalEvaluation,
                 onDismissMedicalDialog = profileViewModel::dismissMedicalDialog,
@@ -409,9 +388,9 @@ fun AppNavHost(
             WorkoutHistoryScreen(state = state)
         }
 
-        // V9: Backup Sync
+        // V9: Cuenta de Google & Respaldo Nube
         composable(Routes.SETTINGS_BACKUP) {
-            val viewModel: BackupSyncViewModel =
+            val syncViewModel: BackupSyncViewModel =
                 viewModel(
                     factory =
                         object : ViewModelProvider.Factory {
@@ -419,14 +398,40 @@ fun AppNavHost(
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return BackupSyncViewModel(
                                     performDriveSyncUseCase = dependencyContainer.performDriveSyncUseCase,
+                                    googleAuthRepository = dependencyContainer.googleAuthRepository,
+                                    uploadDatabaseBackupUseCase = dependencyContainer.uploadDatabaseBackupUseCase,
+                                    downloadAndRestoreDatabaseUseCase = dependencyContainer.downloadAndRestoreDatabaseUseCase,
                                 ) as T
                             }
                         },
                 )
-            val state by viewModel.uiState.collectAsState()
+            val authViewModel: GoogleAuthViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return GoogleAuthViewModel(
+                                    googleAuthRepository = dependencyContainer.googleAuthRepository,
+                                ) as T
+                            }
+                        },
+                )
+
+            val syncState by syncViewModel.uiState.collectAsState()
+            val authState by authViewModel.uiState.collectAsState()
+
             BackupSyncScreen(
-                state = state,
-                onBackupNowClick = { viewModel.triggerBackup(byteArrayOf()) },
+                googleAuthState = authState,
+                syncState = syncState,
+                onGoogleLoginClick = { authViewModel.onGoogleLoginClicked(appContext) },
+                onSignOutClick = authViewModel::onSignOutClicked,
+                onSelectAccountClick = authViewModel::onSelectAccountClicked,
+                onAddAnotherAccountClick = authViewModel::onAddAnotherAccountClicked,
+                onDismissAccountSelection = authViewModel::onErrorDismissed,
+                onBackupNowClick = syncViewModel::triggerBackupNow,
+                onRestoreNowClick = syncViewModel::triggerRestoreNow,
+                onNavigateDbExplorer = { navController.navigate(Routes.DATABASE_EXPLORER) },
             )
         }
 
