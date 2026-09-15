@@ -308,7 +308,8 @@ fun BackupMetadataCard(
 fun GoogleAccountScreenSyncPreview() {
     MaterialThemeComposeUI {
         GoogleAccountScreen(
-            googleAuthState = GoogleAuthUiState.Authenticated(
+            googleAuthState =
+                GoogleAuthUiState.Authenticated(
                 "usuario@gmail.com",
                 "Atleta Synapse",
             ),
