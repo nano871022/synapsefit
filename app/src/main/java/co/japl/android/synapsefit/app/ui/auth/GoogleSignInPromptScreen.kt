@@ -43,7 +43,7 @@ fun GoogleSignInPromptScreen(
                 .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
-        ) {
+    ) {
         KineticCard(
             modifier = Modifier.fillMaxWidth(),
         ) {

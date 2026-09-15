@@ -1,4 +1,10 @@
-@file:Suppress("LongParameterList", "FunctionNaming", "LongMethod", "UnusedPrivateMember", "MagicNumber")
+@file:Suppress(
+    "LongParameterList",
+    "FunctionNaming",
+    "LongMethod",
+    "UnusedPrivateMember",
+    "MagicNumber",
+)
 
 package co.japl.android.synapsefit.app.ui.settings
 
@@ -14,8 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.CloudDone
-import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,7 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -94,8 +97,9 @@ fun GoogleAccountScreen(
                     color = MaterialTheme.colorScheme.outlineVariant,
                 )
 
-                BackupAndRestore( syncState,onBackupNowClick,onRestoreNowClick, googleAuthState)
+                BackupAndRestore(syncState, onBackupNowClick, onRestoreNowClick, googleAuthState)
             }
+
             else -> {
                 GoogleSignInPromptScreen(
                     state = googleAuthState,
@@ -129,8 +133,8 @@ private fun BackupAndRestore(
     syncState: BackupSyncUiState,
     onBackupNowClick: () -> Unit,
     onRestoreNowClick: () -> Unit,
-    googleAuthState: GoogleAuthUiState
-){
+    googleAuthState: GoogleAuthUiState,
+) {
     // Section 2: Backup and Restore Controls
     Text(
         text = stringResource(R.string.backup_sync),
@@ -156,7 +160,8 @@ private fun BackupAndRestore(
             syncState.syncState is SyncState.Restoring ||
             syncState.syncState is SyncState.Checking
 
-    val isConnected = googleAuthState is GoogleAuthUiState.Authenticated || syncState.isDriveConnected
+    val isConnected =
+        googleAuthState is GoogleAuthUiState.Authenticated || syncState.isDriveConnected
 
     NeonButton(
         text = stringResource(R.string.backup_now),
@@ -175,7 +180,7 @@ private fun BackupAndRestore(
 
 
 @Composable
-private fun DriveAndTools(onNavigateDbExplorer: () -> Unit){
+private fun DriveAndTools(onNavigateDbExplorer: () -> Unit) {
     // Section 3: Database Explorer Shortcut
     Text(
         text = stringResource(R.string.tools_and_storage),
@@ -211,7 +216,7 @@ private fun NavigationShortcutCard(
             ),
     ) {
         Column(
-            modifier = Modifier.padding(MaterialTheme.spacing.medium)
+            modifier = Modifier.padding(MaterialTheme.spacing.medium),
         ) {
             KineticCard(
                 modifier = Modifier,
@@ -306,7 +311,10 @@ fun BackupMetadataCard(
 fun GoogleAccountScreenSyncPreview() {
     MaterialThemeComposeUI {
         GoogleAccountScreen(
-            googleAuthState = GoogleAuthUiState.Authenticated("usuario@gmail.com", "Atleta Synapse"),
+            googleAuthState = GoogleAuthUiState.Authenticated(
+                "usuario@gmail.com",
+                "Atleta Synapse",
+            ),
             syncState =
                 BackupSyncUiState(
                     connectedAccountEmail = "usuario@gmail.com",
