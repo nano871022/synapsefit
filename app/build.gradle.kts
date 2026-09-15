@@ -48,7 +48,7 @@ dependencies {
     implementation(project(":services"))
     implementation(project(":ui"))
     implementation(project(":util"))
-    if(findProject(":about") != null){
+    if (findProject(":about") != null) {
         implementation(project(":about"))
     }
 
