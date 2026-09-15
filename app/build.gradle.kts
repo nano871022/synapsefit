@@ -48,6 +48,9 @@ dependencies {
     implementation(project(":services"))
     implementation(project(":ui"))
     implementation(project(":util"))
+    if(findProject(":about") != null){
+        implementation(project(":about"))
+    }
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

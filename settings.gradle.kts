@@ -10,6 +10,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2/") }
+        gradlePluginPortal()
     }
 }
 
@@ -25,3 +26,10 @@ include(":services:wear")
 include(":ui")
 include(":util")
 include(":wear")
+
+val aboutFolder = file("../japl-android-about-module")
+if(aboutFolder.exists()) {
+    include(":about")
+    project(":about").projectDir = aboutFolder
+    project(":about").buildFileName = "../synapsefit/about-consumer.gradle.kts"
+}
