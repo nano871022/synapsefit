@@ -22,7 +22,6 @@ import co.japl.android.synapsefit.app.controller.history.WorkoutHistoryViewModel
 import co.japl.android.synapsefit.app.controller.measurements.BodyMeasurementsViewModel
 import co.japl.android.synapsefit.app.controller.measurements.MeasurementProgressViewModel
 import co.japl.android.synapsefit.app.controller.profile.UserProfileViewModel
-import co.japl.android.synapsefit.app.controller.settings.AboutDeveloperViewModel
 import co.japl.android.synapsefit.app.controller.settings.BackupSyncViewModel
 import co.japl.android.synapsefit.app.controller.settings.DatabaseExplorerViewModel
 import co.japl.android.synapsefit.app.controller.settings.LlmSettingsViewModel
@@ -36,7 +35,6 @@ import co.japl.android.synapsefit.app.ui.history.WorkoutHistoryScreen
 import co.japl.android.synapsefit.app.ui.measurements.BodyMeasurementsScreen
 import co.japl.android.synapsefit.app.ui.measurements.MeasurementProgressGraphScreen
 import co.japl.android.synapsefit.app.ui.profile.ProfileConnectionScreen
-import co.japl.android.synapsefit.app.ui.settings.AboutDeveloperScreen
 import co.japl.android.synapsefit.app.ui.settings.BackupSyncScreen
 import co.japl.android.synapsefit.app.ui.settings.DatabaseExplorerScreen
 import co.japl.android.synapsefit.app.ui.settings.LLMSettingsScreen
@@ -45,6 +43,7 @@ import co.japl.android.synapsefit.app.ui.workout.AICoachGeneratorScreen
 import co.japl.android.synapsefit.app.ui.workout.ActiveWorkoutSessionScreen
 import co.japl.android.synapsefit.app.ui.workout.WorkoutPlanDetailScreen
 import co.japl.android.synapsefit.app.ui.workout.WorkoutPlansScreen
+import co.com.japl.homeconnect.about.ui.About
 
 @Composable
 fun AppNavHost(
@@ -472,9 +471,12 @@ fun AppNavHost(
 
         // V11: About Developer
         composable(Routes.SETTINGS_ABOUT) {
-            val viewModel: AboutDeveloperViewModel = viewModel()
-            val state by viewModel.uiState.collectAsState()
-            AboutDeveloperScreen(state = state)
+            val appContext = LocalContext.current
+            val packageInfo = appContext.packageManager.getPackageInfo(appContext.packageName, 0)
+            About(
+                versionDetail = packageInfo.versionName.orEmpty(),
+                applicationId = appContext.packageName,
+            )
         }
     }
 }

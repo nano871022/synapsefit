@@ -13,6 +13,10 @@ subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
     apply(plugin = "io.gitlab.arturbosch.detekt")
 
+    configurations.configureEach {
+        resolutionStrategy.force("org.jetbrains.kotlin:kotlin-stdlib:2.0.20")
+    }
+
     configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
         buildUponDefaultConfig = true
     }
