@@ -27,7 +27,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run Ktlint & Detekt
-        run: ./gradlew ktlintCheck detekt -x :about:ktlintCheck :about:detekt
+        run: ./gradlew ktlintCheck detekt -x :about:ktlintCheck -x :about:detekt
 
       - name: Upload Static Analysis Reports Artifact
         if: always()
