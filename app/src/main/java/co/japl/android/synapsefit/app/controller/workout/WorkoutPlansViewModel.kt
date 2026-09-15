@@ -38,6 +38,7 @@ class WorkoutPlansViewModel(
     }
 
     fun loadPlans() {
+        _uiState.update { it.copy(isLoading = false) }
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             appNavigator?.setLoading(true)
@@ -69,7 +70,7 @@ class WorkoutPlansViewModel(
                     )
                 }
                 appNavigator?.setLoading(false)
-            }
+            }?:_uiState.update { it.copy(isLoading = false) }
         }
     }
 }

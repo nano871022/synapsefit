@@ -15,8 +15,10 @@ import co.japl.android.synapsefit.app.controller.workout.WorkoutPlansViewModel
 import co.japl.android.synapsefit.core.domain.model.AnatomicalZone
 import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.TrainingLocation
+import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
+import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
 import io.mockk.every
 import io.mockk.mockk
@@ -112,9 +114,22 @@ class ViewModelsTest {
     @Test
     fun activeWorkoutSessionViewModel_startSession_setsPlanId() =
         runTest {
-            val viewModel = ActiveWorkoutSessionViewModel()
+            val planRepository = mockk<WorkoutPlanRepositoryPort>()
+            val plan =
+                WorkoutPlan(
+                    id = "plan-123",
+                    title = "Test plan",
+                    goalDescription = "Test goal",
+                    createdAt = 0L,
+                    updatedAt = 0L,
+                )
+            every { planRepository.getPlanWithExercises("plan-123") } returns flowOf(plan to emptyList())
+
+            val viewModel = ActiveWorkoutSessionViewModel(workoutPlanRepositoryPort = planRepository)
             viewModel.startSession("plan-123")
+
             assertEquals("plan-123", viewModel.uiState.value.planId)
+            viewModel.finishSession()
         }
 
     @Test
