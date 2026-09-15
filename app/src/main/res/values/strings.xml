@@ -10,7 +10,7 @@
     <string name="nav_measurements_progress">Tendencias</string>
     <string name="nav_workout_plans">Planes de Rutina</string>
     <string name="nav_workout_history">Historial</string>
-    <string name="nav_settings_backup">Respaldo Nube</string>
+    <string name="nav_settings_backup">Cuenta de Google</string>
     <string name="settings_llm">Ajustes LLM</string>
     <string name="settings_about">Acerca de</string>
 
