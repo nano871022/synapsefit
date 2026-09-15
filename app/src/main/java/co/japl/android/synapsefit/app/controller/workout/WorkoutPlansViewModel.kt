@@ -70,7 +70,7 @@ class WorkoutPlansViewModel(
                     )
                 }
                 appNavigator?.setLoading(false)
-            }?:_uiState.update { it.copy(isLoading = false) }
+            } ?: _uiState.update { it.copy(isLoading = false) }
         }
     }
 }
