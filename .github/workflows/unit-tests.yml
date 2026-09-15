@@ -32,3 +32,13 @@ jobs:
                     :ui:test \
                     :wear:test \
                     :app:testDebugUnitTest
+
+      - name: Upload Unit Test Results Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: |
+            **/build/reports/tests/
+            **/build/test-results/
+          if-no-files-found: warn

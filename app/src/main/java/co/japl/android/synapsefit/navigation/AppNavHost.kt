@@ -15,6 +15,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import co.com.japl.homeconnect.about.ui.About
 import co.japl.android.synapsefit.DependencyContainer
 import co.japl.android.synapsefit.app.controller.auth.GoogleAuthViewModel
 import co.japl.android.synapsefit.app.controller.dashboard.DashboardViewModel
@@ -43,7 +44,6 @@ import co.japl.android.synapsefit.app.ui.workout.AICoachGeneratorScreen
 import co.japl.android.synapsefit.app.ui.workout.ActiveWorkoutSessionScreen
 import co.japl.android.synapsefit.app.ui.workout.WorkoutPlanDetailScreen
 import co.japl.android.synapsefit.app.ui.workout.WorkoutPlansScreen
-import co.com.japl.homeconnect.about.ui.About
 
 @Composable
 fun AppNavHost(
