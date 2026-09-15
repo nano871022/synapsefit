@@ -114,8 +114,6 @@ fun GoogleAccountScreen(
         )
 
         DriveAndTools(onNavigateDbExplorer)
-
-
     }
 
     if (googleAuthState is GoogleAuthUiState.AccountSelectionRequired) {
@@ -178,7 +176,6 @@ private fun BackupAndRestore(
     }
 }
 
-
 @Composable
 private fun DriveAndTools(onNavigateDbExplorer: () -> Unit) {
     // Section 3: Database Explorer Shortcut
@@ -221,10 +218,10 @@ private fun NavigationShortcutCard(
             KineticCard(
                 modifier = Modifier,
             ) {
-                Row() {
+                Row {
                     Icon(
                         imageVector = icon,
-                        contentDescription = null,
+                        contentDescription = "",
                         modifier = Modifier.padding(12.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
