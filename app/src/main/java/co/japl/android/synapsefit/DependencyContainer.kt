@@ -68,7 +68,7 @@ class DependencyContainer(context: Context) {
     }
 
     val googleAuthRepository: GoogleAuthRepository by lazy {
-        GoogleAuthRepositoryImpl()
+        GoogleAuthRepositoryImpl(context.applicationContext)
     }
 
     val driveSyncPort: DriveSyncPort by lazy {

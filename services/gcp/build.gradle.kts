@@ -27,6 +27,7 @@ dependencies {
 
     implementation(libs.security.crypto)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.play.services.auth)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

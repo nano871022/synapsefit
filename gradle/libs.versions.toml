@@ -37,6 +37,7 @@ security-crypto = "1.1.0-alpha06"
 wear-compose = "1.4.0"
 horologist = "0.6.17"
 play-services-wearable = "18.2.0"
+play-services-auth = "21.2.0"
 
 # Testing
 junit = "4.13.2"
@@ -89,6 +90,7 @@ wear-compose-navigation = { group = "androidx.wear.compose", name = "compose-nav
 horologist-compose-layout = { group = "com.google.android.horologist", name = "horologist-compose-layout", version.ref = "horologist" }
 horologist-compose-material = { group = "com.google.android.horologist", name = "horologist-compose-material", version.ref = "horologist" }
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "play-services-wearable" }
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "play-services-auth" }
 
 # Unit Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }
