@@ -32,4 +32,6 @@ if(aboutFolder.exists()) {
     include(":about")
     project(":about").projectDir = aboutFolder
     project(":about").buildFileName = "../synapsefit/about-consumer.gradle.kts"
+}else{
+  include(":about")
 }
