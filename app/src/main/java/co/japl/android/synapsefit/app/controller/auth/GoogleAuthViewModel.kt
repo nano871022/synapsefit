@@ -1,6 +1,5 @@
 package co.japl.android.synapsefit.app.controller.auth
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.AuthState
@@ -65,7 +64,6 @@ class GoogleAuthViewModel(
                             GoogleAuthUiState.Error(
                                 message = err.message ?: "Authentication failed",
                             )
-                        Log.e(this.javaClass.name, err.message, err)
                     },
                 )
             }
