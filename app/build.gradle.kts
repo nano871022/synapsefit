@@ -1,5 +1,3 @@
-import java.io.File
-
 abstract class CopyGoogleServicesTask : DefaultTask() {
     @get:InputFile
     @get:Optional
@@ -20,7 +18,8 @@ abstract class CopyGoogleServicesTask : DefaultTask() {
     }
 }
 
-val copyGoogleServicesJson = tasks.register<CopyGoogleServicesTask>("copyGoogleServicesJson") {
+val copyGoogleServicesJson =
+    tasks.register<CopyGoogleServicesTask>("copyGoogleServicesJson") {
     description = "Copia el archivo google-services.json si no existe localmente."
     // Cambia la ruta según la ubicación de tu repositorio externo
     sourceFile.set(layout.projectDirectory.file("../../japl-properties/synapseefit/google-services.json"))
