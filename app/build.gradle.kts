@@ -1,20 +1,23 @@
 abstract class CopyGoogleServicesTask : DefaultTask() {
-    @get:InputFile
+    @get:Input
     @get:Optional
-    abstract val sourceFile: RegularFileProperty
+    abstract val sourceFilePath: Property<File>
 
     @get:OutputFile
     abstract val targetFile: RegularFileProperty
 
     @TaskAction
     fun copy() {
-        val src = sourceFile.orNull?.asFile
+        val srcPath = sourceFilePath.orNull
         val dest = targetFile.get().asFile
 
-        if (!dest.exists() && src != null && src.exists()) {
-            src.copyTo(dest, overwrite = true)
+        if (!dest.exists() && srcPath != null && srcPath.exists()) {
+            srcPath.copyTo(dest, overwrite = true)
             logger.lifecycle("--> [Build Local] google-services.json copiado exitosamente.")
+        } else {
+            logger.lifecycle("--> [Build Local] google-services.json No fue encontrado.")
         }
+
     }
 }
 
@@ -22,8 +25,14 @@ val copyGoogleServicesJson =
     tasks.register<CopyGoogleServicesTask>("copyGoogleServicesJson") {
         description = "Copia el archivo google-services.json si no existe localmente."
         // Cambia la ruta según la ubicación de tu repositorio externo
-        sourceFile.set(layout.projectDirectory.file("../../japl-properties/synapseefit/google-services.json"))
-        targetFile.set(layout.projectDirectory.file("google-services.json"))
+        var externalFile = layout.projectDirectory.file("../../japl-properties/synapseefit/google-services.json").asFile
+        var target = layout.projectDirectory.file("google-services.json")
+        sourceFilePath.set(externalFile)
+        targetFile.set(target)
+
+        onlyIf {
+            !target.asFile.exists()
+        }
     }
 
 tasks.configureEach {
