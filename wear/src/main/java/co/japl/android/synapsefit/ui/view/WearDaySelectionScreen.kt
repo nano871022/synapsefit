@@ -18,6 +18,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
@@ -33,6 +35,7 @@ import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.compose.material.TitleCard
 import co.com.japl.ui.theme.BackgroundDark
+import co.com.japl.ui.theme.MaterialThemeComposeUI
 import co.com.japl.ui.theme.OnPrimaryDark
 import co.com.japl.ui.theme.OnSurfaceDark
 import co.com.japl.ui.theme.PrimaryCyan
@@ -55,7 +58,9 @@ fun WearDaySelectionScreen(
     val listState = rememberScalingLazyListState()
 
     Scaffold(
-        modifier = modifier.fillMaxSize().background(BackgroundDark),
+        modifier = modifier
+            .fillMaxSize()
+            .background(BackgroundDark),
         timeText = { TimeText() },
         positionIndicator = { PositionIndicator(scalingLazyListState = listState) },
     ) {
@@ -135,7 +140,9 @@ fun WearDaySelectionScreen(
                                 iconColor = OnSurfaceDark,
                             )
                         },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                 )
             }
         }
@@ -239,5 +246,22 @@ private fun SessionCardItem(
                 color = OnSurfaceDark.copy(alpha = 0.8f),
             )
         }
+    }
+}
+
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Composable
+private fun WearDaySelectionScreenPreview(){
+    MaterialThemeComposeUI {
+        WearDaySelectionScreen(
+            sessions = emptyList(),
+            onSelectSession = { plan, id -> },
+            modifier = Modifier,
+            checkingUpdate = true,
+            updateMessageResId = R.string.wear_check_update,
+            isUpdateAvailable = true,
+            onCheckUpdate = {  },
+            onPerformUpdate = { },
+        )
     }
 }

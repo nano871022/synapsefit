@@ -49,4 +49,10 @@
     <string name="wear_no_update">App up to date</string>
     <string name="wear_update_checking">Checking…</string>
     <string name="wear_update_error">Play Store error</string>
+    <string name="next_exercise">Next exercise</string>
+    <string name="completed_set">Completed Set</string>
+    <string name="set_of_target">Set %d of %d • %s sets</string>
+    <string name="reps">Sets</string>
+    <string name="weight">Weight</string>
+    <string name="weight_avg">Avg %d lb Weight</string>
 </resources>

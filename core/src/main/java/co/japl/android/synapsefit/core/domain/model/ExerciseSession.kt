@@ -10,5 +10,6 @@ data class ExerciseSession(
     val restSeconds: Int,
     val day: Int = 1,
     val completedSets: Int = 0,
+    val weightAvg:Int = 0,
     val isCompleted: Boolean = false,
 )

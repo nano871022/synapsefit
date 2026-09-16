@@ -21,6 +21,8 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -29,6 +31,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
@@ -48,6 +52,7 @@ import androidx.wear.compose.material.TimeText
 import androidx.wear.compose.material.TitleCard
 import co.com.japl.ui.theme.BackgroundDark
 import co.com.japl.ui.theme.ErrorContainerDark
+import co.com.japl.ui.theme.MaterialThemeComposeUI
 import co.com.japl.ui.theme.OnPrimaryDark
 import co.com.japl.ui.theme.OnSurfaceDark
 import co.com.japl.ui.theme.PrimaryCyan
@@ -55,6 +60,7 @@ import co.com.japl.ui.theme.SurfaceContainerHigh
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.core.domain.model.ExerciseSession
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
+import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutViewModel
 
 private const val SECONDS_PER_MINUTE = 60
 private const val MILLIS_PER_SECOND = 1000L
@@ -139,7 +145,7 @@ private fun HeaderCooldownSection(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(bottom = 8.dp),
+        modifier = Modifier.padding(bottom = 8.dp, top=20.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -301,6 +307,12 @@ private fun ExerciseSessionCardItem(
                     style = MaterialTheme.typography.caption2,
                     color = OnSurfaceDark.copy(alpha = COMPLETED_ALPHA),
                 )
+                Text(
+                    text = stringResource(R.string.weight_avg, session.weightAvg),
+                    style = MaterialTheme.typography.caption2,
+                    color = OnSurfaceDark.copy(alpha = COMPLETED_ALPHA),
+                )
+
             }
         }
     } else if (isCurrentSession) {
@@ -483,4 +495,67 @@ private fun FooterIndexSection(
             textAlign = TextAlign.Center,
         )
     }
+}
+
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Composable
+private fun WearCooldownTransitionScreenPreview(){
+    val state =  WearActiveWorkoutViewModel()
+    val activeUiState by state.uiState.collectAsState()
+    val exerciseSession = listExercises()
+    MaterialThemeComposeUI {
+        WearCooldownTransitionScreen(
+            trainingStepState = activeUiState.trainingStepState,
+            exerciseSessions = exerciseSession,
+            heartRateBpm = 20,
+            onAddExtraTime = {},
+            onSkipRest = {  },
+            onStartNextExercise = {},
+            onSelectExercise = { exe,id ->  },
+            modifier = Modifier,
+        )
+    }
+}
+
+@Composable
+private fun listExercises():List<ExerciseSession>{
+    return listOf(
+        ExerciseSession(
+            exerciseId = "1",
+            planId = "1",
+            name = "Exercise 1",
+            muscleGroup = "Arms",
+            targetSets = 4,
+            targetReps = "10-15",
+            restSeconds = 90,
+            day = 1,
+            completedSets = 4,
+            isCompleted = true
+        ),
+        ExerciseSession(
+            exerciseId = "2",
+            planId = "1",
+            name = "Exercise 2",
+            muscleGroup = "Arms",
+            targetSets = 4,
+            targetReps = "10-15",
+            restSeconds = 90,
+            day = 1,
+            completedSets = 2,
+            isCompleted = false
+        ),
+        ExerciseSession(
+            exerciseId = "3",
+            planId = "1",
+            name = "Exercise 3",
+            muscleGroup = "Arms",
+            targetSets = 4,
+            targetReps = "10-15",
+            restSeconds = 90,
+            day = 1,
+            completedSets = 0,
+            isCompleted = false
+        )
+
+    )
 }

@@ -6,6 +6,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Devices.WEAR_OS_SMALL_ROUND
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -15,6 +17,7 @@ import androidx.navigation.navArgument
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import co.com.japl.ui.theme.MaterialThemeComposeUI
 import co.japl.android.synapsefit.WearDependencyProvider
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
 import co.japl.android.synapsefit.ui.navigation.WearRoutes
@@ -154,6 +157,8 @@ fun WearNavHost(
                 uiState = activeUiState,
                 onIncrementReps = { activeWorkoutViewModel.incrementReps() },
                 onDecrementReps = { activeWorkoutViewModel.decrementReps() },
+                onIncrementWgt = { activeWorkoutViewModel.incrementWgt() },
+                onDecrementWgt = { activeWorkoutViewModel.decrementWgt() },
                 onCompleteSet = {
                     activeWorkoutViewModel.completeSet()
                     if (activeWorkoutViewModel.trainingStepState.value is TrainingStepState.Cooldown) {
@@ -244,5 +249,15 @@ fun WearNavHost(
                 },
             )
         }
+    }
+}
+
+@Preview(device = WEAR_OS_SMALL_ROUND, showSystemUi = true )
+@Composable
+private fun WearNavHostPreview(){
+    MaterialThemeComposeUI {
+        WearNavHost(
+
+        )
     }
 }

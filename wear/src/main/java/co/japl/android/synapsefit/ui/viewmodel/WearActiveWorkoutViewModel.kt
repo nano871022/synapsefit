@@ -407,6 +407,15 @@ class WearActiveWorkoutViewModel(
         _uiState.update { it.copy(currentReps = (it.currentReps - 1).coerceAtLeast(0)) }
     }
 
+    fun incrementWgt() {
+        _uiState.update { it.copy(currentWeight = (it.currentWeight + 1.toShort()).toShort()) }
+    }
+
+    fun decrementWgt() {
+        _uiState.update { it.copy(currentWeight = (it.currentWeight - 1.toShort()).coerceAtLeast(0)
+            .toShort()) }
+    }
+
     fun setSyncStatus(isSynced: Boolean) {
         syncPort?.onConnectionStateChanged(isSynced)
         _uiState.update { it.copy(isSyncedWithPhone = isSynced) }

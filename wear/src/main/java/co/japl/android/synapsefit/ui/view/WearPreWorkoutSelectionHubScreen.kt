@@ -26,6 +26,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Devices.WEAR_OS_SMALL_ROUND
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
@@ -40,6 +42,7 @@ import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import co.com.japl.ui.theme.BackgroundDark
+import co.com.japl.ui.theme.MaterialThemeComposeUI
 import co.com.japl.ui.theme.OnPrimaryDark
 import co.com.japl.ui.theme.OnSurfaceDark
 import co.com.japl.ui.theme.PrimaryCyan
@@ -47,6 +50,10 @@ import co.com.japl.ui.theme.SurfaceContainer
 import co.com.japl.ui.theme.SurfaceContainerHigh
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.core.domain.model.Exercise
+import co.japl.android.synapsefit.core.domain.model.ExerciseSession
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 @Suppress("LongMethod", "LongParameterList")
 @Composable
@@ -61,7 +68,9 @@ fun WearPreWorkoutSelectionHubScreen(
     val listState = rememberScalingLazyListState()
 
     Scaffold(
-        modifier = modifier.fillMaxSize().background(BackgroundDark),
+        modifier = modifier
+            .fillMaxSize()
+            .background(BackgroundDark),
         timeText = { TimeText() },
         positionIndicator = { PositionIndicator(scalingLazyListState = listState) },
     ) {
@@ -84,6 +93,7 @@ fun WearPreWorkoutSelectionHubScreen(
                     currentDay = currentDay,
                     planTitle = planTitle,
                     exerciseCount = exercises.size,
+                    onClick=onStartSession
                 )
             }
 
@@ -114,10 +124,6 @@ fun WearPreWorkoutSelectionHubScreen(
                         modifier = Modifier.padding(vertical = 4.dp, horizontal = 12.dp),
                     )
                 }
-
-                item {
-                    StartSessionButton(onStartSession = onStartSession)
-                }
             }
         }
     }
@@ -128,6 +134,7 @@ private fun HeaderCard(
     currentDay: Int,
     planTitle: String,
     exerciseCount: Int,
+    onClick: ()->Unit
 ) {
     Column(
         modifier =
@@ -136,7 +143,10 @@ private fun HeaderCard(
                 .padding(horizontal = 8.dp, vertical = 4.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(SurfaceContainer)
-                .padding(12.dp),
+                .padding(12.dp)
+                .clickable(enabled=true,onClickLabel=">"){
+                    onClick.invoke()
+                },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(
@@ -162,6 +172,13 @@ private fun HeaderCard(
                 color = PrimaryCyan,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+            )
+
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = PrimaryCyan,
+                modifier = Modifier.size(20.dp),
             )
         }
 
@@ -244,40 +261,6 @@ private fun ExerciseCardItem(
     }
 }
 
-@Composable
-private fun StartSessionButton(onStartSession: () -> Unit) {
-    Button(
-        onClick = onStartSession,
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-        colors =
-            ButtonDefaults.buttonColors(
-                backgroundColor = PrimaryCyan,
-                contentColor = OnPrimaryDark,
-            ),
-        shape = RoundedCornerShape(20.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Default.PlayArrow,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = stringResource(R.string.wear_start_session),
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-            )
-        }
-    }
-}
-
 private fun parseExerciseName(fullName: String): Pair<String, String> {
     val regex = Regex("""^(.+?)\s*\((.+)\)$""")
     val match = regex.matchEntire(fullName.trim())
@@ -286,4 +269,69 @@ private fun parseExerciseName(fullName: String): Pair<String, String> {
     } else {
         Pair(fullName.trim(), "")
     }
+}
+
+@Composable
+@Preview(device = WEAR_OS_SMALL_ROUND, showSystemUi = true)
+private fun WearPreWorkoutSelectionHubScreenPreview(){
+    val list = listExercises()
+    MaterialThemeComposeUI {
+        WearPreWorkoutSelectionHubScreen(
+            planTitle = "Plan 1",
+            currentDay = 1,
+            exercises = list,
+            onSelectExercise = { exer, pos -> },
+            onStartSession = {  },
+            modifier = Modifier,
+        )
+    }
+}
+
+@Composable
+private fun listExercises():List<Exercise>{
+    return listOf(
+        Exercise(
+            id = "1",
+            planId = "1",
+            name = "Exercise 1",
+            muscleGroup = "Arms",
+            targetSets = 4,
+            targetReps = "10-15",
+            restSeconds = 90,
+            day = 1,
+            guideVideoUrl = "",
+            guideImageUrl = "",
+            createdAt = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
+            updatedAt = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
+        ),
+        Exercise(
+            id = "2",
+            planId = "1",
+            name = "Exercise 2",
+            muscleGroup = "Arms",
+            targetSets = 4,
+            targetReps = "10-15",
+            restSeconds = 90,
+            day = 1,
+            guideVideoUrl = "",
+            guideImageUrl = "",
+            createdAt = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
+            updatedAt = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
+        ),
+        Exercise(
+            id = "3",
+            planId = "1",
+            name = "Exercise 3",
+            muscleGroup = "Arms",
+            targetSets = 4,
+            targetReps = "10-15",
+            restSeconds = 90,
+            day = 1,
+            guideVideoUrl = "",
+            guideImageUrl = "",
+            createdAt = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
+            updatedAt = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
+        )
+
+    )
 }

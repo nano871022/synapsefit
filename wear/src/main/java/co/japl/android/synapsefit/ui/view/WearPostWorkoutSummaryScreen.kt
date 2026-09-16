@@ -22,6 +22,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
@@ -39,6 +41,7 @@ import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.compose.material.TitleCard
 import co.com.japl.ui.theme.BackgroundDark
+import co.com.japl.ui.theme.MaterialThemeComposeUI
 import co.com.japl.ui.theme.OnPrimaryDark
 import co.com.japl.ui.theme.OnSurfaceDark
 import co.com.japl.ui.theme.PrimaryCyan
@@ -57,7 +60,9 @@ fun WearPostWorkoutSummaryScreen(
     val listState = rememberScalingLazyListState()
 
     Scaffold(
-        modifier = modifier.fillMaxSize().background(BackgroundDark),
+        modifier = modifier
+            .fillMaxSize()
+            .background(BackgroundDark),
         timeText = { TimeText() },
         positionIndicator = { PositionIndicator(scalingLazyListState = listState) },
     ) {
@@ -349,5 +354,18 @@ private fun ExerciseSummaryCardItem(exercise: ExerciseHistory) {
                 color = OnSurfaceDark.copy(alpha = 0.6f),
             )
         }
+    }
+}
+
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Composable
+private fun WearPostWorkoutSummaryScreenPreview(){
+    val uiState = WearPostWorkoutSummaryUiState()
+    MaterialThemeComposeUI {
+        WearPostWorkoutSummaryScreen(
+            uiState = uiState,
+            onFinish = { },
+            modifier = Modifier,
+        )
     }
 }
