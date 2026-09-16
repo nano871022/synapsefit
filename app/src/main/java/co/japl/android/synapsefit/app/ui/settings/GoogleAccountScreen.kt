@@ -309,10 +309,10 @@ fun GoogleAccountScreenSyncPreview() {
     MaterialThemeComposeUI {
         GoogleAccountScreen(
             googleAuthState =
-                    GoogleAuthUiState.Authenticated(
+                GoogleAuthUiState.Authenticated(
                     "usuario@gmail.com",
                     "Atleta Synapse",
-            ),
+                ),
             syncState =
                 BackupSyncUiState(
                     connectedAccountEmail = "usuario@gmail.com",
