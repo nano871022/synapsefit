@@ -174,6 +174,8 @@ class ActiveWorkoutSessionViewModel(
                     finishSession()
                 }
             }
+
+            else -> {}
         }
     }
 
