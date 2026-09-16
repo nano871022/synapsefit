@@ -1,6 +1,11 @@
 package co.japl.android.synapsefit.ui.view
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,19 +21,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -59,6 +58,7 @@ import java.util.Locale
 private const val SECONDS_PER_MINUTE = 60
 private const val SECONDS_PER_HOUR = 3600
 private const val CHIP_WIDTH_FRACTION = 0.85f
+private const val LIVE_BLINK_DURATION_MS = 800
 
 @Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod")
 @Composable
@@ -102,9 +102,10 @@ fun WearActiveWorkoutScreen(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
         ) {
             WorkoutHeaderRow(
                 workoutDurationSeconds = uiState.workoutDurationSeconds,
@@ -120,9 +121,10 @@ fun WearActiveWorkoutScreen(
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
             )
 
             SetAndRepsContent(
@@ -159,9 +161,10 @@ private fun WorkoutHeaderRow(
     isLiveSyncActive: Boolean = false,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 20.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -178,10 +181,11 @@ private fun WorkoutHeaderRow(
             val alpha by infiniteTransition.animateFloat(
                 initialValue = 1f,
                 targetValue = 0.2f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(800),
-                    repeatMode = RepeatMode.Reverse,
-                ),
+                animationSpec =
+                    infiniteRepeatable(
+                        animation = tween(LIVE_BLINK_DURATION_MS),
+                        repeatMode = RepeatMode.Reverse,
+                    ),
                 label = "wear_alpha_blink",
             )
             Row(
@@ -189,10 +193,11 @@ private fun WorkoutHeaderRow(
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .alpha(alpha)
-                        .background(Color.Red, CircleShape)
+                    modifier =
+                        Modifier
+                            .size(6.dp)
+                            .alpha(alpha)
+                            .background(Color.Red, CircleShape),
                 )
                 Text(
                     text = "LIVE",
@@ -254,7 +259,7 @@ private fun SetAndRepsContent(
                 R.string.reps,
                 "${uiState.currentReps}",
                 onDecrementReps,
-                onIncrementReps
+                onIncrementReps,
             )
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -263,7 +268,7 @@ private fun SetAndRepsContent(
                 R.string.weight,
                 "${uiState.currentWeight}",
                 onDecrementWgt,
-                onIncrementWgt
+                onIncrementWgt,
             )
         }
     }
@@ -271,15 +276,17 @@ private fun SetAndRepsContent(
 
 @Composable
 private fun RowScope.FieldIntValueComponent(
-    @StringRes name:Int,
-    value:String,
-    onDecrementReps:()->Unit,
-    onIncrementReps: () -> Unit){
-    Column(modifier=Modifier.weight(1f)) {
+    @StringRes name: Int,
+    value: String,
+    onDecrementReps: () -> Unit,
+    onIncrementReps: () -> Unit,
+) {
+    Column(modifier = Modifier.weight(1f)) {
         Text(
-            text=stringResource(name),
+            text = stringResource(name),
             textAlign = TextAlign.Center,
-            modifier=Modifier.fillMaxWidth())
+            modifier = Modifier.fillMaxWidth(),
+        )
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
@@ -338,7 +345,7 @@ private fun WorkoutActionButton(
     onStartNextExercise: (() -> Unit)?,
     onCompleteSet: (() -> Unit)?,
 ) {
-    val buttonText = if (isReadyForNext) R.string.next_exercise  else R.string.completed_set
+    val buttonText = if (isReadyForNext) R.string.next_exercise else R.string.completed_set
     val onClickAction = if (isReadyForNext) onStartNextExercise else onCompleteSet
 
     Chip(
@@ -357,9 +364,10 @@ private fun WorkoutActionButton(
                 textAlign = TextAlign.Center,
             )
         },
-        modifier = Modifier
-            .fillMaxWidth(CHIP_WIDTH_FRACTION)
-            .height(32.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth(CHIP_WIDTH_FRACTION)
+                .height(32.dp),
         shape = RoundedCornerShape(16.dp),
     )
 }
@@ -372,9 +380,10 @@ private fun WorkoutBottomControlRow(
     onPreviousExercise: (() -> Unit)?,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 15.dp, end=20.dp, start = 20.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 15.dp, end = 20.dp, start = 20.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -434,17 +443,17 @@ private fun formatDuration(seconds: Long): String {
     }
 }
 
-@Preview(device =  Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-internal fun WearActiveWorkoutScreenPreview1(){
-    val uiState =  WearActiveWorkoutUiState()
+internal fun WearActiveWorkoutScreenPreview1() {
+    val uiState = WearActiveWorkoutUiState()
     MaterialThemeComposeUI {
         WearActiveWorkoutScreen(
             uiState = uiState,
             onIncrementReps = {},
-            onDecrementReps = {  },
+            onDecrementReps = { },
             onIncrementWgt = {},
-            onDecrementWgt = {  },
+            onDecrementWgt = { },
             modifier = Modifier,
             onCompleteSet = {},
             onStartNextExercise = {},
@@ -455,19 +464,19 @@ internal fun WearActiveWorkoutScreenPreview1(){
     }
 }
 
-@Preview(device =  Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-internal fun WearActiveWorkoutScreenPreview2(){
-    val vm =  WearActiveWorkoutViewModel()
+internal fun WearActiveWorkoutScreenPreview2() {
+    val vm = WearActiveWorkoutViewModel()
     val uiState by vm.uiState.collectAsState()
 
     MaterialThemeComposeUI {
         WearActiveWorkoutScreen(
             uiState = uiState,
             onIncrementReps = {},
-            onDecrementReps = {  },
+            onDecrementReps = { },
             onIncrementWgt = {},
-            onDecrementWgt = {  },
+            onDecrementWgt = { },
             modifier = Modifier,
             onCompleteSet = {},
             onStartNextExercise = {},
