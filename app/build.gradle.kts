@@ -55,8 +55,8 @@ android {
         applicationId = "co.japl.android.synapsefit"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 11_00_001
-        versionName = "1.00.001Fix issue with exersice view in wear os"
+        versionCode = 11_00_012
+        versionName = "1.00.012 Fix issue with exersice view in wear os"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
