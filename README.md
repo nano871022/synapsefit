@@ -1,4 +1,4 @@
-# SynapseFit (`co.japl.android.synapsefit`)   
+# SynapseFit (`co.japl.android.synapsefit`)    
 
 > An offline-first, multi-device Android & Wear OS fitness platform engineered with a multi-module Hexagonal Architecture. SynapseFit combines AI-driven workout generation, precise body metric tracking, and total user data sovereignty.
 
