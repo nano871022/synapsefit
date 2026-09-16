@@ -181,9 +181,8 @@ class ActiveWorkoutSessionViewModel(
                             cooldownTargetTimestamp = event.cooldownTargetTimestamp,
                         )
                     }
-
-                    if (event.cooldownTargetTimestamp != null) {
-                        val diff = event.cooldownTargetTimestamp - System.currentTimeMillis()
+                    event.cooldownTargetTimestamp?.let{
+                        val diff = it - System.currentTimeMillis()
                         val remainingSec = if (diff > 0) (diff / 1000L).toInt() else 0
                         startRestTimer(remainingSec, event.cooldownTargetTimestamp)
                     }
