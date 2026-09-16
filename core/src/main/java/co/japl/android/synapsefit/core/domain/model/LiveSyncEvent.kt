@@ -1,6 +1,20 @@
 package co.japl.android.synapsefit.core.domain.model
 
 sealed interface LiveSyncEvent {
+    data class PingSession(
+        val sourceDevice: String = "MOBILE",
+    ) : LiveSyncEvent
+
+    data class ActiveSessionStatePayload(
+        val isLiveActive: Boolean,
+        val planId: String,
+        val day: Int = 1,
+        val currentExerciseId: String = "",
+        val activeSet: Int = 1,
+        val cooldownTargetTimestamp: Long? = null,
+        val completedExerciseIds: List<String> = emptyList(),
+    ) : LiveSyncEvent
+
     data class StartSession(
         val planId: String,
         val day: Int = 1,

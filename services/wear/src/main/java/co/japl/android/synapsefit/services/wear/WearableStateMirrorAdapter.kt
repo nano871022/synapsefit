@@ -1,4 +1,4 @@
-@file:Suppress("MaxLineLength", "CyclomaticComplexMethod")
+@file:Suppress("MaxLineLength", "CyclomaticComplexMethod", "LongMethod", "ReturnCount")
 
 package co.japl.android.synapsefit.services.wear
 
@@ -71,6 +71,18 @@ class WearableStateMirrorAdapter(
 
         fun serializeEvent(event: LiveSyncEvent): String {
             return when (event) {
+                is LiveSyncEvent.PingSession -> {
+                    "{\"type\":\"PingSession\",\"sourceDevice\":\"${event.sourceDevice}\"}"
+                }
+                is LiveSyncEvent.ActiveSessionStatePayload -> {
+                    val completedJoined = event.completedExerciseIds.joinToString(",") { "\"$it\"" }
+                    val targetTs = event.cooldownTargetTimestamp ?: "null"
+                    "{\"type\":\"ActiveSessionStatePayload\",\"isLiveActive\":${event.isLiveActive}," +
+                        "\"planId\":\"${event.planId}\",\"day\":${event.day}," +
+                        "\"currentExerciseId\":\"${event.currentExerciseId}\"," +
+                        "\"activeSet\":${event.activeSet},\"cooldownTargetTimestamp\":$targetTs," +
+                        "\"completedExerciseIds\":[$completedJoined]}"
+                }
                 is LiveSyncEvent.StartSession -> {
                     val pId = event.planId
                     val day = event.day
@@ -105,6 +117,28 @@ class WearableStateMirrorAdapter(
         fun deserializeEvent(json: String): LiveSyncEvent? {
             val type = extractString(json, "type") ?: return null
             return when (type) {
+                "PingSession" -> {
+                    val src = extractString(json, "sourceDevice") ?: "MOBILE"
+                    LiveSyncEvent.PingSession(src)
+                }
+                "ActiveSessionStatePayload" -> {
+                    val isLive = json.contains("\"isLiveActive\":true")
+                    val planId = extractString(json, "planId") ?: ""
+                    val day = extractInt(json, "day") ?: 1
+                    val currentExerciseId = extractString(json, "currentExerciseId") ?: ""
+                    val activeSet = extractInt(json, "activeSet") ?: 1
+                    val cooldownTargetTimestamp = extractLong(json, "cooldownTargetTimestamp")
+                    val completedExerciseIds = extractStringList(json, "completedExerciseIds")
+                    LiveSyncEvent.ActiveSessionStatePayload(
+                        isLiveActive = isLive,
+                        planId = planId,
+                        day = day,
+                        currentExerciseId = currentExerciseId,
+                        activeSet = activeSet,
+                        cooldownTargetTimestamp = cooldownTargetTimestamp,
+                        completedExerciseIds = completedExerciseIds,
+                    )
+                }
                 "StartSession" -> {
                     val planId = extractString(json, "planId") ?: ""
                     val day = extractInt(json, "day") ?: 1
@@ -175,6 +209,19 @@ class WearableStateMirrorAdapter(
         ): Double? {
             val regex = """" $key "\s*:\s* (-?\d+(?:\.\d+)?) """.toRegex(RegexOption.COMMENTS)
             return regex.find(json)?.groupValues?.get(1)?.toDoubleOrNull()
+        }
+
+        private fun extractStringList(
+            json: String,
+            key: String,
+        ): List<String> {
+            val regex = """" $key "\s*:\s* \[(.*?)\] """.toRegex(RegexOption.COMMENTS)
+            val arrayContent = regex.find(json)?.groupValues?.get(1)
+            return if (arrayContent.isNullOrBlank()) {
+                emptyList()
+            } else {
+                arrayContent.split(",").map { it.trim().removeSurrounding("\"") }
+            }
         }
     }
 }
