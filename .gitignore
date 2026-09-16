@@ -35,3 +35,5 @@ google-services.json
 
 # Kotlin daemon/sessions
 .kotlin/
+
+app/google-services.json

@@ -1,3 +1,38 @@
+import java.io.File
+
+abstract class CopyGoogleServicesTask : DefaultTask() {
+    @get:InputFile
+    @get:Optional
+    abstract val sourceFile: RegularFileProperty
+
+    @get:OutputFile
+    abstract val targetFile: RegularFileProperty
+
+    @TaskAction
+    fun copy() {
+        val src = sourceFile.orNull?.asFile
+        val dest = targetFile.get().asFile
+
+        if (!dest.exists() && src != null && src.exists()) {
+            src.copyTo(dest, overwrite = true)
+            logger.lifecycle("--> [Build Local] google-services.json copiado exitosamente.")
+        }
+    }
+}
+
+val copyGoogleServicesJson = tasks.register<CopyGoogleServicesTask>("copyGoogleServicesJson") {
+    description = "Copia el archivo google-services.json si no existe localmente."
+    // Cambia la ruta según la ubicación de tu repositorio externo
+    sourceFile.set(layout.projectDirectory.file("../../japl-properties/synapseefit/google-services.json"))
+    targetFile.set(layout.projectDirectory.file("google-services.json"))
+}
+
+tasks.configureEach {
+    if ((name.startsWith("process") && name.endsWith("GoogleServices")) || name == "preBuild") {
+        dependsOn(copyGoogleServicesJson)
+    }
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -60,8 +95,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.fragment.ktx)
 
-    implementation(platform("com.google.firebase:firebase-bom:34.19.0"))
-    implementation("com.google.firebase:firebase-analytics")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
