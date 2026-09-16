@@ -76,7 +76,7 @@ class GoogleAuthRepositoryImpl(
                 Result.success(newState)
             } catch (e: Exception) {
                 Result.failure(e)
-            } catch (e: ApiException){
+            } catch (e: ApiException) {
                 Result.failure(e)
             }
         }
