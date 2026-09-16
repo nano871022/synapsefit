@@ -271,6 +271,18 @@ class WearActiveWorkoutViewModelTest {
     }
 
     @Test
+    fun testResetSessionMemoryClearsUiState() {
+        viewModel.updateExerciseName("Press de Banca")
+        viewModel.incrementReps()
+        viewModel.resetSessionMemory()
+
+        val state = viewModel.uiState.value
+        assertEquals("", state.exerciseName)
+        assertEquals(0, state.currentReps)
+        assertFalse(state.isSessionStarted)
+    }
+
+    @Test
     fun testLoadPlanDataWithNullRepositoryGracefullyHandles() {
         viewModel.loadPlanData("plan_1", 2)
         assertEquals("", viewModel.uiState.value.activePlanTitle)
