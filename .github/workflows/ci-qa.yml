@@ -18,6 +18,7 @@ jobs:
   unit-tests:
     name: Unit Testing
     uses: ./.github/workflows/unit-tests.yml
+    secrets: inherit
 
   build-release:
     name: Production Release Build
