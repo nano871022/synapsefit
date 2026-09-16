@@ -65,6 +65,7 @@ class GoogleAuthViewModel(
                             GoogleAuthUiState.Error(
                                 message = err.message ?: "Authentication failed",
                             )
+                            Log.e(this.javaClass.name, err.message, err)
                     },
                 )
             }
