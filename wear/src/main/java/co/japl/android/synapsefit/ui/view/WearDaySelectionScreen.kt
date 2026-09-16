@@ -251,7 +251,7 @@ private fun SessionCardItem(
 
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-private fun WearDaySelectionScreenPreview(){
+internal fun WearDaySelectionScreenPreview(){
     MaterialThemeComposeUI {
         WearDaySelectionScreen(
             sessions = emptyList(),

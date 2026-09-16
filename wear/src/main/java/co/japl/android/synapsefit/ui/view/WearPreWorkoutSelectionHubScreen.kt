@@ -273,7 +273,7 @@ private fun parseExerciseName(fullName: String): Pair<String, String> {
 
 @Composable
 @Preview(device = WEAR_OS_SMALL_ROUND, showSystemUi = true)
-private fun WearPreWorkoutSelectionHubScreenPreview(){
+internal fun WearPreWorkoutSelectionHubScreenPreview(){
     val list = listExercises()
     MaterialThemeComposeUI {
         WearPreWorkoutSelectionHubScreen(

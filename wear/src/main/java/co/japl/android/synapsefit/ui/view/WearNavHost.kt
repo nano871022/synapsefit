@@ -254,7 +254,7 @@ fun WearNavHost(
 
 @Preview(device = WEAR_OS_SMALL_ROUND, showSystemUi = true )
 @Composable
-private fun WearNavHostPreview(){
+internal fun WearNavHostPreview(){
     MaterialThemeComposeUI {
         WearNavHost(
 

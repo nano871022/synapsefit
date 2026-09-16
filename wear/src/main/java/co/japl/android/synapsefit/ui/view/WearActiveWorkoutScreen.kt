@@ -230,7 +230,11 @@ private fun SetAndRepsContent(
 }
 
 @Composable
-private fun RowScope.FieldIntValueComponent(@StringRes name:Int, value:String, onDecrementReps:()->Unit, onIncrementReps: () -> Unit){
+private fun RowScope.FieldIntValueComponent(
+    @StringRes name:Int,
+    value:String,
+    onDecrementReps:()->Unit,
+    onIncrementReps: () -> Unit){
     Column(modifier=Modifier.weight(1f)) {
         Text(
             text=stringResource(name),
@@ -392,7 +396,7 @@ private fun formatDuration(seconds: Long): String {
 
 @Preview(device =  Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-private fun WearActiveWorkoutScreenPreview1(){
+internal fun WearActiveWorkoutScreenPreview1(){
     val uiState =  WearActiveWorkoutUiState()
     MaterialThemeComposeUI {
         WearActiveWorkoutScreen(
@@ -413,7 +417,7 @@ private fun WearActiveWorkoutScreenPreview1(){
 
 @Preview(device =  Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-private fun WearActiveWorkoutScreenPreview2(){
+internal fun WearActiveWorkoutScreenPreview2(){
     val vm =  WearActiveWorkoutViewModel()
     val uiState by vm.uiState.collectAsState()
 

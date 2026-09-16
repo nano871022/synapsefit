@@ -359,7 +359,7 @@ private fun ExerciseSummaryCardItem(exercise: ExerciseHistory) {
 
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-private fun WearPostWorkoutSummaryScreenPreview(){
+internal fun WearPostWorkoutSummaryScreenPreview(){
     val uiState = WearPostWorkoutSummaryUiState()
     MaterialThemeComposeUI {
         WearPostWorkoutSummaryScreen(

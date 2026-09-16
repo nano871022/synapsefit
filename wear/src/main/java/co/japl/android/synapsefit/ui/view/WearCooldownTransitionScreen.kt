@@ -499,7 +499,7 @@ private fun FooterIndexSection(
 
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-private fun WearCooldownTransitionScreenPreview(){
+internal fun WearCooldownTransitionScreenPreview(){
     val state =  WearActiveWorkoutViewModel()
     val activeUiState by state.uiState.collectAsState()
     val exerciseSession = listExercises()
