@@ -17,7 +17,6 @@ abstract class CopyGoogleServicesTask : DefaultTask() {
         } else {
             logger.lifecycle("--> [Build Local] google-services.json No fue encontrado.")
         }
-
     }
 }
 
