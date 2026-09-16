@@ -1,5 +1,8 @@
 package co.japl.android.synapsefit.ui.viewmodel
 
+import co.japl.android.synapsefit.core.domain.model.LiveSyncEvent
+import co.japl.android.synapsefit.core.port.secondary.WearStateMirrorPort
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.Exercise
@@ -25,6 +28,7 @@ class WearActiveWorkoutViewModel(
     private val sensorPort: WearSensorPort? = null,
     private val syncPort: WearSyncPort? = null,
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
+    private val wearStateMirrorPort: WearStateMirrorPort? = null,
 ) : ViewModel() {
     private val _trainingStepState =
         MutableStateFlow<TrainingStepState>(TrainingStepState.ReadyForNext(null))
@@ -38,6 +42,94 @@ class WearActiveWorkoutViewModel(
     init {
         loadActivePlanData()
         observeSensorPort()
+        observeMirrorPort()
+    }
+
+    private fun observeMirrorPort() {
+        val mirror = wearStateMirrorPort ?: return
+        viewModelScope.launch {
+            mirror.isConnected.collect { connected ->
+                if (connected) {
+                    _uiState.update { it.copy(isLiveSyncActive = true) }
+                }
+            }
+        }
+        viewModelScope.launch {
+            mirror.liveSyncEvents.collect { event ->
+                _uiState.update { it.copy(isLiveSyncActive = true) }
+                handleIncomingLiveSyncEvent(event)
+            }
+        }
+    }
+
+    private fun handleIncomingLiveSyncEvent(event: LiveSyncEvent) {
+        when (event) {
+            is LiveSyncEvent.PingSession -> {
+                val state = _uiState.value
+                if (state.isSessionStarted && state.exerciseSessions.isNotEmpty()) {
+                    val currentExId = state.exerciseSessions.getOrNull(state.activeExerciseIndex)?.exerciseId ?: ""
+                    val completedIds = state.exerciseSessions.filter { it.isCompleted }.map { it.exerciseId }
+                    viewModelScope.launch {
+                        wearStateMirrorPort?.sendEvent(
+                            LiveSyncEvent.ActiveSessionStatePayload(
+                                isLiveActive = true,
+                                planId = state.activePlanTitle,
+                                day = state.currentDay,
+                                currentExerciseId = currentExId,
+                                activeSet = 1,
+                                cooldownTargetTimestamp = state.cooldownTargetTimestamp,
+                                completedExerciseIds = completedIds,
+                            )
+                        )
+                    }
+                }
+            }
+            is LiveSyncEvent.ActiveSessionStatePayload -> {
+                if (event.isLiveActive) {
+                    val state = _uiState.value
+                    val updatedSessions = state.exerciseSessions.map { session ->
+                        if (event.completedExerciseIds.contains(session.exerciseId)) {
+                            session.copy(isCompleted = true, completedSets = session.targetSets)
+                        } else {
+                            session
+                        }
+                    }
+                    val targetIndex = updatedSessions.indexOfFirst { it.exerciseId == event.currentExerciseId }.coerceAtLeast(0)
+                    val activeSession = updatedSessions.getOrNull(targetIndex)
+
+                    val cdTarget = event.cooldownTargetTimestamp
+                    val nextState = if (cdTarget != null) {
+                        val remaining = DateTimeUtils.getCurrentTimestamp().let { now ->
+                            val diff = cdTarget - now
+                            if (diff > 0) diff else 0L
+                        }
+                        if (activeSession != null) {
+                            TrainingStepState.Cooldown(activeSession, cdTarget, remaining)
+                        } else {
+                            _trainingStepState.value
+                        }
+                    } else if (activeSession != null) {
+                        TrainingStepState.Active(activeSession, event.activeSet)
+                    } else {
+                        _trainingStepState.value
+                    }
+
+                    _trainingStepState.value = nextState
+                    _uiState.update {
+                        it.copy(
+                            isLiveSyncActive = true,
+                            isSessionStarted = true,
+                            exerciseSessions = updatedSessions,
+                            activeExerciseIndex = targetIndex,
+                            exerciseName = activeSession?.name ?: it.exerciseName,
+                            cooldownTargetTimestamp = event.cooldownTargetTimestamp,
+                            trainingStepState = nextState,
+                        )
+                    }
+                }
+            }
+            else -> {}
+        }
     }
 
     private fun observeSensorPort() {
@@ -476,6 +568,12 @@ class WearActiveWorkoutViewModel(
                 cooldownSecondsRemaining = 0,
             )
         }
+    }
+
+    fun resetSessionMemory() {
+        timerJob?.cancel()
+        _trainingStepState.value = TrainingStepState.ReadyForNext(null)
+        _uiState.value = WearActiveWorkoutUiState()
     }
 
     override fun onCleared() {

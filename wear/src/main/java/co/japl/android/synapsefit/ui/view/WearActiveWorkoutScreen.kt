@@ -14,6 +14,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -89,6 +97,7 @@ fun WearActiveWorkoutScreen(
             WorkoutHeaderRow(
                 workoutDurationSeconds = uiState.workoutDurationSeconds,
                 currentHeartRateBpm = uiState.currentHeartRateBpm,
+                isLiveSyncActive = uiState.isLiveSyncActive,
             )
 
             Text(
@@ -131,6 +140,7 @@ fun WearActiveWorkoutScreen(
 private fun WorkoutHeaderRow(
     workoutDurationSeconds: Long,
     currentHeartRateBpm: Int,
+    isLiveSyncActive: Boolean = false,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
@@ -144,6 +154,36 @@ private fun WorkoutHeaderRow(
             color = PrimaryCyan,
             modifier = Modifier.padding(start = 12.dp),
         )
+
+        if (isLiveSyncActive) {
+            val infiniteTransition = rememberInfiniteTransition(label = "wear_live_blink")
+            val alpha by infiniteTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 0.2f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(800),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+                label = "wear_alpha_blink",
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .alpha(alpha)
+                        .background(Color.Red, CircleShape)
+                )
+                Text(
+                    text = "LIVE",
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Red,
+                )
+            }
+        }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,

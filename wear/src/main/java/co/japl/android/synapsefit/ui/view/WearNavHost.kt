@@ -33,6 +33,7 @@ fun WearNavHost(
 
     LaunchedEffect(Unit) {
         WearDependencyProvider.requestActivePlanFromPhone(context)
+        WearDependencyProvider.wearStateMirrorPort.sendEvent(co.japl.android.synapsefit.core.domain.model.LiveSyncEvent.PingSession("WEAR"))
     }
 
     val daySelectionViewModel: WearDaySelectionViewModel =
@@ -54,10 +55,26 @@ fun WearNavHost(
                             sensorPort = WearDependencyProvider.wearSensorPort,
                             syncPort = WearDependencyProvider.wearSyncPort,
                             workoutPlanRepositoryPort = WearDependencyProvider.workoutPlanRepository,
+                            wearStateMirrorPort = WearDependencyProvider.wearStateMirrorPort,
                         )
                     }
                 },
         )
+
+    val activeUiState by activeWorkoutViewModel.uiState.collectAsState()
+
+    LaunchedEffect(activeUiState.isSessionStarted, activeUiState.isLiveSyncActive) {
+        if (activeUiState.isSessionStarted && activeUiState.isLiveSyncActive) {
+            val currentRoute = navController.currentDestination?.route
+            if (currentRoute == WearRoutes.DAY_SELECTION || currentRoute == WearRoutes.PRE_WORKOUT) {
+                val planId = activeUiState.activePlanTitle.ifBlank { "active_plan" }
+                val day = activeUiState.currentDay
+                navController.navigate(WearRoutes.activeWorkout(planId, day)) {
+                    popUpTo(WearRoutes.DAY_SELECTION)
+                }
+            }
+        }
+    }
 
     val postWorkoutSummaryViewModel: WearPostWorkoutSummaryViewModel =
         viewModel(
@@ -238,6 +255,7 @@ fun WearNavHost(
             WearPostWorkoutSummaryScreen(
                 uiState = summaryUiState,
                 onFinish = {
+                    activeWorkoutViewModel.resetSessionMemory()
                     navController.navigate(WearRoutes.DAY_SELECTION) {
                         popUpTo(WearRoutes.DAY_SELECTION) { inclusive = true }
                     }

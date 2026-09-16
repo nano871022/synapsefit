@@ -86,6 +86,7 @@ data class ActiveWorkoutUiState(
     val exerciseImageUrl: String? = null,
     val isImagePopupVisible: Boolean = false,
     val isMediaLoading: Boolean = false,
+    val isLiveSyncActive: Boolean = false,
 )
 
 class ActiveWorkoutSessionViewModel(
@@ -112,6 +113,16 @@ class ActiveWorkoutSessionViewModel(
     init {
         wearStateMirrorPort?.let { port ->
             viewModelScope.launch {
+                port.sendEvent(LiveSyncEvent.PingSession("MOBILE"))
+            }
+            viewModelScope.launch {
+                port.isConnected.collect { connected ->
+                    if (connected) {
+                        _uiState.update { it.copy(isLiveSyncActive = true) }
+                    }
+                }
+            }
+            viewModelScope.launch {
                 port.liveSyncEvents.collect { event ->
                     handleIncomingLiveSyncEvent(event)
                 }
@@ -120,7 +131,63 @@ class ActiveWorkoutSessionViewModel(
     }
 
     private fun handleIncomingLiveSyncEvent(event: LiveSyncEvent) {
+        _uiState.update { it.copy(isLiveSyncActive = true) }
         when (event) {
+            is LiveSyncEvent.PingSession -> {
+                val state = _uiState.value
+                if (state.planId.isNotBlank() && !state.isSessionComplete) {
+                    val completedIds = exerciseCompletedSetsCount.filter {
+                        val target = state.exercises.find { ex -> ex.id == it.key }?.targetSets ?: 0
+                        it.value >= target && target > 0
+                    }.keys.toList()
+
+                    viewModelScope.launch {
+                        wearStateMirrorPort?.sendEvent(
+                            LiveSyncEvent.ActiveSessionStatePayload(
+                                isLiveActive = true,
+                                planId = state.planId,
+                                day = 1,
+                                currentExerciseId = state.currentExerciseId,
+                                activeSet = state.currentSetIndex,
+                                cooldownTargetTimestamp = state.cooldownTargetTimestamp,
+                                completedExerciseIds = completedIds,
+                            )
+                        )
+                    }
+                }
+            }
+            is LiveSyncEvent.ActiveSessionStatePayload -> {
+                if (event.isLiveActive && event.planId.isNotBlank()) {
+                    if (_uiState.value.planId != event.planId) {
+                        startSession(event.planId)
+                    }
+                    val state = _uiState.value
+                    val exIndex = state.exercises.indexOfFirst { it.id == event.currentExerciseId }.coerceAtLeast(0)
+                    val currentEx = state.exercises.getOrNull(exIndex)
+
+                    for (completedId in event.completedExerciseIds) {
+                        val target = state.exercises.find { it.id == completedId }?.targetSets ?: 3
+                        exerciseCompletedSetsCount[completedId] = target
+                    }
+
+                    _uiState.update {
+                        it.copy(
+                            isLiveSyncActive = true,
+                            currentExerciseIndex = exIndex,
+                            currentExerciseId = event.currentExerciseId.ifBlank { currentEx?.id ?: "" },
+                            currentExerciseName = currentEx?.name ?: it.currentExerciseName,
+                            currentSetIndex = event.activeSet,
+                            cooldownTargetTimestamp = event.cooldownTargetTimestamp,
+                        )
+                    }
+
+                    if (event.cooldownTargetTimestamp != null) {
+                        val diff = event.cooldownTargetTimestamp - System.currentTimeMillis()
+                        val remainingSec = if (diff > 0) (diff / 1000L).toInt() else 0
+                        startRestTimer(remainingSec, event.cooldownTargetTimestamp)
+                    }
+                }
+            }
             is LiveSyncEvent.StartSession -> {
                 if (_uiState.value.planId != event.planId) {
                     startSession(event.planId)

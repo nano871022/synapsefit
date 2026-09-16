@@ -1,5 +1,8 @@
 package co.japl.android.synapsefit
 
+import co.japl.android.synapsefit.core.port.secondary.WearStateMirrorPort
+import co.japl.android.synapsefit.services.wear.WearableStateMirrorAdapter
+
 import android.content.Context
 import androidx.room.Room
 import co.japl.android.synapsefit.core.port.secondary.WearSensorPort
@@ -26,6 +29,7 @@ object WearDependencyProvider {
     lateinit var workoutLogRepository: WorkoutLogRepositoryPort
     lateinit var wearSensorPort: WearSensorPort
     lateinit var wearSyncPort: WearSyncPort
+    lateinit var wearStateMirrorPort: WearStateMirrorPort
 
     lateinit var getTodayRoutineUseCase: GetTodayRoutineUseCase
     lateinit var getGroupedWorkoutHistoryUseCase: GetGroupedWorkoutHistoryUseCase
@@ -47,6 +51,7 @@ object WearDependencyProvider {
         workoutLogRepository = WorkoutLogRepositoryAdapter(database.workoutLogDao())
         wearSensorPort = WearHeartRateSensorAdapter(appContext)
         wearSyncPort = WearableSyncAdapter(appContext)
+        wearStateMirrorPort = WearableStateMirrorAdapter(appContext)
 
         getTodayRoutineUseCase = GetTodayRoutineUseCase(workoutPlanRepository, workoutLogRepository)
         getGroupedWorkoutHistoryUseCase = GetGroupedWorkoutHistoryUseCase(workoutLogRepository)
