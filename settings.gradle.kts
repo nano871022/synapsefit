@@ -45,6 +45,6 @@ when {
         "../about-consumer.gradle.kts",
     )
     else -> {
-        include(:about)
+        include(":about")
     }
 }
