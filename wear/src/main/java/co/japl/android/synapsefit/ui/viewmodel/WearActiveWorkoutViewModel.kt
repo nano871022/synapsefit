@@ -1,14 +1,13 @@
 package co.japl.android.synapsefit.ui.viewmodel
 
-import co.japl.android.synapsefit.core.domain.model.LiveSyncEvent
-import co.japl.android.synapsefit.core.port.secondary.WearStateMirrorPort
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.ExerciseSession
+import co.japl.android.synapsefit.core.domain.model.LiveSyncEvent
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
 import co.japl.android.synapsefit.core.port.secondary.WearSensorPort
+import co.japl.android.synapsefit.core.port.secondary.WearStateMirrorPort
 import co.japl.android.synapsefit.core.port.secondary.WearSyncPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.util.DateTimeUtils
@@ -64,71 +63,82 @@ class WearActiveWorkoutViewModel(
 
     private fun handleIncomingLiveSyncEvent(event: LiveSyncEvent) {
         when (event) {
-            is LiveSyncEvent.PingSession -> {
-                val state = _uiState.value
-                if (state.isSessionStarted && state.exerciseSessions.isNotEmpty()) {
-                    val currentExId = state.exerciseSessions.getOrNull(state.activeExerciseIndex)?.exerciseId ?: ""
-                    val completedIds = state.exerciseSessions.filter { it.isCompleted }.map { it.exerciseId }
-                    viewModelScope.launch {
-                        wearStateMirrorPort?.sendEvent(
-                            LiveSyncEvent.ActiveSessionStatePayload(
-                                isLiveActive = true,
-                                planId = state.activePlanTitle,
-                                day = state.currentDay,
-                                currentExerciseId = currentExId,
-                                activeSet = 1,
-                                cooldownTargetTimestamp = state.cooldownTargetTimestamp,
-                                completedExerciseIds = completedIds,
-                            )
-                        )
-                    }
-                }
-            }
-            is LiveSyncEvent.ActiveSessionStatePayload -> {
-                if (event.isLiveActive) {
-                    val state = _uiState.value
-                    val updatedSessions = state.exerciseSessions.map { session ->
-                        if (event.completedExerciseIds.contains(session.exerciseId)) {
-                            session.copy(isCompleted = true, completedSets = session.targetSets)
-                        } else {
-                            session
-                        }
-                    }
-                    val targetIndex = updatedSessions.indexOfFirst { it.exerciseId == event.currentExerciseId }.coerceAtLeast(0)
-                    val activeSession = updatedSessions.getOrNull(targetIndex)
-
-                    val cdTarget = event.cooldownTargetTimestamp
-                    val nextState = if (cdTarget != null) {
-                        val remaining = DateTimeUtils.getCurrentTimestamp().let { now ->
-                            val diff = cdTarget - now
-                            if (diff > 0) diff else 0L
-                        }
-                        if (activeSession != null) {
-                            TrainingStepState.Cooldown(activeSession, cdTarget, remaining)
-                        } else {
-                            _trainingStepState.value
-                        }
-                    } else if (activeSession != null) {
-                        TrainingStepState.Active(activeSession, event.activeSet)
-                    } else {
-                        _trainingStepState.value
-                    }
-
-                    _trainingStepState.value = nextState
-                    _uiState.update {
-                        it.copy(
-                            isLiveSyncActive = true,
-                            isSessionStarted = true,
-                            exerciseSessions = updatedSessions,
-                            activeExerciseIndex = targetIndex,
-                            exerciseName = activeSession?.name ?: it.exerciseName,
-                            cooldownTargetTimestamp = event.cooldownTargetTimestamp,
-                            trainingStepState = nextState,
-                        )
-                    }
-                }
-            }
+            is LiveSyncEvent.PingSession -> handlePingSessionEvent()
+            is LiveSyncEvent.ActiveSessionStatePayload -> handleActiveSessionStatePayload(event)
             else -> {}
+        }
+    }
+
+    private fun handlePingSessionEvent() {
+        val state = _uiState.value
+        if (state.isSessionStarted && state.exerciseSessions.isNotEmpty()) {
+            val currentExId =
+                state.exerciseSessions.getOrNull(state.activeExerciseIndex)?.exerciseId ?: ""
+            val completedIds =
+                state.exerciseSessions.filter { it.isCompleted }.map { it.exerciseId }
+            viewModelScope.launch {
+                wearStateMirrorPort?.sendEvent(
+                    LiveSyncEvent.ActiveSessionStatePayload(
+                        isLiveActive = true,
+                        planId = state.activePlanTitle,
+                        day = state.currentDay,
+                        currentExerciseId = currentExId,
+                        activeSet = 1,
+                        cooldownTargetTimestamp = state.cooldownTargetTimestamp,
+                        completedExerciseIds = completedIds,
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun handleActiveSessionStatePayload(event: LiveSyncEvent.ActiveSessionStatePayload) {
+        if (!event.isLiveActive) return
+
+        val state = _uiState.value
+        val updatedSessions =
+            state.exerciseSessions.map { session ->
+                if (event.completedExerciseIds.contains(session.exerciseId)) {
+                    session.copy(isCompleted = true, completedSets = session.targetSets)
+                } else {
+                    session
+                }
+            }
+        val targetIndex =
+            updatedSessions.indexOfFirst { it.exerciseId == event.currentExerciseId }
+                .coerceAtLeast(0)
+        val activeSession = updatedSessions.getOrNull(targetIndex)
+
+        val cdTarget = event.cooldownTargetTimestamp
+        val nextState =
+            if (cdTarget != null) {
+                val remaining =
+                    DateTimeUtils.getCurrentTimestamp().let { now ->
+                        val diff = cdTarget - now
+                        if (diff > 0) diff else 0L
+                    }
+                if (activeSession != null) {
+                    TrainingStepState.Cooldown(activeSession, cdTarget, remaining)
+                } else {
+                    _trainingStepState.value
+                }
+            } else if (activeSession != null) {
+                TrainingStepState.Active(activeSession, event.activeSet)
+            } else {
+                _trainingStepState.value
+            }
+
+        _trainingStepState.value = nextState
+        _uiState.update {
+            it.copy(
+                isLiveSyncActive = true,
+                isSessionStarted = true,
+                exerciseSessions = updatedSessions,
+                activeExerciseIndex = targetIndex,
+                exerciseName = activeSession?.name ?: it.exerciseName,
+                cooldownTargetTimestamp = event.cooldownTargetTimestamp,
+                trainingStepState = nextState,
+            )
         }
     }
 
@@ -504,8 +514,13 @@ class WearActiveWorkoutViewModel(
     }
 
     fun decrementWgt() {
-        _uiState.update { it.copy(currentWeight = (it.currentWeight - 1.toShort()).coerceAtLeast(0)
-            .toShort()) }
+        _uiState.update {
+            it.copy(
+                currentWeight =
+                    (it.currentWeight - 1.toShort()).coerceAtLeast(0)
+                        .toShort(),
+            )
+        }
     }
 
     fun setSyncStatus(isSynced: Boolean) {

@@ -60,9 +60,10 @@ fun WearPostWorkoutSummaryScreen(
     val listState = rememberScalingLazyListState()
 
     Scaffold(
-        modifier = modifier
-            .fillMaxSize()
-            .background(BackgroundDark),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(BackgroundDark),
         timeText = { TimeText() },
         positionIndicator = { PositionIndicator(scalingLazyListState = listState) },
     ) {
@@ -359,7 +360,7 @@ private fun ExerciseSummaryCardItem(exercise: ExerciseHistory) {
 
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-internal fun WearPostWorkoutSummaryScreenPreview(){
+internal fun WearPostWorkoutSummaryScreenPreview() {
     val uiState = WearPostWorkoutSummaryUiState()
     MaterialThemeComposeUI {
         WearPostWorkoutSummaryScreen(

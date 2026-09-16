@@ -58,9 +58,10 @@ fun WearDaySelectionScreen(
     val listState = rememberScalingLazyListState()
 
     Scaffold(
-        modifier = modifier
-            .fillMaxSize()
-            .background(BackgroundDark),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(BackgroundDark),
         timeText = { TimeText() },
         positionIndicator = { PositionIndicator(scalingLazyListState = listState) },
     ) {
@@ -140,9 +141,10 @@ fun WearDaySelectionScreen(
                                 iconColor = OnSurfaceDark,
                             )
                         },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
                 )
             }
         }
@@ -251,7 +253,7 @@ private fun SessionCardItem(
 
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-internal fun WearDaySelectionScreenPreview(){
+internal fun WearDaySelectionScreenPreview() {
     MaterialThemeComposeUI {
         WearDaySelectionScreen(
             sessions = emptyList(),
@@ -260,7 +262,7 @@ internal fun WearDaySelectionScreenPreview(){
             checkingUpdate = true,
             updateMessageResId = R.string.wear_check_update,
             isUpdateAvailable = true,
-            onCheckUpdate = {  },
+            onCheckUpdate = { },
             onPerformUpdate = { },
         )
     }

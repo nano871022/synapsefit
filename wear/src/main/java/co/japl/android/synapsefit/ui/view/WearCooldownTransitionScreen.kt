@@ -145,7 +145,7 @@ private fun HeaderCooldownSection(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(bottom = 8.dp, top=20.dp),
+        modifier = Modifier.padding(bottom = 8.dp, top = 20.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -312,7 +312,6 @@ private fun ExerciseSessionCardItem(
                     style = MaterialTheme.typography.caption2,
                     color = OnSurfaceDark.copy(alpha = COMPLETED_ALPHA),
                 )
-
             }
         }
     } else if (isCurrentSession) {
@@ -499,8 +498,8 @@ private fun FooterIndexSection(
 
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-internal fun WearCooldownTransitionScreenPreview(){
-    val state =  WearActiveWorkoutViewModel()
+internal fun WearCooldownTransitionScreenPreview() {
+    val state = WearActiveWorkoutViewModel()
     val activeUiState by state.uiState.collectAsState()
     val exerciseSession = listExercises()
     MaterialThemeComposeUI {
@@ -509,16 +508,16 @@ internal fun WearCooldownTransitionScreenPreview(){
             exerciseSessions = exerciseSession,
             heartRateBpm = 20,
             onAddExtraTime = {},
-            onSkipRest = {  },
+            onSkipRest = { },
             onStartNextExercise = {},
-            onSelectExercise = { exe,id ->  },
+            onSelectExercise = { exe, id -> },
             modifier = Modifier,
         )
     }
 }
 
 @Composable
-private fun listExercises():List<ExerciseSession>{
+private fun listExercises(): List<ExerciseSession> {
     return listOf(
         ExerciseSession(
             exerciseId = "1",
@@ -530,7 +529,7 @@ private fun listExercises():List<ExerciseSession>{
             restSeconds = 90,
             day = 1,
             completedSets = 4,
-            isCompleted = true
+            isCompleted = true,
         ),
         ExerciseSession(
             exerciseId = "2",
@@ -542,7 +541,7 @@ private fun listExercises():List<ExerciseSession>{
             restSeconds = 90,
             day = 1,
             completedSets = 2,
-            isCompleted = false
+            isCompleted = false,
         ),
         ExerciseSession(
             exerciseId = "3",
@@ -554,8 +553,7 @@ private fun listExercises():List<ExerciseSession>{
             restSeconds = 90,
             day = 1,
             completedSets = 0,
-            isCompleted = false
-        )
-
+            isCompleted = false,
+        ),
     )
 }

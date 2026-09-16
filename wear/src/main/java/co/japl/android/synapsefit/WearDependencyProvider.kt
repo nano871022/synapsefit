@@ -1,11 +1,9 @@
 package co.japl.android.synapsefit
 
-import co.japl.android.synapsefit.core.port.secondary.WearStateMirrorPort
-import co.japl.android.synapsefit.services.wear.WearableStateMirrorAdapter
-
 import android.content.Context
 import androidx.room.Room
 import co.japl.android.synapsefit.core.port.secondary.WearSensorPort
+import co.japl.android.synapsefit.core.port.secondary.WearStateMirrorPort
 import co.japl.android.synapsefit.core.port.secondary.WearSyncPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
@@ -15,6 +13,7 @@ import co.japl.android.synapsefit.services.database.SynapseFitDatabase
 import co.japl.android.synapsefit.services.repository.WorkoutLogRepositoryAdapter
 import co.japl.android.synapsefit.services.repository.WorkoutPlanRepositoryAdapter
 import co.japl.android.synapsefit.services.wear.WearHeartRateSensorAdapter
+import co.japl.android.synapsefit.services.wear.WearableStateMirrorAdapter
 import co.japl.android.synapsefit.services.wear.WearableSyncAdapter
 import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CoroutineScope

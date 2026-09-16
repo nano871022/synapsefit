@@ -136,10 +136,11 @@ class ActiveWorkoutSessionViewModel(
             is LiveSyncEvent.PingSession -> {
                 val state = _uiState.value
                 if (state.planId.isNotBlank() && !state.isSessionComplete) {
-                    val completedIds = exerciseCompletedSetsCount.filter {
-                        val target = state.exercises.find { ex -> ex.id == it.key }?.targetSets ?: 0
-                        it.value >= target && target > 0
-                    }.keys.toList()
+                    val completedIds =
+                        exerciseCompletedSetsCount.filter {
+                            val target = state.exercises.find { ex -> ex.id == it.key }?.targetSets ?: 0
+                            it.value >= target && target > 0
+                        }.keys.toList()
 
                     viewModelScope.launch {
                         wearStateMirrorPort?.sendEvent(
@@ -151,7 +152,7 @@ class ActiveWorkoutSessionViewModel(
                                 activeSet = state.currentSetIndex,
                                 cooldownTargetTimestamp = state.cooldownTargetTimestamp,
                                 completedExerciseIds = completedIds,
-                            )
+                            ),
                         )
                     }
                 }

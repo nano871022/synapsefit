@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,8 +32,6 @@ import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.itemsIndexed
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
-import androidx.wear.compose.material.Button
-import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.PositionIndicator
@@ -43,17 +40,14 @@ import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import co.com.japl.ui.theme.BackgroundDark
 import co.com.japl.ui.theme.MaterialThemeComposeUI
-import co.com.japl.ui.theme.OnPrimaryDark
 import co.com.japl.ui.theme.OnSurfaceDark
 import co.com.japl.ui.theme.PrimaryCyan
 import co.com.japl.ui.theme.SurfaceContainer
 import co.com.japl.ui.theme.SurfaceContainerHigh
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.core.domain.model.Exercise
-import co.japl.android.synapsefit.core.domain.model.ExerciseSession
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import java.time.ZonedDateTime
 
 @Suppress("LongMethod", "LongParameterList")
 @Composable
@@ -68,9 +62,10 @@ fun WearPreWorkoutSelectionHubScreen(
     val listState = rememberScalingLazyListState()
 
     Scaffold(
-        modifier = modifier
-            .fillMaxSize()
-            .background(BackgroundDark),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(BackgroundDark),
         timeText = { TimeText() },
         positionIndicator = { PositionIndicator(scalingLazyListState = listState) },
     ) {
@@ -93,7 +88,7 @@ fun WearPreWorkoutSelectionHubScreen(
                     currentDay = currentDay,
                     planTitle = planTitle,
                     exerciseCount = exercises.size,
-                    onClick=onStartSession
+                    onClick = onStartSession,
                 )
             }
 
@@ -134,7 +129,7 @@ private fun HeaderCard(
     currentDay: Int,
     planTitle: String,
     exerciseCount: Int,
-    onClick: ()->Unit
+    onClick: () -> Unit,
 ) {
     Column(
         modifier =
@@ -144,7 +139,7 @@ private fun HeaderCard(
                 .clip(RoundedCornerShape(12.dp))
                 .background(SurfaceContainer)
                 .padding(12.dp)
-                .clickable(enabled=true,onClickLabel=">"){
+                .clickable(enabled = true, onClickLabel = ">") {
                     onClick.invoke()
                 },
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -273,7 +268,7 @@ private fun parseExerciseName(fullName: String): Pair<String, String> {
 
 @Composable
 @Preview(device = WEAR_OS_SMALL_ROUND, showSystemUi = true)
-internal fun WearPreWorkoutSelectionHubScreenPreview(){
+internal fun WearPreWorkoutSelectionHubScreenPreview() {
     val list = listExercises()
     MaterialThemeComposeUI {
         WearPreWorkoutSelectionHubScreen(
@@ -281,14 +276,14 @@ internal fun WearPreWorkoutSelectionHubScreenPreview(){
             currentDay = 1,
             exercises = list,
             onSelectExercise = { exer, pos -> },
-            onStartSession = {  },
+            onStartSession = { },
             modifier = Modifier,
         )
     }
 }
 
 @Composable
-private fun listExercises():List<Exercise>{
+private fun listExercises(): List<Exercise> {
     return listOf(
         Exercise(
             id = "1",
@@ -331,7 +326,6 @@ private fun listExercises():List<Exercise>{
             guideImageUrl = "",
             createdAt = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
             updatedAt = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
-        )
-
+        ),
     )
 }
