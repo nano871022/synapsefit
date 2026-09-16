@@ -7,6 +7,7 @@ import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.Scope
 import com.google.android.gms.tasks.Tasks
 import kotlinx.coroutines.Dispatchers
@@ -74,6 +75,8 @@ class GoogleAuthRepositoryImpl(
                 _authState.value = newState
                 Result.success(newState)
             } catch (e: Exception) {
+                Result.failure(e)
+            } catch (e: ApiException){
                 Result.failure(e)
             }
         }
