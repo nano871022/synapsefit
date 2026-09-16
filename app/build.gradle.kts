@@ -24,7 +24,7 @@ val copyGoogleServicesJson =
         // Cambia la ruta según la ubicación de tu repositorio externo
         sourceFile.set(layout.projectDirectory.file("../../japl-properties/synapseefit/google-services.json"))
         targetFile.set(layout.projectDirectory.file("google-services.json"))
-}
+    }
 
 tasks.configureEach {
     if ((name.startsWith("process") && name.endsWith("GoogleServices")) || name == "preBuild") {
