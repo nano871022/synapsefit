@@ -1,10 +1,13 @@
 package co.japl.android.synapsefit.app.controller.auth
 
+import android.util.Log
 import co.japl.android.synapsefit.core.domain.model.AuthState
 import co.japl.android.synapsefit.core.port.secondary.GoogleAuthRepository
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,11 +28,14 @@ class GoogleAuthViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        mockkStatic(Log::class)
+        every { Log.e(any(), any(), any()) } returns 0
     }
 
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+        unmockkStatic(Log::class)
     }
 
     @Test
