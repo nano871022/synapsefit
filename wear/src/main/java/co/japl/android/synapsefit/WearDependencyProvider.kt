@@ -45,7 +45,7 @@ object WearDependencyProvider {
 
         workoutPlanRepository = WorkoutPlanRepositoryAdapter(database.workoutPlanDao())
         workoutLogRepository = WorkoutLogRepositoryAdapter(database.workoutLogDao())
-        wearSensorPort = WearHeartRateSensorAdapter()
+        wearSensorPort = WearHeartRateSensorAdapter(appContext)
         wearSyncPort = WearableSyncAdapter(appContext)
 
         getTodayRoutineUseCase = GetTodayRoutineUseCase(workoutPlanRepository, workoutLogRepository)

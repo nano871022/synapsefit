@@ -9,6 +9,8 @@ import co.japl.android.synapsefit.core.port.secondary.WearSensorPort
 import co.japl.android.synapsefit.core.port.secondary.WearSyncPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.util.DateTimeUtils
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,8 +33,45 @@ class WearActiveWorkoutViewModel(
     private val _uiState = MutableStateFlow(WearActiveWorkoutUiState())
     val uiState: StateFlow<WearActiveWorkoutUiState> = _uiState.asStateFlow()
 
+    private var timerJob: Job? = null
+
     init {
         loadActivePlanData()
+        observeSensorPort()
+    }
+
+    private fun observeSensorPort() {
+        val sensor = sensorPort ?: return
+        sensor.startHeartRateMonitoring()
+        viewModelScope.launch {
+            sensor.heartRateBpm.collect { bpm ->
+                if (bpm > 0) {
+                    _uiState.update { it.copy(currentHeartRateBpm = bpm) }
+                }
+            }
+        }
+    }
+
+    private fun startWorkoutTimer() {
+        if (timerJob?.isActive == true) return
+        timerJob =
+            viewModelScope.launch {
+                while (true) {
+                    delay(MILLIS_PER_SECOND)
+                    if (!_uiState.value.isPaused && _uiState.value.isSessionStarted) {
+                        _uiState.update { it.copy(workoutDurationSeconds = it.workoutDurationSeconds + 1) }
+                    }
+                }
+            }
+    }
+
+    fun togglePauseResume() {
+        _uiState.update { it.copy(isPaused = !it.isPaused) }
+    }
+
+    fun startSession() {
+        _uiState.update { it.copy(isSessionStarted = true) }
+        startWorkoutTimer()
     }
 
     fun loadPlanData(
@@ -121,50 +160,13 @@ class WearActiveWorkoutViewModel(
         }
     }
 
-    fun startSession() {
-        if (_uiState.value.availableExercises.isNotEmpty() && _uiState.value.exerciseSessions.isEmpty()) {
-            val sessions =
-                _uiState.value.availableExercises.map { ex ->
-                    ExerciseSession(
-                        exerciseId = ex.id,
-                        planId = ex.planId,
-                        name = ex.name,
-                        muscleGroup = ex.muscleGroup,
-                        targetSets = ex.targetSets,
-                        targetReps = ex.targetReps,
-                        restSeconds = ex.restSeconds,
-                    )
-                }
-            loadExerciseSessions(sessions)
-        }
-        _uiState.update { it.copy(isSessionStarted = true) }
-    }
-
     fun selectExercise(
         exercise: Exercise,
         index: Int,
     ) {
-        val sessions =
-            if (_uiState.value.exerciseSessions.isEmpty()) {
-                _uiState.value.availableExercises.map { ex ->
-                    ExerciseSession(
-                        exerciseId = ex.id,
-                        planId = ex.planId,
-                        name = ex.name,
-                        muscleGroup = ex.muscleGroup,
-                        targetSets = ex.targetSets,
-                        targetReps = ex.targetReps,
-                        restSeconds = ex.restSeconds,
-                    )
-                }
-            } else {
-                _uiState.value.exerciseSessions
-            }
-
+        val sessions = _uiState.value.exerciseSessions
         val targetSession =
-            if (sessions.isNotEmpty()) {
-                sessions.getOrNull(index) ?: sessions.first()
-            } else {
+            sessions.firstOrNull { it.exerciseId == exercise.id } ?: run {
                 ExerciseSession(
                     exerciseId = exercise.id,
                     planId = exercise.planId,
@@ -196,6 +198,7 @@ class WearActiveWorkoutViewModel(
                 isSessionStarted = true,
             )
         }
+        startWorkoutTimer()
     }
 
     fun exitToSelectionHub() {
@@ -348,6 +351,45 @@ class WearActiveWorkoutViewModel(
         }
     }
 
+    fun navigateToNextExercise() {
+        val sessions = _uiState.value.exerciseSessions
+        if (sessions.isEmpty()) return
+        val nextIndex = (_uiState.value.activeExerciseIndex + 1) % sessions.size
+        val nextSession = sessions[nextIndex]
+        val currentSet = (nextSession.completedSets + 1).coerceAtMost(nextSession.targetSets)
+        val activeState = TrainingStepState.Active(nextSession, currentSet)
+        _trainingStepState.value = activeState
+        _uiState.update {
+            it.copy(
+                exerciseName = nextSession.name,
+                activeExerciseIndex = nextIndex,
+                trainingStepState = activeState,
+            )
+        }
+    }
+
+    fun navigateToPreviousExercise() {
+        val sessions = _uiState.value.exerciseSessions
+        if (sessions.isEmpty()) return
+        val prevIndex =
+            if (_uiState.value.activeExerciseIndex - 1 < 0) {
+                sessions.lastIndex
+            } else {
+                _uiState.value.activeExerciseIndex - 1
+            }
+        val prevSession = sessions[prevIndex]
+        val currentSet = (prevSession.completedSets + 1).coerceAtMost(prevSession.targetSets)
+        val activeState = TrainingStepState.Active(prevSession, currentSet)
+        _trainingStepState.value = activeState
+        _uiState.update {
+            it.copy(
+                exerciseName = prevSession.name,
+                activeExerciseIndex = prevIndex,
+                trainingStepState = activeState,
+            )
+        }
+    }
+
     fun updateExerciseName(name: String) {
         _uiState.update { it.copy(exerciseName = name) }
     }
@@ -434,5 +476,11 @@ class WearActiveWorkoutViewModel(
                 cooldownSecondsRemaining = 0,
             )
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        timerJob?.cancel()
+        sensorPort?.stopHeartRateMonitoring()
     }
 }

@@ -18,4 +18,6 @@ data class WearActiveWorkoutUiState(
     val currentDay: Int = 1,
     val availableExercises: List<Exercise> = emptyList(),
     val isSessionStarted: Boolean = false,
+    val workoutDurationSeconds: Long = 0L,
+    val isPaused: Boolean = false,
 )

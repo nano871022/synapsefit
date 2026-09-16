@@ -52,6 +52,7 @@ jobs:
 
           # 2. Limpiar la versión base (quitar sufijos si existen: 1.00.009-beta -> 1.00.009)
           BASE_VNAME=$(echo "$CURRENT_VNAME_FULL" | cut -d'-' -f1)
+          BASE_VNAME=$(echo "$BASE_VNAME" | sed 's/ .*//' )
 
           # 3. Dividir en componentes (Major.Minor.Patch)
           IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VNAME"
@@ -87,7 +88,7 @@ jobs:
           # 8. Agregar sufijo al versionName si existe
           SUFFIX="${{ github.event.inputs.version_suffix }}"
           if [ -n "$SUFFIX" ]; then
-            NEW_VNAME="${NEW_VNAME_BASE}${SUFFIX}"
+            NEW_VNAME="${NEW_VNAME_BASE} ${SUFFIX}"
           else
             NEW_VNAME="${NEW_VNAME_BASE}"
           fi

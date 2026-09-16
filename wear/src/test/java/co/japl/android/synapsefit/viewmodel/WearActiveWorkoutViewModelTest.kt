@@ -7,6 +7,12 @@ import co.japl.android.synapsefit.service.WorkoutPlanPayloadParser
 import co.japl.android.synapsefit.services.wear.WearHeartRateSensorAdapter
 import co.japl.android.synapsefit.services.wear.WearableSyncAdapter
 import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -14,14 +20,17 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LongMethod")
 class WearActiveWorkoutViewModelTest {
+    private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var sensorAdapter: WearHeartRateSensorAdapter
     private lateinit var syncAdapter: WearableSyncAdapter
     private lateinit var viewModel: WearActiveWorkoutViewModel
 
     @Before
     fun setUp() {
+        Dispatchers.setMain(testDispatcher)
         sensorAdapter = WearHeartRateSensorAdapter()
         syncAdapter = WearableSyncAdapter()
         viewModel =
@@ -31,6 +40,11 @@ class WearActiveWorkoutViewModelTest {
             )
     }
 
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
     @Test
     fun testInitialUiState() {
         val state = viewModel.uiState.value
@@ -38,6 +52,58 @@ class WearActiveWorkoutViewModelTest {
         assertEquals(0, state.currentHeartRateBpm)
         assertEquals(0, state.currentReps)
         assertTrue(state.isSyncedWithPhone)
+        assertEquals(0L, state.workoutDurationSeconds)
+        assertFalse(state.isPaused)
+    }
+
+    @Test
+    fun testTogglePauseResume() {
+        viewModel.togglePauseResume()
+        assertTrue(viewModel.uiState.value.isPaused)
+
+        viewModel.togglePauseResume()
+        assertFalse(viewModel.uiState.value.isPaused)
+    }
+
+    @Test
+    fun testExerciseNavigationNextAndPrevious() {
+        val sessions =
+            listOf(
+                ExerciseSession(
+                    exerciseId = "ex1",
+                    planId = "p1",
+                    name = "Press de Banca",
+                    muscleGroup = "Pecho",
+                    targetSets = 3,
+                    targetReps = "10",
+                    restSeconds = 60,
+                ),
+                ExerciseSession(
+                    exerciseId = "ex2",
+                    planId = "p1",
+                    name = "Sentadilla",
+                    muscleGroup = "Piernas",
+                    targetSets = 3,
+                    targetReps = "12",
+                    restSeconds = 60,
+                ),
+            )
+        viewModel.loadExerciseSessions(sessions)
+
+        assertEquals("Press de Banca", viewModel.uiState.value.exerciseName)
+        assertEquals(0, viewModel.uiState.value.activeExerciseIndex)
+
+        viewModel.navigateToNextExercise()
+        assertEquals("Sentadilla", viewModel.uiState.value.exerciseName)
+        assertEquals(1, viewModel.uiState.value.activeExerciseIndex)
+
+        viewModel.navigateToNextExercise()
+        assertEquals("Press de Banca", viewModel.uiState.value.exerciseName)
+        assertEquals(0, viewModel.uiState.value.activeExerciseIndex)
+
+        viewModel.navigateToPreviousExercise()
+        assertEquals("Sentadilla", viewModel.uiState.value.exerciseName)
+        assertEquals(1, viewModel.uiState.value.activeExerciseIndex)
     }
 
     @Test
