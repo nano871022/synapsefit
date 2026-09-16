@@ -161,6 +161,9 @@ fun WearNavHost(
                     }
                 },
                 onStartNextExercise = { activeWorkoutViewModel.startNextExercise() },
+                onTogglePause = { activeWorkoutViewModel.togglePauseResume() },
+                onNextExercise = { activeWorkoutViewModel.navigateToNextExercise() },
+                onPreviousExercise = { activeWorkoutViewModel.navigateToPreviousExercise() },
             )
         }
 

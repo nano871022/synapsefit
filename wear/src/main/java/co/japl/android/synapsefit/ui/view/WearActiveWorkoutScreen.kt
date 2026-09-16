@@ -7,38 +7,44 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.wear.compose.foundation.CurvedLayout
-import androidx.wear.compose.foundation.curvedRow
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
+import androidx.wear.compose.material.Chip
+import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Text
-import androidx.wear.compose.material.curvedText
 import co.com.japl.ui.theme.BackgroundDark
 import co.com.japl.ui.theme.ErrorContainerDark
 import co.com.japl.ui.theme.OnPrimaryDark
 import co.com.japl.ui.theme.OnSurfaceDark
 import co.com.japl.ui.theme.PrimaryCyan
 import co.com.japl.ui.theme.SurfaceContainerHigh
+import co.com.japl.ui.theme.SurfaceContainerLow
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
 import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutUiState
+import java.util.Locale
 
 private const val SECONDS_PER_MINUTE = 60
+private const val SECONDS_PER_HOUR = 3600
+private const val CHIP_WIDTH_FRACTION = 0.85f
 
-@Suppress("LongMethod", "LongParameterList", "UnusedParameter")
+@Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod")
 @Composable
 fun WearActiveWorkoutScreen(
     uiState: WearActiveWorkoutUiState,
@@ -47,7 +53,27 @@ fun WearActiveWorkoutScreen(
     modifier: Modifier = Modifier,
     onCompleteSet: (() -> Unit)? = null,
     onStartNextExercise: (() -> Unit)? = null,
+    onTogglePause: (() -> Unit)? = null,
+    onNextExercise: (() -> Unit)? = null,
+    onPreviousExercise: (() -> Unit)? = null,
 ) {
+    val exerciseSession =
+        when (val state = uiState.trainingStepState) {
+            is TrainingStepState.Active -> state.exerciseSession
+            is TrainingStepState.Cooldown -> state.exerciseSession
+            is TrainingStepState.ReadyForNext -> state.nextExerciseSession
+        }
+
+    val currentSet =
+        when (val state = uiState.trainingStepState) {
+            is TrainingStepState.Active -> state.currentSet
+            else -> exerciseSession?.completedSets ?: 0
+        }
+
+    val exerciseTitle =
+        exerciseSession?.name
+            ?: uiState.exerciseName.ifEmpty { stringResource(R.string.wear_default_exercise) }
+
     Box(
         modifier =
             modifier
@@ -55,167 +81,261 @@ fun WearActiveWorkoutScreen(
                 .background(BackgroundDark),
         contentAlignment = Alignment.Center,
     ) {
-        val exerciseTitle =
-            when (val state = uiState.trainingStepState) {
-                is TrainingStepState.Active -> state.exerciseSession.name
-                is TrainingStepState.Cooldown -> state.exerciseSession.name
-                is TrainingStepState.ReadyForNext ->
-                    state.nextExerciseSession?.name
-                        ?: uiState.exerciseName.ifEmpty { stringResource(R.string.wear_default_exercise) }
-            }
-
-        CurvedLayout(
-            modifier = Modifier.fillMaxSize(),
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 6.dp),
         ) {
-            curvedRow {
-                curvedText(
-                    text = exerciseTitle,
-                    style =
-                        androidx.wear.compose.foundation.CurvedTextStyle(
-                            color = PrimaryCyan,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                        ),
-                )
-            }
-        }
+            WorkoutHeaderRow(
+                workoutDurationSeconds = uiState.workoutDurationSeconds,
+                currentHeartRateBpm = uiState.currentHeartRateBpm,
+            )
 
-        CentralWorkoutContent(
-            uiState = uiState,
-            onIncrementReps = onIncrementReps,
-            onDecrementReps = onDecrementReps,
-            onCompleteSet = onCompleteSet,
-            onStartNextExercise = onStartNextExercise,
-        )
+            Text(
+                text = exerciseTitle,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryCyan,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            )
+
+            SetAndRepsContent(
+                uiState = uiState,
+                targetSets = exerciseSession?.targetSets ?: 0,
+                targetReps = exerciseSession?.targetReps ?: "0",
+                currentSet = currentSet,
+                onIncrementReps = onIncrementReps,
+                onDecrementReps = onDecrementReps,
+            )
+
+            WorkoutActionButton(
+                isReadyForNext = uiState.trainingStepState is TrainingStepState.ReadyForNext,
+                onStartNextExercise = onStartNextExercise,
+                onCompleteSet = onCompleteSet,
+            )
+
+            WorkoutBottomControlRow(
+                isPaused = uiState.isPaused,
+                onTogglePause = onTogglePause,
+                onNextExercise = onNextExercise,
+                onPreviousExercise = onPreviousExercise,
+            )
+        }
     }
 }
 
-@Suppress("UnusedParameter")
 @Composable
-private fun CentralWorkoutContent(
+private fun WorkoutHeaderRow(
+    workoutDurationSeconds: Long,
+    currentHeartRateBpm: Int,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = formatDuration(workoutDurationSeconds),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = PrimaryCyan,
+            modifier = Modifier.padding(start = 12.dp),
+        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(end = 12.dp),
+        ) {
+            Text(
+                text = if (currentHeartRateBpm > 0) "$currentHeartRateBpm" else "--",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = ErrorContainerDark,
+            )
+            Spacer(modifier = Modifier.width(2.dp))
+            Text(
+                text = stringResource(R.string.wear_bpm_unit),
+                fontSize = 9.sp,
+                color = OnSurfaceDark,
+            )
+        }
+    }
+}
+
+@Suppress("LongParameterList")
+@Composable
+private fun SetAndRepsContent(
     uiState: WearActiveWorkoutUiState,
+    targetSets: Int,
+    targetReps: String,
+    currentSet: Int,
     onIncrementReps: () -> Unit,
     onDecrementReps: () -> Unit,
-    onCompleteSet: (() -> Unit)?,
-    onStartNextExercise: (() -> Unit)?,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.padding(16.dp),
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        if (targetSets > 0) {
+            Text(
+                text = "Serie $currentSet de $targetSets • $targetReps reps",
+                fontSize = 11.sp,
+                color = OnSurfaceDark,
+                fontWeight = FontWeight.Medium,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(2.dp))
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
+            Button(
+                onClick = onDecrementReps,
+                modifier = Modifier.size(28.dp),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        backgroundColor = SurfaceContainerHigh,
+                        contentColor = OnSurfaceDark,
+                    ),
+                shape = CircleShape,
+            ) {
+                Text(
+                    text = stringResource(R.string.wear_dec_reps),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
             Text(
-                text = "${uiState.currentHeartRateBpm}",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = ErrorContainerDark,
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = stringResource(R.string.wear_bpm_unit),
-                fontSize = 12.sp,
-                color = OnSurfaceDark,
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = stringResource(R.string.wear_reps_label),
-            fontSize = 12.sp,
-            color = OnSurfaceDark,
-        )
-        Text(
-            text = "${uiState.currentReps}",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = PrimaryCyan,
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        RepControlButtons(
-            onIncrementReps = onIncrementReps,
-            onDecrementReps = onDecrementReps,
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        if (uiState.cooldownSecondsRemaining != null && uiState.cooldownSecondsRemaining > 0) {
-            val mins = uiState.cooldownSecondsRemaining / SECONDS_PER_MINUTE
-            val secs = uiState.cooldownSecondsRemaining % SECONDS_PER_MINUTE
-            Text(
-                text = stringResource(R.string.wear_cooldown_label, mins, secs),
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
+                text = "${uiState.currentReps}",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.ExtraBold,
                 color = PrimaryCyan,
-                textAlign = TextAlign.Center,
             )
-        } else {
-            Text(
-                text =
-                    if (uiState.isSyncedWithPhone) {
-                        stringResource(R.string.wear_synced)
-                    } else {
-                        stringResource(R.string.wear_not_synced)
-                    },
-                fontSize = 10.sp,
-                color = if (uiState.isSyncedWithPhone) PrimaryCyan else OnSurfaceDark,
-                textAlign = TextAlign.Center,
-            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Button(
+                onClick = onIncrementReps,
+                modifier = Modifier.size(28.dp),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        backgroundColor = SurfaceContainerHigh,
+                        contentColor = PrimaryCyan,
+                    ),
+                shape = CircleShape,
+            ) {
+                Text(
+                    text = stringResource(R.string.wear_inc_reps),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun RepControlButtons(
-    onIncrementReps: () -> Unit,
-    onDecrementReps: () -> Unit,
+private fun WorkoutActionButton(
+    isReadyForNext: Boolean,
+    onStartNextExercise: (() -> Unit)?,
+    onCompleteSet: (() -> Unit)?,
+) {
+    val buttonText = if (isReadyForNext) "SIGUIENTE EJERCICIO" else "COMPLETAR SERIE"
+    val onClickAction = if (isReadyForNext) onStartNextExercise else onCompleteSet
+
+    Chip(
+        onClick = { onClickAction?.invoke() },
+        colors =
+            ChipDefaults.chipColors(
+                backgroundColor = PrimaryCyan,
+                contentColor = OnPrimaryDark,
+            ),
+        label = {
+            Text(
+                text = buttonText,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+        },
+        modifier = Modifier.fillMaxWidth(CHIP_WIDTH_FRACTION).height(32.dp),
+        shape = RoundedCornerShape(16.dp),
+    )
+}
+
+@Composable
+private fun WorkoutBottomControlRow(
+    isPaused: Boolean,
+    onTogglePause: (() -> Unit)?,
+    onNextExercise: (() -> Unit)?,
+    onPreviousExercise: (() -> Unit)?,
 ) {
     Row(
-        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Button(
-            onClick = onDecrementReps,
-            modifier = Modifier.size(36.dp),
+            onClick = { onPreviousExercise?.invoke() },
+            modifier = Modifier.size(26.dp),
             colors =
                 ButtonDefaults.buttonColors(
-                    backgroundColor = SurfaceContainerHigh,
+                    backgroundColor = SurfaceContainerLow,
                     contentColor = OnSurfaceDark,
                 ),
             shape = CircleShape,
         ) {
-            Text(
-                text = stringResource(R.string.wear_dec_reps),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-            )
+            Text(text = "‹", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
 
-        Spacer(modifier = Modifier.width(16.dp))
-
         Button(
-            onClick = onIncrementReps,
-            modifier = Modifier.size(36.dp),
+            onClick = { onTogglePause?.invoke() },
+            modifier = Modifier.size(26.dp),
             colors =
                 ButtonDefaults.buttonColors(
-                    backgroundColor = PrimaryCyan,
-                    contentColor = OnPrimaryDark,
+                    backgroundColor = if (isPaused) ErrorContainerDark else SurfaceContainerHigh,
+                    contentColor = if (isPaused) PrimaryCyan else OnSurfaceDark,
                 ),
             shape = CircleShape,
         ) {
             Text(
-                text = stringResource(R.string.wear_inc_reps),
-                fontSize = 18.sp,
+                text = if (isPaused) "▶" else "❚❚",
+                fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
             )
         }
+
+        Button(
+            onClick = { onNextExercise?.invoke() },
+            modifier = Modifier.size(26.dp),
+            colors =
+                ButtonDefaults.buttonColors(
+                    backgroundColor = SurfaceContainerLow,
+                    contentColor = OnSurfaceDark,
+                ),
+            shape = CircleShape,
+        ) {
+            Text(text = "›", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+private fun formatDuration(seconds: Long): String {
+    val hrs = seconds / SECONDS_PER_HOUR
+    val mins = (seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE
+    val secs = seconds % SECONDS_PER_MINUTE
+    return if (hrs > 0) {
+        String.format(Locale.getDefault(), "%02d:%02d:%02d", hrs, mins, secs)
+    } else {
+        String.format(Locale.getDefault(), "%02d:%02d", mins, secs)
     }
 }
