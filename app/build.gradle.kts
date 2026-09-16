@@ -20,10 +20,10 @@ abstract class CopyGoogleServicesTask : DefaultTask() {
 
 val copyGoogleServicesJson =
     tasks.register<CopyGoogleServicesTask>("copyGoogleServicesJson") {
-    description = "Copia el archivo google-services.json si no existe localmente."
-    // Cambia la ruta según la ubicación de tu repositorio externo
-    sourceFile.set(layout.projectDirectory.file("../../japl-properties/synapseefit/google-services.json"))
-    targetFile.set(layout.projectDirectory.file("google-services.json"))
+        description = "Copia el archivo google-services.json si no existe localmente."
+        // Cambia la ruta según la ubicación de tu repositorio externo
+        sourceFile.set(layout.projectDirectory.file("../../japl-properties/synapseefit/google-services.json"))
+        targetFile.set(layout.projectDirectory.file("google-services.json"))
 }
 
 tasks.configureEach {
