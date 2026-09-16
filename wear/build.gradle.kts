@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
 
+    implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
     implementation(libs.compose.material.icons.extended)
@@ -74,4 +75,5 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(platform(libs.compose.bom))
 }
