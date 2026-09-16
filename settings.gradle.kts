@@ -45,6 +45,6 @@ when {
         "../about-consumer.gradle.kts",
     )
     else -> {
-        // Do not include :about if neither folder exists
+        include(:about)
     }
 }
