@@ -1,4 +1,12 @@
-@file:Suppress("FunctionNaming", "LongMethod", "MaxLineLength", "UnusedParameter", "UnusedPrivateMember", "MagicNumber")
+@file:Suppress(
+    "FunctionNaming",
+    "LongMethod",
+    "MaxLineLength",
+    "UnusedParameter",
+    "UnusedPrivateMember",
+    "MagicNumber",
+    "LongParameterList",
+)
 
 package co.japl.android.synapsefit.app.ui.dashboard
 
@@ -23,6 +31,7 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -98,8 +107,16 @@ fun DashboardScreen(
         )
 
         TodayWorkoutCard(
-            title = state.todayWorkoutTitle ?: stringResource(R.string.no_active_routine),
-            planId = state.todayWorkoutPlanId,
+            title = if (state.hasActiveSession) {
+                state.activeWorkoutPlanTitle ?: state.todayWorkoutTitle ?: stringResource(R.string.no_active_routine)
+            } else {
+                state.todayWorkoutTitle ?: stringResource(R.string.no_active_routine)
+            },
+            planId = if (state.hasActiveSession) state.activeWorkoutPlanId else state.todayWorkoutPlanId,
+            hasActiveSession = state.hasActiveSession,
+            elapsedSeconds = state.activeWorkoutElapsedSeconds,
+            completedExercises = state.activeWorkoutCompletedExercises,
+            totalExercises = state.activeWorkoutTotalExercises,
             onStartWorkout = { planId ->
                 if (planId != null) {
                     onStartWorkoutClick(planId)
@@ -188,6 +205,30 @@ private fun DashboardScreenPreview() {
                     todayWorkoutPlanId = "plan_1",
                     isPlanCompletedAlertVisible = true,
                     activePlanTotalSessions = 12,
+                ),
+            onStartWorkoutClick = {},
+            onLogMeasurementClick = {},
+            onProfileClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ActiveDashboardScreenPreview() {
+    MaterialThemeComposeUI {
+        DashboardScreen(
+            state =
+                DashboardUiState(
+                    userName = "Atleta SynapseFit",
+                    latestWeightKg = 75.0,
+                    weightTrendDeltaKg = -0.5,
+                    hasActiveSession = true,
+                    activeWorkoutPlanId = "plan_1",
+                    activeWorkoutPlanTitle = "Pecho y Tríceps",
+                    activeWorkoutElapsedSeconds = 1254L,
+                    activeWorkoutCompletedExercises = 2,
+                    activeWorkoutTotalExercises = 5,
                 ),
             onStartWorkoutClick = {},
             onLogMeasurementClick = {},
@@ -295,6 +336,10 @@ fun TodayWorkoutCard(
     planId: String?,
     onStartWorkout: (String?) -> Unit,
     modifier: Modifier = Modifier,
+    hasActiveSession: Boolean = false,
+    elapsedSeconds: Long = 0L,
+    completedExercises: Int = 0,
+    totalExercises: Int = 0,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -308,19 +353,47 @@ fun TodayWorkoutCard(
             modifier = Modifier.padding(MaterialTheme.spacing.medium),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.FitnessCenter,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp),
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.today_workout_title).uppercase(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.FitnessCenter,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (hasActiveSession) {
+                            stringResource(R.string.active_session_title).uppercase()
+                        } else {
+                            stringResource(R.string.today_workout_title).uppercase()
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+
+                if (hasActiveSession) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Timer,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = formatSecondsToTimeString(elapsedSeconds),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
             }
 
             Text(
@@ -329,11 +402,34 @@ fun TodayWorkoutCard(
                 color = MaterialTheme.colorScheme.onSurface,
             )
 
+            if (hasActiveSession && totalExercises > 0) {
+                Text(
+                    text = stringResource(R.string.exercises_progress, completedExercises, totalExercises),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
             NeonButton(
-                text = stringResource(R.string.start_session),
+                text = if (hasActiveSession) {
+                    stringResource(R.string.continue_session)
+                } else {
+                    stringResource(R.string.start_session)
+                },
                 onClick = { onStartWorkout(planId) },
                 enabled = planId != null,
             )
         }
+    }
+}
+
+private fun formatSecondsToTimeString(totalSeconds: Long): String {
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    return if (hours > 0) {
+        "%02d:%02d:%02d".format(hours, minutes, seconds)
+    } else {
+        "%02d:%02d".format(minutes, seconds)
     }
 }
