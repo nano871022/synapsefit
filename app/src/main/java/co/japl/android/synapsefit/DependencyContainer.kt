@@ -9,6 +9,7 @@ import co.japl.android.synapsefit.core.port.secondary.GoogleAuthRepository
 import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
 import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
+import co.japl.android.synapsefit.core.port.secondary.WearStateMirrorPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.CheckAndRestoreBackupUseCase
@@ -36,8 +37,13 @@ import co.japl.android.synapsefit.services.repository.LlmConfigRepositoryAdapter
 import co.japl.android.synapsefit.services.repository.UserProfileRepositoryAdapter
 import co.japl.android.synapsefit.services.repository.WorkoutLogRepositoryAdapter
 import co.japl.android.synapsefit.services.repository.WorkoutPlanRepositoryAdapter
+import co.japl.android.synapsefit.services.wear.WearableStateMirrorAdapter
 
 class DependencyContainer(context: Context) {
+    val wearStateMirrorPort: WearStateMirrorPort by lazy {
+        WearableStateMirrorAdapter(context.applicationContext)
+    }
+
     private val database: SynapseFitDatabase by lazy {
         Room.databaseBuilder(
             context.applicationContext,
