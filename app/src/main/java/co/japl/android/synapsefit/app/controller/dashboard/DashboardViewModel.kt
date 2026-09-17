@@ -1,4 +1,9 @@
-@file:Suppress("MaxLineLength", "LongMethod", "CyclomaticComplexMethod")
+@file:Suppress(
+    "MaxLineLength",
+    "LongMethod",
+    "CyclomaticComplexMethod",
+    "MagicNumber",
+)
 
 package co.japl.android.synapsefit.app.controller.dashboard
 
@@ -10,12 +15,15 @@ import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryP
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.ValidateActivePlanSessionsUseCase
+import co.japl.android.synapsefit.util.DateTimeUtils
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 data class DashboardUiState(
@@ -28,6 +36,11 @@ data class DashboardUiState(
     val isPlanCompletedAlertVisible: Boolean = false,
     val activePlanTotalSessions: Int = 12,
     val hasActiveSession: Boolean = false,
+    val activeWorkoutPlanId: String? = null,
+    val activeWorkoutPlanTitle: String? = null,
+    val activeWorkoutElapsedSeconds: Long = 0L,
+    val activeWorkoutCompletedExercises: Int = 0,
+    val activeWorkoutTotalExercises: Int = 0,
     val isSyncing: Boolean = false,
     val isLoading: Boolean = false,
 )
@@ -43,6 +56,7 @@ class DashboardViewModel(
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     private var dashboardJob: Job? = null
+    private var activeSessionTimerJob: Job? = null
 
     init {
         loadDashboardData()
@@ -50,6 +64,8 @@ class DashboardViewModel(
 
     fun loadDashboardData() {
         dashboardJob?.cancel()
+        checkActiveSession()
+
         dashboardJob =
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true) }
@@ -99,7 +115,6 @@ class DashboardViewModel(
                             val activeDayNumber = if (lastDay == 0) 1 else (lastDay % totalPlanDays) + 1
                             val isLimitReached = validation?.isLimitReached ?: false
                             val totalSessions = validation?.totalSessions ?: targetPlan.totalSessions
-                            val hasActive = context?.let { WorkoutSessionStateManager.hasActiveSession(it) } ?: false
 
                             _uiState.update {
                                 it.copy(
@@ -107,18 +122,15 @@ class DashboardViewModel(
                                     todayWorkoutPlanId = targetPlan.id,
                                     isPlanCompletedAlertVisible = isLimitReached,
                                     activePlanTotalSessions = totalSessions,
-                                    hasActiveSession = hasActive,
                                     isLoading = false,
                                 )
                             }
                         } else {
-                            val hasActive = context?.let { WorkoutSessionStateManager.hasActiveSession(it) } ?: false
                             _uiState.update {
                                 it.copy(
                                     todayWorkoutTitle = "Sin rutina activa",
                                     todayWorkoutPlanId = null,
                                     isPlanCompletedAlertVisible = false,
-                                    hasActiveSession = hasActive,
                                     isLoading = false,
                                 )
                             }
@@ -126,5 +138,47 @@ class DashboardViewModel(
                     }
                 }
             }
+    }
+
+    private fun checkActiveSession() {
+        activeSessionTimerJob?.cancel()
+        val restored = context?.let { WorkoutSessionStateManager.loadSession(it) }
+        if (restored != null) {
+            val totalEx = restored.uiState.exercises.size
+            val completedEx =
+                restored.uiState.exercises.count { ex ->
+                    (restored.exerciseCompletedSets[ex.id] ?: 0) >= ex.targetSets
+                }
+            val startTs = restored.sessionStartTimestamp
+
+            activeSessionTimerJob =
+                viewModelScope.launch {
+                    while (isActive) {
+                        val elapsed = DateTimeUtils.calculateElapsedTimeSeconds(startTs)
+                        _uiState.update {
+                            it.copy(
+                                hasActiveSession = true,
+                                activeWorkoutPlanId = restored.uiState.planId,
+                                activeWorkoutPlanTitle = restored.uiState.planTitle,
+                                activeWorkoutElapsedSeconds = elapsed,
+                                activeWorkoutCompletedExercises = completedEx,
+                                activeWorkoutTotalExercises = totalEx,
+                            )
+                        }
+                        delay(1000L)
+                    }
+                }
+        } else {
+            _uiState.update {
+                it.copy(
+                    hasActiveSession = false,
+                    activeWorkoutPlanId = null,
+                    activeWorkoutPlanTitle = null,
+                    activeWorkoutElapsedSeconds = 0L,
+                    activeWorkoutCompletedExercises = 0,
+                    activeWorkoutTotalExercises = 0,
+                )
+            }
+        }
     }
 }

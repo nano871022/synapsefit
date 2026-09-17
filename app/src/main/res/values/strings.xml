@@ -265,4 +265,7 @@
     <string name="db_records_count">%1$d registros</string>
     <string name="db_columns_count">%1$d columnas</string>
     <string name="refresh">Actualizar</string>
+    <string name="active_session_title">Sesion Activa</string>
+    <string name="exercises_progress">Progreso ejercicio</string>
+    <string name="continue_session">Continuar Sesion</string>
 </resources>

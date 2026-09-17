@@ -239,4 +239,7 @@
     <string name="sign_in_google">Sign in with Google</string>
     <string name="sign_out">Sign out</string>
     <string name="restore_from_drive">Restore from Google Drive</string>
+    <string name="active_session_title">Active Session</string>
+    <string name="exercises_progress">Exercises Progress</string>
+    <string name="continue_session">Continue Session</string>
 </resources>
