@@ -55,8 +55,8 @@ android {
         applicationId = "co.japl.android.synapsefit"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 11_00_014
-        versionName = "1.00.014 Fix live connection"
+        versionCode = 11_00_015
+        versionName = "1.00.015 Fix Sync Sessions"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
