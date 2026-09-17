@@ -107,11 +107,12 @@ fun DashboardScreen(
         )
 
         TodayWorkoutCard(
-            title = if (state.hasActiveSession) {
-                state.activeWorkoutPlanTitle ?: state.todayWorkoutTitle ?: stringResource(R.string.no_active_routine)
-            } else {
-                state.todayWorkoutTitle ?: stringResource(R.string.no_active_routine)
-            },
+            title = 
+                if (state.hasActiveSession) {
+                    state.activeWorkoutPlanTitle ?: state.todayWorkoutTitle ?: stringResource(R.string.no_active_routine)
+                } else {
+                    state.todayWorkoutTitle ?: stringResource(R.string.no_active_routine)
+                },
             planId = if (state.hasActiveSession) state.activeWorkoutPlanId else state.todayWorkoutPlanId,
             hasActiveSession = state.hasActiveSession,
             elapsedSeconds = state.activeWorkoutElapsedSeconds,
@@ -367,11 +368,12 @@ fun TodayWorkoutCard(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (hasActiveSession) {
-                            stringResource(R.string.active_session_title).uppercase()
-                        } else {
-                            stringResource(R.string.today_workout_title).uppercase()
-                        },
+                        text = 
+                            if (hasActiveSession) {
+                                stringResource(R.string.active_session_title).uppercase()
+                            } else {
+                                stringResource(R.string.today_workout_title).uppercase()
+                            },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -411,11 +413,12 @@ fun TodayWorkoutCard(
             }
 
             NeonButton(
-                text = if (hasActiveSession) {
-                    stringResource(R.string.continue_session)
-                } else {
-                    stringResource(R.string.start_session)
-                },
+                text = 
+                    if (hasActiveSession) {
+                        stringResource(R.string.continue_session)
+                    } else {
+                        stringResource(R.string.start_session)
+                    },
                 onClick = { onStartWorkout(planId) },
                 enabled = planId != null,
             )
