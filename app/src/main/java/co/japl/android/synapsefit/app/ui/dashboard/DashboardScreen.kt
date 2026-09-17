@@ -107,7 +107,7 @@ fun DashboardScreen(
         )
 
         TodayWorkoutCard(
-            title = 
+            title =
                 if (state.hasActiveSession) {
                     state.activeWorkoutPlanTitle ?: state.todayWorkoutTitle ?: stringResource(R.string.no_active_routine)
                 } else {
@@ -368,7 +368,7 @@ fun TodayWorkoutCard(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = 
+                        text =
                             if (hasActiveSession) {
                                 stringResource(R.string.active_session_title).uppercase()
                             } else {
@@ -413,7 +413,7 @@ fun TodayWorkoutCard(
             }
 
             NeonButton(
-                text = 
+                text =
                     if (hasActiveSession) {
                         stringResource(R.string.continue_session)
                     } else {

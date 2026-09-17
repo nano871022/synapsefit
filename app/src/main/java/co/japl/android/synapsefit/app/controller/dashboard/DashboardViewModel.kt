@@ -145,7 +145,7 @@ class DashboardViewModel(
         val restored = context?.let { WorkoutSessionStateManager.loadSession(it) }
         if (restored != null) {
             val totalEx = restored.uiState.exercises.size
-            val completedEx = 
+            val completedEx =
                 restored.uiState.exercises.count { ex ->
                     (restored.exerciseCompletedSets[ex.id] ?: 0) >= ex.targetSets
                 }
