@@ -168,12 +168,37 @@ class WearActiveWorkoutViewModel(
     }
 
     fun togglePauseResume() {
-        _uiState.update { it.copy(isPaused = !it.isPaused) }
+        val newIsPaused = !_uiState.value.isPaused
+        if (newIsPaused) {
+            val currentState = _trainingStepState.value
+            if (currentState !is TrainingStepState.Paused) {
+                _trainingStepState.value = TrainingStepState.Paused(currentState)
+            }
+        } else {
+            val currentState = _trainingStepState.value
+            if (currentState is TrainingStepState.Paused) {
+                _trainingStepState.value = currentState.previousState
+            }
+        }
+        _uiState.update {
+            it.copy(
+                isPaused = newIsPaused,
+                trainingStepState = _trainingStepState.value,
+            )
+        }
     }
 
     fun startSession() {
+        sensorPort?.startHeartRateMonitoring()
         _uiState.update { it.copy(isSessionStarted = true) }
         startWorkoutTimer()
+    }
+
+    fun finishSession() {
+        timerJob?.cancel()
+        sensorPort?.stopHeartRateMonitoring()
+        syncPort?.flushSyncQueue()
+        _uiState.update { it.copy(isSessionStarted = false) }
     }
 
     fun loadPlanData(
