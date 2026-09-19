@@ -253,12 +253,6 @@ private fun ActiveWorkoutDestination(
         onTogglePause = { activeWorkoutViewModel.togglePauseResume() },
         onNextExercise = { activeWorkoutViewModel.navigateToNextExercise() },
         onPreviousExercise = { activeWorkoutViewModel.navigateToPreviousExercise() },
-        onFinishSession = {
-            activeWorkoutViewModel.finishSession()
-            navController.navigate(WearRoutes.postWorkoutSummary(planId, day)) {
-                popUpTo(WearRoutes.ACTIVE_WORKOUT) { inclusive = true }
-            }
-        },
     )
 }
 

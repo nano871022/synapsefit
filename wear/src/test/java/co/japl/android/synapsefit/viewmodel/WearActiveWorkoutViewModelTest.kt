@@ -77,6 +77,7 @@ class WearActiveWorkoutViewModelTest {
 
         viewModel.finishSession()
         assertFalse(viewModel.uiState.value.isSessionStarted)
+        assertTrue(viewModel.uiState.value.isRoutineCompleted)
     }
 
     @Test
