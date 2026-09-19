@@ -47,6 +47,22 @@ class WearDaySelectionViewModel(
             }
     }
 
+    fun updateActiveSessionState(
+        activePlanDayId: Int?,
+        sessionStartTimestamp: Long?,
+        activeExerciseId: String?,
+        exerciseStartTimestamp: Long?,
+    ) {
+        _uiState.update {
+            it.copy(
+                activePlanDayId = activePlanDayId,
+                sessionStartTimestamp = sessionStartTimestamp,
+                activeExerciseId = activeExerciseId,
+                exerciseStartTimestamp = exerciseStartTimestamp,
+            )
+        }
+    }
+
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     fun checkForUpdates(context: Context) {
         if (_uiState.value.checkingUpdate) return

@@ -76,4 +76,21 @@ class WearDaySelectionViewModelTest {
         assertTrue(state.sessions.isEmpty())
         assertFalse(state.isLoading)
     }
+
+    @Test
+    fun testUpdateActiveSessionStateUpdatesUiState() {
+        viewModel = WearDaySelectionViewModel(null)
+        viewModel.updateActiveSessionState(
+            activePlanDayId = 2,
+            sessionStartTimestamp = 1000000L,
+            activeExerciseId = "ex_123",
+            exerciseStartTimestamp = 1005000L,
+        )
+
+        val state = viewModel.uiState.value
+        assertEquals(2, state.activePlanDayId)
+        assertEquals(1000000L, state.sessionStartTimestamp)
+        assertEquals("ex_123", state.activeExerciseId)
+        assertEquals(1005000L, state.exerciseStartTimestamp)
+    }
 }

@@ -262,12 +262,16 @@ class WearActiveWorkoutViewModelTest {
         viewModel.selectExercise(exercise, 0)
         assertTrue(viewModel.uiState.value.isSessionStarted)
         assertEquals("Press de Banca (Compuesto)", viewModel.uiState.value.exerciseName)
+        assertNotNull(viewModel.uiState.value.sessionStartTimestamp)
+        assertEquals("ex_1", viewModel.uiState.value.activeExerciseId)
+        assertNotNull(viewModel.uiState.value.exerciseStartTimestamp)
 
         viewModel.exitToSelectionHub()
         assertFalse(viewModel.uiState.value.isSessionStarted)
 
         viewModel.startSession()
         assertTrue(viewModel.uiState.value.isSessionStarted)
+        assertNotNull(viewModel.uiState.value.sessionStartTimestamp)
     }
 
     @Test

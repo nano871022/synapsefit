@@ -82,6 +82,25 @@ fun WearNavHost(
         }
     }
 
+    LaunchedEffect(
+        activeUiState.isSessionStarted,
+        activeUiState.activePlanDayId,
+        activeUiState.sessionStartTimestamp,
+        activeUiState.activeExerciseId,
+        activeUiState.exerciseStartTimestamp,
+    ) {
+        if (activeUiState.isSessionStarted) {
+            daySelectionViewModel.updateActiveSessionState(
+                activePlanDayId = activeUiState.activePlanDayId ?: activeUiState.currentDay,
+                sessionStartTimestamp = activeUiState.sessionStartTimestamp,
+                activeExerciseId = activeUiState.activeExerciseId,
+                exerciseStartTimestamp = activeUiState.exerciseStartTimestamp,
+            )
+        } else {
+            daySelectionViewModel.updateActiveSessionState(null, null, null, null)
+        }
+    }
+
     val postWorkoutSummaryViewModel: WearPostWorkoutSummaryViewModel =
         viewModel(
             factory =
@@ -159,6 +178,8 @@ private fun DaySelectionDestination(
 
     WearDaySelectionScreen(
         sessions = daySelectionState.sessions,
+        activePlanDayId = daySelectionState.activePlanDayId,
+        sessionStartTimestamp = daySelectionState.sessionStartTimestamp,
         onSelectSession = { planId, day ->
             navController.navigate(WearRoutes.preWorkout(planId, day))
         },
@@ -194,13 +215,25 @@ private fun PreWorkoutDestination(
         planTitle = activeUiState.activePlanTitle,
         currentDay = day,
         exercises = activeUiState.availableExercises,
+        activeExerciseId = activeUiState.activeExerciseId,
+        exerciseStartTimestamp = activeUiState.exerciseStartTimestamp,
         onSelectExercise = { exercise, index ->
             activeWorkoutViewModel.selectExercise(exercise, index)
-            navController.navigate(WearRoutes.activeWorkout(planId, day))
+            val stepState = activeWorkoutViewModel.trainingStepState.value
+            if (stepState is co.japl.android.synapsefit.core.domain.model.TrainingStepState.Cooldown) {
+                navController.navigate(WearRoutes.cooldown(planId, day))
+            } else {
+                navController.navigate(WearRoutes.activeWorkout(planId, day))
+            }
         },
         onStartSession = {
             activeWorkoutViewModel.startSession()
-            navController.navigate(WearRoutes.activeWorkout(planId, day))
+            val stepState = activeWorkoutViewModel.trainingStepState.value
+            if (stepState is co.japl.android.synapsefit.core.domain.model.TrainingStepState.Cooldown) {
+                navController.navigate(WearRoutes.cooldown(planId, day))
+            } else {
+                navController.navigate(WearRoutes.activeWorkout(planId, day))
+            }
         },
     )
 }
