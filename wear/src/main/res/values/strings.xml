@@ -56,4 +56,5 @@
     <string name="reps">Repeticiones</string>
     <string name="weight">Peso</string>
     <string name="weight_avg">Prom. %d Kg Peso</string>
+    <string name="wear_finish_session">Finalizar Sesión</string>
 </resources>

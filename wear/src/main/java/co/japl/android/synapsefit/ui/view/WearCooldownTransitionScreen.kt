@@ -111,6 +111,18 @@ fun WearCooldownTransitionScreen(
                             trainingStepState.exerciseSession.exerciseId == session.exerciseId
                         is TrainingStepState.ReadyForNext ->
                             trainingStepState.nextExerciseSession?.exerciseId == session.exerciseId
+                        is TrainingStepState.Paused -> {
+                            val prev = trainingStepState.previousState
+                            when (prev) {
+                                is TrainingStepState.Active ->
+                                    prev.exerciseSession.exerciseId == session.exerciseId
+                                is TrainingStepState.Cooldown ->
+                                    prev.exerciseSession.exerciseId == session.exerciseId
+                                is TrainingStepState.ReadyForNext ->
+                                    prev.nextExerciseSession?.exerciseId == session.exerciseId
+                                is TrainingStepState.Paused -> false
+                            }
+                        }
                     }
 
                 ExerciseSessionCardItem(
@@ -471,6 +483,7 @@ private fun FooterIndexSection(
                     exerciseSessions.size
                 }
             }
+            is TrainingStepState.Paused -> 1
         }
 
     Box(

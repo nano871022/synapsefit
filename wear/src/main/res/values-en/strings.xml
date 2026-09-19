@@ -55,4 +55,5 @@
     <string name="reps">Sets</string>
     <string name="weight">Weight</string>
     <string name="weight_avg">Avg %d lb Weight</string>
+    <string name="wear_finish_session">Finish Session</string>
 </resources>
