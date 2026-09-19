@@ -143,7 +143,12 @@ class WearActiveWorkoutViewModel(
                 activePlanDayId = event.day,
                 sessionStartTimestamp = it.sessionStartTimestamp ?: now,
                 activeExerciseId = event.currentExerciseId,
-                exerciseStartTimestamp = if (exChanged || it.exerciseStartTimestamp == null) now else it.exerciseStartTimestamp,
+                exerciseStartTimestamp =
+                    if (exChanged || it.exerciseStartTimestamp == null) {
+                        now
+                    } else {
+                        it.exerciseStartTimestamp
+                    },
             )
         }
     }
@@ -174,14 +179,33 @@ class WearActiveWorkoutViewModel(
     }
 
     fun togglePauseResume() {
-        _uiState.update { it.copy(isPaused = !it.isPaused) }
+        val newIsPaused = !_uiState.value.isPaused
+        if (newIsPaused) {
+            val currentState = _trainingStepState.value
+            if (currentState !is TrainingStepState.Paused) {
+                _trainingStepState.value = TrainingStepState.Paused(currentState)
+            }
+        } else {
+            val currentState = _trainingStepState.value
+            if (currentState is TrainingStepState.Paused) {
+                _trainingStepState.value = currentState.previousState
+            }
+        }
+        _uiState.update {
+            it.copy(
+                isPaused = newIsPaused,
+                trainingStepState = _trainingStepState.value,
+            )
+        }
     }
 
     fun startSession() {
+        sensorPort?.startHeartRateMonitoring()
         val now = DateTimeUtils.getCurrentTimestamp()
         _uiState.update { current ->
-            val firstExId = current.exerciseSessions.getOrNull(current.activeExerciseIndex)?.exerciseId
-                ?: current.availableExercises.firstOrNull()?.id
+            val firstExId =
+                current.exerciseSessions.getOrNull(current.activeExerciseIndex)?.exerciseId
+                    ?: current.availableExercises.firstOrNull()?.id
             current.copy(
                 isSessionStarted = true,
                 activePlanDayId = current.currentDay,
@@ -191,6 +215,13 @@ class WearActiveWorkoutViewModel(
             )
         }
         startWorkoutTimer()
+    }
+
+    fun finishSession() {
+        timerJob?.cancel()
+        sensorPort?.stopHeartRateMonitoring()
+        syncPort?.flushSyncQueue()
+        _uiState.update { it.copy(isSessionStarted = false) }
     }
 
     fun loadPlanData(

@@ -11,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.util.Locale
 
+@Suppress("MagicNumber")
 fun formatElapsedTime(seconds: Long): String {
     val hrs = seconds / 3600
     val mins = (seconds % 3600) / 60
@@ -22,6 +23,7 @@ fun formatElapsedTime(seconds: Long): String {
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 fun rememberElapsedTimeSeconds(startTimestamp: Long?): Long {
     var elapsedSeconds by remember(startTimestamp) {
