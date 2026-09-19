@@ -18,10 +18,6 @@ sealed interface TrainingStepState {
         val nextExerciseSession: ExerciseSession?,
     ) : TrainingStepState
 
-    data class Paused(
-        val previousState: TrainingStepState,
-    ) : TrainingStepState
-
     companion object {
         fun calculateRemainingMillis(
             targetTimestamp: Long,
