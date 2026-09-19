@@ -1,5 +1,6 @@
 package co.japl.android.synapsefit.ui.viewmodel
 
+import android.view.KeyEvent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.Exercise
@@ -19,10 +20,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 private const val MILLIS_PER_SECOND = 1000L
+private const val DEFAULT_REST_SECONDS = 60L
+private const val ROTARY_THRESHOLD = 0.5f
 
-@Suppress("TooManyFunctions", "LongMethod", "CyclomaticComplexMethod", "MagicNumber")
+@Suppress("TooManyFunctions", "LongMethod", "CyclomaticComplexMethod", "MagicNumber", "LargeClass")
 class WearActiveWorkoutViewModel(
     private val sensorPort: WearSensorPort? = null,
     private val syncPort: WearSyncPort? = null,
@@ -37,6 +41,7 @@ class WearActiveWorkoutViewModel(
     val uiState: StateFlow<WearActiveWorkoutUiState> = _uiState.asStateFlow()
 
     private var timerJob: Job? = null
+    private var rotaryAccumulator = 0f
 
     init {
         loadActivePlanData()
@@ -179,24 +184,16 @@ class WearActiveWorkoutViewModel(
     }
 
     fun togglePauseResume() {
-        val newIsPaused = !_uiState.value.isPaused
-        if (newIsPaused) {
-            val currentState = _trainingStepState.value
-            if (currentState !is TrainingStepState.Paused) {
-                _trainingStepState.value = TrainingStepState.Paused(currentState)
-            }
+        val nextPaused = !_uiState.value.isPaused
+        if (nextPaused) {
+            _trainingStepState.value = TrainingStepState.Paused(_trainingStepState.value)
         } else {
-            val currentState = _trainingStepState.value
-            if (currentState is TrainingStepState.Paused) {
-                _trainingStepState.value = currentState.previousState
+            val paused = _trainingStepState.value as? TrainingStepState.Paused
+            if (paused != null) {
+                _trainingStepState.value = paused.previousState
             }
         }
-        _uiState.update {
-            it.copy(
-                isPaused = newIsPaused,
-                trainingStepState = _trainingStepState.value,
-            )
-        }
+        _uiState.update { it.copy(isPaused = nextPaused) }
     }
 
     fun startSession() {
@@ -218,10 +215,70 @@ class WearActiveWorkoutViewModel(
     }
 
     fun finishSession() {
-        timerJob?.cancel()
-        sensorPort?.stopHeartRateMonitoring()
+        _uiState.update { it.copy(isSessionStarted = false, isRoutineCompleted = true) }
         syncPort?.flushSyncQueue()
-        _uiState.update { it.copy(isSessionStarted = false) }
+    }
+
+    fun setFocusedInput(input: FocusedInput) {
+        _uiState.update { it.copy(focusedInput = input) }
+    }
+
+    fun openNumericKeypad() {
+        _uiState.update { it.copy(isNumericKeypadOpen = true) }
+    }
+
+    fun closeNumericKeypad() {
+        _uiState.update { it.copy(isNumericKeypadOpen = false) }
+    }
+
+    fun setFocusedValueDirect(value: Int) {
+        val safeVal = value.coerceAtLeast(0)
+        _uiState.update { state ->
+            when (state.focusedInput) {
+                FocusedInput.REPS -> state.copy(currentReps = safeVal, isNumericKeypadOpen = false)
+                FocusedInput.WEIGHT -> state.copy(currentWeight = safeVal.toShort(), isNumericKeypadOpen = false)
+            }
+        }
+    }
+
+    fun incrementFocusedInput() {
+        when (_uiState.value.focusedInput) {
+            FocusedInput.REPS -> incrementReps()
+            FocusedInput.WEIGHT -> incrementWgt()
+        }
+    }
+
+    fun decrementFocusedInput() {
+        when (_uiState.value.focusedInput) {
+            FocusedInput.REPS -> decrementReps()
+            FocusedInput.WEIGHT -> decrementWgt()
+        }
+    }
+
+    fun handleRotaryScroll(delta: Float) {
+        rotaryAccumulator += delta
+        if (abs(rotaryAccumulator) >= ROTARY_THRESHOLD) {
+            if (rotaryAccumulator > 0) {
+                incrementFocusedInput()
+            } else {
+                decrementFocusedInput()
+            }
+            rotaryAccumulator = 0f
+        }
+    }
+
+    fun handleHardwareKey(keyCode: Int): Boolean {
+        return when (keyCode) {
+            KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_STEM_1 -> {
+                incrementFocusedInput()
+                true
+            }
+            KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_STEM_2 -> {
+                decrementFocusedInput()
+                true
+            }
+            else -> false
+        }
     }
 
     fun loadPlanData(
@@ -351,6 +408,7 @@ class WearActiveWorkoutViewModel(
                 sessionStartTimestamp = it.sessionStartTimestamp ?: now,
                 activeExerciseId = targetSession.exerciseId,
                 exerciseStartTimestamp = now,
+                isRoutineCompleted = false,
             )
         }
         startWorkoutTimer()
@@ -367,6 +425,7 @@ class WearActiveWorkoutViewModel(
                 it.copy(
                     exerciseSessions = emptyList(),
                     trainingStepState = TrainingStepState.ReadyForNext(null),
+                    isRoutineCompleted = false,
                 )
             }
             return
@@ -384,6 +443,7 @@ class WearActiveWorkoutViewModel(
                 exerciseSessions = sessions,
                 activeExerciseIndex = firstIncompleteIndex,
                 trainingStepState = initialState,
+                isRoutineCompleted = false,
             )
         }
     }
@@ -407,28 +467,63 @@ class WearActiveWorkoutViewModel(
                 if (it.exerciseId == session.exerciseId) updatedSession else it
             }
 
+        syncPort?.queueDataForDeferredSync(
+            exerciseId = session.exerciseId,
+            reps = _uiState.value.currentReps,
+            heartRateBpm = _uiState.value.currentHeartRateBpm,
+        )
+
+        val targetTimestamp =
+            DateTimeUtils.getCurrentTimestamp() + (DEFAULT_REST_SECONDS * MILLIS_PER_SECOND)
+        val remainingMillis = TrainingStepState.calculateRemainingMillis(targetTimestamp)
+
+        val allRoutineDone = updatedList.isNotEmpty() && updatedList.all { it.isCompleted }
+
         if (isExerciseDone) {
             val nextIncomplete = updatedList.firstOrNull { !it.isCompleted }
-            val nextState = TrainingStepState.ReadyForNext(nextIncomplete)
-            _trainingStepState.value = nextState
+            val nextIncompleteIndex =
+                if (nextIncomplete != null) {
+                    updatedList.indexOfFirst {
+                        it.exerciseId == nextIncomplete.exerciseId
+                    }.coerceAtLeast(0)
+                } else {
+                    _uiState.value.activeExerciseIndex
+                }
 
-            _uiState.update { current ->
-                current.copy(
-                    exerciseSessions = updatedList,
-                    trainingStepState = nextState,
-                    cooldownTargetTimestamp = null,
-                    cooldownSecondsRemaining = null,
-                )
+            if (nextIncomplete != null) {
+                val cooldownState =
+                    TrainingStepState.Cooldown(
+                        exerciseSession = updatedSession,
+                        targetTimestamp = targetTimestamp,
+                        remainingMillis = remainingMillis,
+                    )
+                _trainingStepState.value = cooldownState
+
+                _uiState.update { current ->
+                    current.copy(
+                        exerciseSessions = updatedList,
+                        activeExerciseIndex = nextIncompleteIndex,
+                        exerciseName = nextIncomplete.name,
+                        trainingStepState = cooldownState,
+                        cooldownTargetTimestamp = targetTimestamp,
+                        cooldownSecondsRemaining = (remainingMillis / MILLIS_PER_SECOND).toInt(),
+                    )
+                }
+            } else {
+                val nextState = TrainingStepState.ReadyForNext(null)
+                _trainingStepState.value = nextState
+
+                _uiState.update { current ->
+                    current.copy(
+                        exerciseSessions = updatedList,
+                        trainingStepState = nextState,
+                        cooldownTargetTimestamp = null,
+                        cooldownSecondsRemaining = null,
+                        isRoutineCompleted = allRoutineDone,
+                    )
+                }
             }
-            syncPort?.queueDataForDeferredSync(
-                exerciseId = session.exerciseId,
-                reps = _uiState.value.currentReps,
-                heartRateBpm = _uiState.value.currentHeartRateBpm,
-            )
         } else {
-            val targetTimestamp =
-                DateTimeUtils.getCurrentTimestamp() + (session.restSeconds * MILLIS_PER_SECOND)
-            val remainingMillis = TrainingStepState.calculateRemainingMillis(targetTimestamp)
             val cooldownState =
                 TrainingStepState.Cooldown(
                     exerciseSession = updatedSession,
@@ -471,13 +566,28 @@ class WearActiveWorkoutViewModel(
             }
         } else {
             val nextIncomplete = _uiState.value.exerciseSessions.firstOrNull { !it.isCompleted }
+            val nextIndex =
+                if (nextIncomplete != null) {
+                    _uiState.value.exerciseSessions.indexOfFirst {
+                        it.exerciseId == nextIncomplete.exerciseId
+                    }.coerceAtLeast(0)
+                } else {
+                    _uiState.value.activeExerciseIndex
+                }
             val nextState = TrainingStepState.ReadyForNext(nextIncomplete)
+            val allRoutineDone =
+                _uiState.value.exerciseSessions.isNotEmpty() &&
+                    _uiState.value.exerciseSessions.all { it.isCompleted }
+
             _trainingStepState.value = nextState
             _uiState.update {
                 it.copy(
+                    activeExerciseIndex = nextIndex,
+                    exerciseName = nextIncomplete?.name ?: it.exerciseName,
                     trainingStepState = nextState,
                     cooldownTargetTimestamp = null,
                     cooldownSecondsRemaining = 0,
+                    isRoutineCompleted = allRoutineDone,
                 )
             }
         }
@@ -645,13 +755,28 @@ class WearActiveWorkoutViewModel(
 
     fun skipCooldown() {
         val nextIncomplete = _uiState.value.exerciseSessions.firstOrNull { !it.isCompleted }
+        val nextIndex =
+            if (nextIncomplete != null) {
+                _uiState.value.exerciseSessions.indexOfFirst {
+                    it.exerciseId == nextIncomplete.exerciseId
+                }.coerceAtLeast(0)
+            } else {
+                _uiState.value.activeExerciseIndex
+            }
         val nextState = TrainingStepState.ReadyForNext(nextIncomplete)
+        val allRoutineDone =
+            _uiState.value.exerciseSessions.isNotEmpty() &&
+                _uiState.value.exerciseSessions.all { it.isCompleted }
+
         _trainingStepState.value = nextState
         _uiState.update {
             it.copy(
+                activeExerciseIndex = nextIndex,
+                exerciseName = nextIncomplete?.name ?: it.exerciseName,
                 trainingStepState = nextState,
                 cooldownTargetTimestamp = null,
                 cooldownSecondsRemaining = 0,
+                isRoutineCompleted = allRoutineDone,
             )
         }
     }

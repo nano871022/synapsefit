@@ -101,6 +101,16 @@ fun WearNavHost(
         }
     }
 
+    LaunchedEffect(activeUiState.isRoutineCompleted) {
+        if (activeUiState.isRoutineCompleted) {
+            val planId = activeUiState.activePlanTitle.ifBlank { "active_plan" }
+            val day = activeUiState.currentDay
+            navController.navigate(WearRoutes.postWorkoutSummary(planId, day)) {
+                popUpTo(WearRoutes.DAY_SELECTION)
+            }
+        }
+    }
+
     val postWorkoutSummaryViewModel: WearPostWorkoutSummaryViewModel =
         viewModel(
             factory =
@@ -255,9 +265,20 @@ private fun ActiveWorkoutDestination(
         onDecrementReps = { activeWorkoutViewModel.decrementReps() },
         onIncrementWgt = { activeWorkoutViewModel.incrementWgt() },
         onDecrementWgt = { activeWorkoutViewModel.decrementWgt() },
+        onSelectFocus = { focus -> activeWorkoutViewModel.setFocusedInput(focus) },
+        onRotaryScroll = { delta -> activeWorkoutViewModel.handleRotaryScroll(delta) },
+        onHardwareKey = { keyCode -> activeWorkoutViewModel.handleHardwareKey(keyCode) },
+        onOpenNumericKeypad = { activeWorkoutViewModel.openNumericKeypad() },
+        onCloseNumericKeypad = { activeWorkoutViewModel.closeNumericKeypad() },
+        onDirectValueEntered = { valVal -> activeWorkoutViewModel.setFocusedValueDirect(valVal) },
         onCompleteSet = {
             activeWorkoutViewModel.completeSet()
-            if (activeWorkoutViewModel.trainingStepState.value is TrainingStepState.Cooldown) {
+            val state = activeWorkoutViewModel.uiState.value
+            if (state.isRoutineCompleted) {
+                navController.navigate(WearRoutes.postWorkoutSummary(planId, day)) {
+                    popUpTo(WearRoutes.DAY_SELECTION)
+                }
+            } else if (activeWorkoutViewModel.trainingStepState.value is TrainingStepState.Cooldown) {
                 navController.navigate(WearRoutes.cooldown(planId, day))
             }
         },
@@ -265,12 +286,6 @@ private fun ActiveWorkoutDestination(
         onTogglePause = { activeWorkoutViewModel.togglePauseResume() },
         onNextExercise = { activeWorkoutViewModel.navigateToNextExercise() },
         onPreviousExercise = { activeWorkoutViewModel.navigateToPreviousExercise() },
-        onFinishSession = {
-            activeWorkoutViewModel.finishSession()
-            navController.navigate(WearRoutes.postWorkoutSummary(planId, day)) {
-                popUpTo(WearRoutes.ACTIVE_WORKOUT) { inclusive = true }
-            }
-        },
     )
 }
 
@@ -292,8 +307,15 @@ private fun CooldownDestination(
         onAddExtraTime = { activeWorkoutViewModel.addExtraCooldownTime() },
         onSkipRest = {
             activeWorkoutViewModel.skipCooldown()
-            navController.navigate(WearRoutes.activeWorkout(planId, day)) {
-                popUpTo(WearRoutes.ACTIVE_WORKOUT) { inclusive = true }
+            val state = activeWorkoutViewModel.uiState.value
+            if (state.isRoutineCompleted) {
+                navController.navigate(WearRoutes.postWorkoutSummary(planId, day)) {
+                    popUpTo(WearRoutes.DAY_SELECTION)
+                }
+            } else {
+                navController.navigate(WearRoutes.activeWorkout(planId, day)) {
+                    popUpTo(WearRoutes.ACTIVE_WORKOUT) { inclusive = true }
+                }
             }
         },
         onStartNextExercise = {
