@@ -63,9 +63,20 @@ class WearActiveWorkoutViewModelTest {
     fun testTogglePauseResume() {
         viewModel.togglePauseResume()
         assertTrue(viewModel.uiState.value.isPaused)
+        assertTrue(viewModel.trainingStepState.value is TrainingStepState.Paused)
 
         viewModel.togglePauseResume()
         assertFalse(viewModel.uiState.value.isPaused)
+        assertFalse(viewModel.trainingStepState.value is TrainingStepState.Paused)
+    }
+
+    @Test
+    fun testFinishSessionStopsSessionAndFlushesQueue() {
+        viewModel.startSession()
+        assertTrue(viewModel.uiState.value.isSessionStarted)
+
+        viewModel.finishSession()
+        assertFalse(viewModel.uiState.value.isSessionStarted)
     }
 
     @Test
