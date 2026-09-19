@@ -57,4 +57,6 @@
     <string name="weight">Peso</string>
     <string name="weight_avg">Prom. %d Kg Peso</string>
     <string name="wear_finish_session">Finalizar Sesión</string>
+    <string name="wear_session_in_progress">En progreso • %1$s</string>
+    <string name="wear_exercise_in_progress">En curso • %1$s</string>
 </resources>

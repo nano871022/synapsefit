@@ -56,4 +56,6 @@
     <string name="weight">Weight</string>
     <string name="weight_avg">Avg %d lb Weight</string>
     <string name="wear_finish_session">Finish Session</string>
+    <string name="wear_session_in_progress">In progress • %1$s</string>
+    <string name="wear_exercise_in_progress">In progress • %1$s</string>
 </resources>
