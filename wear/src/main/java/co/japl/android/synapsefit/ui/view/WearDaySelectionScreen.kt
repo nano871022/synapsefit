@@ -42,6 +42,8 @@ import co.com.japl.ui.theme.PrimaryCyan
 import co.com.japl.ui.theme.SurfaceContainerHigh
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.core.domain.model.WorkoutSessionItem
+import co.japl.android.synapsefit.ui.util.formatElapsedTime
+import co.japl.android.synapsefit.ui.util.rememberElapsedTimeSeconds
 
 @Suppress("LongParameterList")
 @Composable
@@ -49,6 +51,8 @@ fun WearDaySelectionScreen(
     sessions: List<WorkoutSessionItem>,
     onSelectSession: (planId: String, day: Int) -> Unit,
     modifier: Modifier = Modifier,
+    activePlanDayId: Int? = null,
+    sessionStartTimestamp: Long? = null,
     checkingUpdate: Boolean = false,
     updateMessageResId: Int = R.string.wear_check_update,
     isUpdateAvailable: Boolean = false,
@@ -94,6 +98,8 @@ fun WearDaySelectionScreen(
                 items(sessions) { sessionItem ->
                     SessionCardItem(
                         sessionItem = sessionItem,
+                        activePlanDayId = activePlanDayId,
+                        sessionStartTimestamp = sessionStartTimestamp,
                         onClick = { onSelectSession(sessionItem.planId, sessionItem.day) },
                     )
                 }
@@ -154,9 +160,14 @@ fun WearDaySelectionScreen(
 @Composable
 private fun SessionCardItem(
     sessionItem: WorkoutSessionItem,
+    activePlanDayId: Int?,
+    sessionStartTimestamp: Long?,
     onClick: () -> Unit,
 ) {
-    if (sessionItem.isTodayScheduled) {
+    val isActiveSession = activePlanDayId != null && activePlanDayId == sessionItem.day
+    val elapsedSeconds = rememberElapsedTimeSeconds(if (isActiveSession) sessionStartTimestamp else null)
+
+    if (isActiveSession || sessionItem.isTodayScheduled) {
         TitleCard(
             onClick = onClick,
             title = {
@@ -211,6 +222,15 @@ private fun SessionCardItem(
                     fontWeight = FontWeight.SemiBold,
                     color = OnPrimaryDark,
                 )
+                if (isActiveSession && sessionStartTimestamp != null) {
+                    Spacer(modifier = Modifier.size(2.dp))
+                    Text(
+                        text = stringResource(R.string.wear_in_progress, formatElapsedTime(elapsedSeconds)),
+                        style = MaterialTheme.typography.caption2,
+                        fontWeight = FontWeight.Bold,
+                        color = OnPrimaryDark,
+                    )
+                }
             }
         }
     } else {

@@ -8,4 +8,8 @@ data class WearDaySelectionUiState(
     val checkingUpdate: Boolean = false,
     val updateMessageResId: Int = co.japl.android.synapsefit.R.string.wear_check_update,
     val isUpdateAvailable: Boolean = false,
+    val activePlanDayId: Int? = null,
+    val sessionStartTimestamp: Long? = null,
+    val activeExerciseId: String? = null,
+    val exerciseStartTimestamp: Long? = null,
 )

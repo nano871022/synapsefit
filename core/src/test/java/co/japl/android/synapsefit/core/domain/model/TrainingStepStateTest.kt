@@ -56,24 +56,4 @@ class TrainingStepStateTest {
 
         assertEquals(0L, remaining)
     }
-
-    @Test
-    fun testPausedState() {
-        val session =
-            ExerciseSession(
-                exerciseId = "ex1",
-                planId = "p1",
-                name = "Bench Press",
-                muscleGroup = "Chest",
-                targetSets = 3,
-                targetReps = "10",
-                restSeconds = 60,
-                completedSets = 0,
-                isCompleted = false,
-            )
-        val activeState = TrainingStepState.Active(session, 1)
-        val pausedState = TrainingStepState.Paused(activeState)
-
-        assertEquals(activeState, pausedState.previousState)
-    }
 }

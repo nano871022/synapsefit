@@ -1,6 +1,7 @@
 package co.japl.android.synapsefit.ui.view
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +26,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Devices.WEAR_OS_SMALL_ROUND
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,6 +46,8 @@ import co.com.japl.ui.theme.SurfaceContainer
 import co.com.japl.ui.theme.SurfaceContainerHigh
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.core.domain.model.Exercise
+import co.japl.android.synapsefit.ui.util.formatElapsedTime
+import co.japl.android.synapsefit.ui.util.rememberElapsedTimeSeconds
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
@@ -58,6 +60,8 @@ fun WearPreWorkoutSelectionHubScreen(
     onSelectExercise: (Exercise, Int) -> Unit,
     onStartSession: () -> Unit,
     modifier: Modifier = Modifier,
+    activeExerciseId: String? = null,
+    exerciseStartTimestamp: Long? = null,
 ) {
     val listState = rememberScalingLazyListState()
 
@@ -106,6 +110,8 @@ fun WearPreWorkoutSelectionHubScreen(
                 itemsIndexed(exercises) { index, exercise ->
                     ExerciseCardItem(
                         exercise = exercise,
+                        activeExerciseId = activeExerciseId,
+                        exerciseStartTimestamp = exerciseStartTimestamp,
                         onClick = { onSelectExercise(exercise, index) },
                     )
                 }
@@ -190,8 +196,12 @@ private fun HeaderCard(
 @Composable
 private fun ExerciseCardItem(
     exercise: Exercise,
+    activeExerciseId: String?,
+    exerciseStartTimestamp: Long?,
     onClick: () -> Unit,
 ) {
+    val isActive = activeExerciseId != null && activeExerciseId == exercise.id
+    val elapsedSeconds = rememberElapsedTimeSeconds(if (isActive) exerciseStartTimestamp else null)
     val (title, detail) = parseExerciseName(exercise.name)
 
     Box(
@@ -200,6 +210,13 @@ private fun ExerciseCardItem(
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 3.dp)
                 .clip(RoundedCornerShape(10.dp))
+                .then(
+                    if (isActive) {
+                        Modifier.border(1.dp, PrimaryCyan, RoundedCornerShape(10.dp))
+                    } else {
+                        Modifier
+                    },
+                )
                 .background(SurfaceContainerHigh)
                 .clickable(onClick = onClick)
                 .padding(10.dp),
@@ -216,7 +233,7 @@ private fun ExerciseCardItem(
                     text = title,
                     style = MaterialTheme.typography.body2,
                     fontWeight = FontWeight.Bold,
-                    color = OnSurfaceDark,
+                    color = if (isActive) PrimaryCyan else OnSurfaceDark,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -244,6 +261,16 @@ private fun ExerciseCardItem(
                     fontSize = 10.sp,
                     color = OnSurfaceDark.copy(alpha = 0.7f),
                 )
+
+                if (isActive && exerciseStartTimestamp != null) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = stringResource(R.string.wear_active_exercise_timer, formatElapsedTime(elapsedSeconds)),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryCyan,
+                    )
+                }
             }
 
             Icon(
@@ -267,7 +294,7 @@ private fun parseExerciseName(fullName: String): Pair<String, String> {
 }
 
 @Composable
-@Preview(device = WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Preview(showSystemUi = true)
 internal fun WearPreWorkoutSelectionHubScreenPreview() {
     val list = listExercises()
     MaterialThemeComposeUI {

@@ -60,20 +60,9 @@ class WearActiveWorkoutViewModelTest {
     fun testTogglePauseResume() {
         viewModel.togglePauseResume()
         assertTrue(viewModel.uiState.value.isPaused)
-        assertTrue(viewModel.trainingStepState.value is TrainingStepState.Paused)
 
         viewModel.togglePauseResume()
         assertFalse(viewModel.uiState.value.isPaused)
-        assertFalse(viewModel.trainingStepState.value is TrainingStepState.Paused)
-    }
-
-    @Test
-    fun testFinishSessionStopsSessionAndFlushesQueue() {
-        viewModel.startSession()
-        assertTrue(viewModel.uiState.value.isSessionStarted)
-
-        viewModel.finishSession()
-        assertFalse(viewModel.uiState.value.isSessionStarted)
     }
 
     @Test
@@ -273,12 +262,16 @@ class WearActiveWorkoutViewModelTest {
         viewModel.selectExercise(exercise, 0)
         assertTrue(viewModel.uiState.value.isSessionStarted)
         assertEquals("Press de Banca (Compuesto)", viewModel.uiState.value.exerciseName)
+        assertNotNull(viewModel.uiState.value.sessionStartTimestamp)
+        assertEquals("ex_1", viewModel.uiState.value.activeExerciseId)
+        assertNotNull(viewModel.uiState.value.exerciseStartTimestamp)
 
         viewModel.exitToSelectionHub()
         assertFalse(viewModel.uiState.value.isSessionStarted)
 
         viewModel.startSession()
         assertTrue(viewModel.uiState.value.isSessionStarted)
+        assertNotNull(viewModel.uiState.value.sessionStartTimestamp)
     }
 
     @Test

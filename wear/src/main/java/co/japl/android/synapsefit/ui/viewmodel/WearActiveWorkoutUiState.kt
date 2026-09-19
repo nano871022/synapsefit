@@ -22,4 +22,8 @@ data class WearActiveWorkoutUiState(
     val workoutDurationSeconds: Long = 0L,
     val isPaused: Boolean = false,
     val isLiveSyncActive: Boolean = false,
+    val activePlanDayId: Int? = null,
+    val sessionStartTimestamp: Long? = null,
+    val activeExerciseId: String? = null,
+    val exerciseStartTimestamp: Long? = null,
 )
