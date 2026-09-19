@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,11 +49,12 @@ import co.com.japl.ui.theme.PrimaryCyan
 import co.com.japl.ui.theme.SurfaceContainerHigh
 import co.com.japl.ui.theme.SurfaceContainerLow
 import co.japl.android.synapsefit.R
+import co.japl.android.synapsefit.core.domain.model.ExerciseSession
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
 import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutUiState
-import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutViewModel
 import java.util.Locale
 
+private const val MILLIS_PER_SECOND = 1000L
 private const val SECONDS_PER_MINUTE = 60
 private const val SECONDS_PER_HOUR = 3600
 private const val CHIP_WIDTH_FRACTION = 0.85f
@@ -74,19 +74,28 @@ fun WearActiveWorkoutScreen(
     onTogglePause: (() -> Unit)? = null,
     onNextExercise: (() -> Unit)? = null,
     onPreviousExercise: (() -> Unit)? = null,
+    onFinishSession: (() -> Unit)? = null,
 ) {
-    val exerciseSession =
-        when (val state = uiState.trainingStepState) {
+    fun resolveExerciseSession(state: TrainingStepState): ExerciseSession? {
+        return when (state) {
             is TrainingStepState.Active -> state.exerciseSession
             is TrainingStepState.Cooldown -> state.exerciseSession
             is TrainingStepState.ReadyForNext -> state.nextExerciseSession
+            is TrainingStepState.Paused -> resolveExerciseSession(state.previousState)
         }
+    }
 
-    val currentSet =
-        when (val state = uiState.trainingStepState) {
+    val exerciseSession = resolveExerciseSession(uiState.trainingStepState)
+
+    fun resolveCurrentSet(state: TrainingStepState): Int {
+        return when (state) {
             is TrainingStepState.Active -> state.currentSet
+            is TrainingStepState.Paused -> resolveCurrentSet(state.previousState)
             else -> exerciseSession?.completedSets ?: 0
         }
+    }
+
+    val currentSet = resolveCurrentSet(uiState.trainingStepState)
 
     val exerciseTitle =
         exerciseSession?.name
@@ -111,6 +120,7 @@ fun WearActiveWorkoutScreen(
                 workoutDurationSeconds = uiState.workoutDurationSeconds,
                 currentHeartRateBpm = uiState.currentHeartRateBpm,
                 isLiveSyncActive = uiState.isLiveSyncActive,
+                cooldownTargetTimestamp = uiState.cooldownTargetTimestamp,
             )
 
             Text(
@@ -127,22 +137,28 @@ fun WearActiveWorkoutScreen(
                         .padding(horizontal = 8.dp),
             )
 
-            SetAndRepsContent(
-                uiState = uiState,
-                targetSets = exerciseSession?.targetSets ?: 0,
-                targetReps = exerciseSession?.targetReps ?: "0",
-                currentSet = currentSet,
-                onIncrementReps = onIncrementReps,
-                onDecrementReps = onDecrementReps,
-                onIncrementWgt = onIncrementWgt,
-                onDecrementWgt = onDecrementWgt,
-            )
+            if (uiState.isPaused || uiState.trainingStepState is TrainingStepState.Paused) {
+                FinishSessionButton(
+                    onFinishSession = onFinishSession,
+                )
+            } else {
+                SetAndRepsContent(
+                    uiState = uiState,
+                    targetSets = exerciseSession?.targetSets ?: 0,
+                    targetReps = exerciseSession?.targetReps ?: "0",
+                    currentSet = currentSet,
+                    onIncrementReps = onIncrementReps,
+                    onDecrementReps = onDecrementReps,
+                    onIncrementWgt = onIncrementWgt,
+                    onDecrementWgt = onDecrementWgt,
+                )
 
-            WorkoutActionButton(
-                isReadyForNext = uiState.trainingStepState is TrainingStepState.ReadyForNext,
-                onStartNextExercise = onStartNextExercise,
-                onCompleteSet = onCompleteSet,
-            )
+                WorkoutActionButton(
+                    isReadyForNext = uiState.trainingStepState is TrainingStepState.ReadyForNext,
+                    onStartNextExercise = onStartNextExercise,
+                    onCompleteSet = onCompleteSet,
+                )
+            }
 
             WorkoutBottomControlRow(
                 isPaused = uiState.isPaused,
@@ -159,7 +175,13 @@ private fun WorkoutHeaderRow(
     workoutDurationSeconds: Long,
     currentHeartRateBpm: Int,
     isLiveSyncActive: Boolean = false,
+    cooldownTargetTimestamp: Long? = null,
 ) {
+    val cooldownRemainingSecs =
+        cooldownTargetTimestamp?.let { target ->
+            val remainingMillis = TrainingStepState.calculateRemainingMillis(target)
+            (remainingMillis / MILLIS_PER_SECOND).toInt()
+        } ?: 0
     Row(
         modifier =
             Modifier
@@ -169,11 +191,18 @@ private fun WorkoutHeaderRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = formatDuration(workoutDurationSeconds),
+            text =
+                if (cooldownRemainingSecs > 0) {
+                    val mins = cooldownRemainingSecs / SECONDS_PER_MINUTE
+                    val secs = cooldownRemainingSecs % SECONDS_PER_MINUTE
+                    stringResource(R.string.wear_rest_timer, mins, secs)
+                } else {
+                    formatDuration(workoutDurationSeconds)
+                },
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = PrimaryCyan,
-            modifier = Modifier.padding(start = 45.dp),
+            modifier = Modifier.padding(start = 25.dp),
         )
 
         if (isLiveSyncActive) {
@@ -443,33 +472,36 @@ private fun formatDuration(seconds: Long): String {
     }
 }
 
-@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-internal fun WearActiveWorkoutScreenPreview1() {
-    val uiState = WearActiveWorkoutUiState()
-    MaterialThemeComposeUI {
-        WearActiveWorkoutScreen(
-            uiState = uiState,
-            onIncrementReps = {},
-            onDecrementReps = { },
-            onIncrementWgt = {},
-            onDecrementWgt = { },
-            modifier = Modifier,
-            onCompleteSet = {},
-            onStartNextExercise = {},
-            onTogglePause = {},
-            onNextExercise = {},
-            onPreviousExercise = {},
-        )
-    }
+private fun FinishSessionButton(onFinishSession: (() -> Unit)?) {
+    Chip(
+        onClick = { onFinishSession?.invoke() },
+        colors =
+            ChipDefaults.chipColors(
+                backgroundColor = ErrorContainerDark,
+                contentColor = PrimaryCyan,
+            ),
+        label = {
+            Text(
+                text = stringResource(R.string.wear_finish_session),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+        },
+        modifier =
+            Modifier
+                .fillMaxWidth(CHIP_WIDTH_FRACTION)
+                .height(36.dp),
+        shape = RoundedCornerShape(18.dp),
+    )
 }
 
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-internal fun WearActiveWorkoutScreenPreview2() {
-    val vm = WearActiveWorkoutViewModel()
-    val uiState by vm.uiState.collectAsState()
-
+internal fun WearActiveWorkoutScreenPreview1() {
+    val uiState = WearActiveWorkoutUiState()
     MaterialThemeComposeUI {
         WearActiveWorkoutScreen(
             uiState = uiState,
