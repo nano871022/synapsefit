@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package co.japl.android.synapsefit.ui.view
 
 import androidx.annotation.StringRes
@@ -7,6 +9,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,12 +26,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.rotary.onRotaryScrollEvent
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -39,22 +56,25 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
+import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.Text
+import androidx.wear.compose.material.dialog.Dialog
 import co.com.japl.ui.theme.BackgroundDark
 import co.com.japl.ui.theme.ErrorContainerDark
 import co.com.japl.ui.theme.MaterialThemeComposeUI
 import co.com.japl.ui.theme.OnPrimaryDark
 import co.com.japl.ui.theme.OnSurfaceDark
 import co.com.japl.ui.theme.PrimaryCyan
+import co.com.japl.ui.theme.SurfaceContainer
 import co.com.japl.ui.theme.SurfaceContainerHigh
 import co.com.japl.ui.theme.SurfaceContainerLow
 import co.japl.android.synapsefit.R
-import co.japl.android.synapsefit.core.domain.model.ExerciseSession
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
+import co.japl.android.synapsefit.ui.viewmodel.FocusedInput
 import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutUiState
+import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutViewModel
 import java.util.Locale
 
-private const val MILLIS_PER_SECOND = 1000L
 private const val SECONDS_PER_MINUTE = 60
 private const val SECONDS_PER_HOUR = 3600
 private const val CHIP_WIDTH_FRACTION = 0.85f
@@ -69,43 +89,63 @@ fun WearActiveWorkoutScreen(
     onIncrementWgt: () -> Unit,
     onDecrementWgt: () -> Unit,
     modifier: Modifier = Modifier,
+    onSelectFocus: ((FocusedInput) -> Unit)? = null,
+    onRotaryScroll: ((Float) -> Unit)? = null,
+    onHardwareKey: ((Int) -> Boolean)? = null,
+    onOpenNumericKeypad: (() -> Unit)? = null,
+    onCloseNumericKeypad: (() -> Unit)? = null,
+    onDirectValueEntered: ((Int) -> Unit)? = null,
     onCompleteSet: (() -> Unit)? = null,
     onStartNextExercise: (() -> Unit)? = null,
     onTogglePause: (() -> Unit)? = null,
     onNextExercise: (() -> Unit)? = null,
     onPreviousExercise: (() -> Unit)? = null,
-    onFinishSession: (() -> Unit)? = null,
 ) {
-    fun resolveExerciseSession(state: TrainingStepState): ExerciseSession? {
-        return when (state) {
+    val exerciseSession =
+        when (val state = uiState.trainingStepState) {
             is TrainingStepState.Active -> state.exerciseSession
             is TrainingStepState.Cooldown -> state.exerciseSession
             is TrainingStepState.ReadyForNext -> state.nextExerciseSession
-            is TrainingStepState.Paused -> resolveExerciseSession(state.previousState)
+            is TrainingStepState.Paused -> {
+                when (val prev = state.previousState) {
+                    is TrainingStepState.Active -> prev.exerciseSession
+                    is TrainingStepState.Cooldown -> prev.exerciseSession
+                    is TrainingStepState.ReadyForNext -> prev.nextExerciseSession
+                    else -> null
+                }
+            }
         }
-    }
 
-    val exerciseSession = resolveExerciseSession(uiState.trainingStepState)
-
-    fun resolveCurrentSet(state: TrainingStepState): Int {
-        return when (state) {
+    val currentSet =
+        when (val state = uiState.trainingStepState) {
             is TrainingStepState.Active -> state.currentSet
-            is TrainingStepState.Paused -> resolveCurrentSet(state.previousState)
             else -> exerciseSession?.completedSets ?: 0
         }
-    }
-
-    val currentSet = resolveCurrentSet(uiState.trainingStepState)
 
     val exerciseTitle =
         exerciseSession?.name
             ?: uiState.exerciseName.ifEmpty { stringResource(R.string.wear_default_exercise) }
 
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
     Box(
         modifier =
             modifier
                 .fillMaxSize()
-                .background(BackgroundDark),
+                .background(BackgroundDark)
+                .focusRequester(focusRequester)
+                .focusable()
+                .onRotaryScrollEvent { event ->
+                    onRotaryScroll?.invoke(event.verticalScrollPixels)
+                    true
+                }
+                .onKeyEvent { keyEvent ->
+                    onHardwareKey?.invoke(keyEvent.nativeKeyEvent.keyCode) ?: false
+                },
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -120,7 +160,6 @@ fun WearActiveWorkoutScreen(
                 workoutDurationSeconds = uiState.workoutDurationSeconds,
                 currentHeartRateBpm = uiState.currentHeartRateBpm,
                 isLiveSyncActive = uiState.isLiveSyncActive,
-                cooldownTargetTimestamp = uiState.cooldownTargetTimestamp,
             )
 
             Text(
@@ -137,34 +176,52 @@ fun WearActiveWorkoutScreen(
                         .padding(horizontal = 8.dp),
             )
 
-            if (uiState.isPaused || uiState.trainingStepState is TrainingStepState.Paused) {
-                FinishSessionButton(
-                    onFinishSession = onFinishSession,
-                )
-            } else {
-                SetAndRepsContent(
-                    uiState = uiState,
-                    targetSets = exerciseSession?.targetSets ?: 0,
-                    targetReps = exerciseSession?.targetReps ?: "0",
-                    currentSet = currentSet,
-                    onIncrementReps = onIncrementReps,
-                    onDecrementReps = onDecrementReps,
-                    onIncrementWgt = onIncrementWgt,
-                    onDecrementWgt = onDecrementWgt,
-                )
+            SetAndRepsContent(
+                uiState = uiState,
+                targetSets = exerciseSession?.targetSets ?: 0,
+                targetReps = exerciseSession?.targetReps ?: "0",
+                currentSet = currentSet,
+                onIncrementReps = onIncrementReps,
+                onDecrementReps = onDecrementReps,
+                onIncrementWgt = onIncrementWgt,
+                onDecrementWgt = onDecrementWgt,
+                onSelectFocus = onSelectFocus,
+                onOpenNumericKeypad = onOpenNumericKeypad,
+            )
 
-                WorkoutActionButton(
-                    isReadyForNext = uiState.trainingStepState is TrainingStepState.ReadyForNext,
-                    onStartNextExercise = onStartNextExercise,
-                    onCompleteSet = onCompleteSet,
-                )
-            }
+            WorkoutActionButton(
+                isReadyForNext = uiState.trainingStepState is TrainingStepState.ReadyForNext,
+                onStartNextExercise = onStartNextExercise,
+                onCompleteSet = onCompleteSet,
+            )
 
             WorkoutBottomControlRow(
                 isPaused = uiState.isPaused,
                 onTogglePause = onTogglePause,
                 onNextExercise = onNextExercise,
                 onPreviousExercise = onPreviousExercise,
+            )
+        }
+
+        if (uiState.isNumericKeypadOpen) {
+            val keypadTitle =
+                if (uiState.focusedInput == FocusedInput.REPS) {
+                    stringResource(R.string.reps)
+                } else {
+                    stringResource(R.string.weight)
+                }
+            val keypadVal =
+                if (uiState.focusedInput == FocusedInput.REPS) {
+                    uiState.currentReps
+                } else {
+                    uiState.currentWeight.toInt()
+                }
+
+            NumericKeypadDialog(
+                title = keypadTitle,
+                initialValue = keypadVal,
+                onDismiss = { onCloseNumericKeypad?.invoke() },
+                onConfirm = { numericValue -> onDirectValueEntered?.invoke(numericValue) },
             )
         }
     }
@@ -175,13 +232,7 @@ private fun WorkoutHeaderRow(
     workoutDurationSeconds: Long,
     currentHeartRateBpm: Int,
     isLiveSyncActive: Boolean = false,
-    cooldownTargetTimestamp: Long? = null,
 ) {
-    val cooldownRemainingSecs =
-        cooldownTargetTimestamp?.let { target ->
-            val remainingMillis = TrainingStepState.calculateRemainingMillis(target)
-            (remainingMillis / MILLIS_PER_SECOND).toInt()
-        } ?: 0
     Row(
         modifier =
             Modifier
@@ -191,18 +242,11 @@ private fun WorkoutHeaderRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text =
-                if (cooldownRemainingSecs > 0) {
-                    val mins = cooldownRemainingSecs / SECONDS_PER_MINUTE
-                    val secs = cooldownRemainingSecs % SECONDS_PER_MINUTE
-                    stringResource(R.string.wear_rest_timer, mins, secs)
-                } else {
-                    formatDuration(workoutDurationSeconds)
-                },
+            text = formatDuration(workoutDurationSeconds),
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = PrimaryCyan,
-            modifier = Modifier.padding(start = 25.dp),
+            modifier = Modifier.padding(start = 45.dp),
         )
 
         if (isLiveSyncActive) {
@@ -268,6 +312,8 @@ private fun SetAndRepsContent(
     onDecrementReps: () -> Unit,
     onIncrementWgt: () -> Unit,
     onDecrementWgt: () -> Unit,
+    onSelectFocus: ((FocusedInput) -> Unit)?,
+    onOpenNumericKeypad: (() -> Unit)?,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -285,44 +331,93 @@ private fun SetAndRepsContent(
         Spacer(modifier = Modifier.height(2.dp))
         Row {
             FieldIntValueComponent(
-                R.string.reps,
-                "${uiState.currentReps}",
-                onDecrementReps,
-                onIncrementReps,
+                name = R.string.reps,
+                value = "${uiState.currentReps}",
+                isFocused = uiState.focusedInput == FocusedInput.REPS,
+                onSelectFocus = { onSelectFocus?.invoke(FocusedInput.REPS) },
+                onDecrement = onDecrementReps,
+                onIncrement = onIncrementReps,
+                onOpenKeypad = {
+                    onSelectFocus?.invoke(FocusedInput.REPS)
+                    onOpenNumericKeypad?.invoke()
+                },
             )
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.width(4.dp))
 
             FieldIntValueComponent(
-                R.string.weight,
-                "${uiState.currentWeight}",
-                onDecrementWgt,
-                onIncrementWgt,
+                name = R.string.weight,
+                value = "${uiState.currentWeight}",
+                isFocused = uiState.focusedInput == FocusedInput.WEIGHT,
+                onSelectFocus = { onSelectFocus?.invoke(FocusedInput.WEIGHT) },
+                onDecrement = onDecrementWgt,
+                onIncrement = onIncrementWgt,
+                onOpenKeypad = {
+                    onSelectFocus?.invoke(FocusedInput.WEIGHT)
+                    onOpenNumericKeypad?.invoke()
+                },
             )
         }
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun RowScope.FieldIntValueComponent(
     @StringRes name: Int,
     value: String,
-    onDecrementReps: () -> Unit,
-    onIncrementReps: () -> Unit,
+    isFocused: Boolean,
+    onSelectFocus: () -> Unit,
+    onDecrement: () -> Unit,
+    onIncrement: () -> Unit,
+    onOpenKeypad: () -> Unit,
 ) {
-    Column(modifier = Modifier.weight(1f)) {
-        Text(
-            text = stringResource(name),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
+    val focusBorderModifier =
+        if (isFocused) {
+            Modifier.border(1.5.dp, PrimaryCyan, RoundedCornerShape(8.dp))
+        } else {
+            Modifier.border(1.dp, Color.Transparent, RoundedCornerShape(8.dp))
+        }
+
+    Column(
+        modifier =
+            Modifier
+                .weight(1f)
+                .clickable { onSelectFocus() }
+                .then(focusBorderModifier)
+                .padding(2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = stringResource(name),
+                textAlign = TextAlign.Center,
+                fontSize = 10.sp,
+                color = if (isFocused) PrimaryCyan else OnSurfaceDark,
+                fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Normal,
+            )
+            Spacer(modifier = Modifier.width(2.dp))
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = null,
+                tint = if (isFocused) PrimaryCyan else OnSurfaceDark.copy(alpha = 0.5f),
+                modifier =
+                    Modifier
+                        .size(10.dp)
+                        .clickable { onOpenKeypad() },
+            )
+        }
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
             Button(
-                onClick = onDecrementReps,
-                modifier = Modifier.size(28.dp),
+                onClick = onDecrement,
+                modifier = Modifier.size(24.dp),
                 colors =
                     ButtonDefaults.buttonColors(
                         backgroundColor = SurfaceContainerHigh,
@@ -332,25 +427,25 @@ private fun RowScope.FieldIntValueComponent(
             ) {
                 Text(
                     text = stringResource(R.string.wear_dec_reps),
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(4.dp))
 
             Text(
                 text = value,
-                fontSize = 24.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = PrimaryCyan,
+                color = if (isFocused) PrimaryCyan else OnSurfaceDark,
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(4.dp))
 
             Button(
-                onClick = onIncrementReps,
-                modifier = Modifier.size(28.dp),
+                onClick = onIncrement,
+                modifier = Modifier.size(24.dp),
                 colors =
                     ButtonDefaults.buttonColors(
                         backgroundColor = SurfaceContainerHigh,
@@ -360,7 +455,7 @@ private fun RowScope.FieldIntValueComponent(
             ) {
                 Text(
                     text = stringResource(R.string.wear_inc_reps),
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                 )
             }
@@ -461,6 +556,107 @@ private fun WorkoutBottomControlRow(
     }
 }
 
+@Composable
+private fun NumericKeypadDialog(
+    title: String,
+    initialValue: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit,
+) {
+    var inputString by remember { mutableStateOf(if (initialValue > 0) "$initialValue" else "") }
+
+    Dialog(
+        showDialog = true,
+        onDismissRequest = onDismiss,
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(BackgroundDark)
+                    .padding(8.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryCyan,
+                )
+                Text(
+                    text = inputString.ifEmpty { "0" },
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = OnSurfaceDark,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("1", "2", "3").forEach { num ->
+                        KeypadButton(num) { inputString += num }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("4", "5", "6").forEach { num ->
+                        KeypadButton(num) { inputString += num }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("7", "8", "9").forEach { num ->
+                        KeypadButton(num) { inputString += num }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    KeypadButton("C") { inputString = "" }
+                    KeypadButton("0") { inputString += "0" }
+                    Button(
+                        onClick = {
+                            val parsed = inputString.toIntOrNull() ?: 0
+                            onConfirm(parsed)
+                        },
+                        modifier = Modifier.size(28.dp),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                backgroundColor = PrimaryCyan,
+                                contentColor = OnPrimaryDark,
+                            ),
+                        shape = CircleShape,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "OK",
+                            modifier = Modifier.size(14.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun KeypadButton(
+    text: String,
+    onClick: () -> Unit,
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.size(28.dp),
+        colors =
+            ButtonDefaults.buttonColors(
+                backgroundColor = SurfaceContainer,
+                contentColor = OnSurfaceDark,
+            ),
+        shape = CircleShape,
+    ) {
+        Text(text = text, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
 private fun formatDuration(seconds: Long): String {
     val hrs = seconds / SECONDS_PER_HOUR
     val mins = (seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE
@@ -472,36 +668,33 @@ private fun formatDuration(seconds: Long): String {
     }
 }
 
-@Composable
-private fun FinishSessionButton(onFinishSession: (() -> Unit)?) {
-    Chip(
-        onClick = { onFinishSession?.invoke() },
-        colors =
-            ChipDefaults.chipColors(
-                backgroundColor = ErrorContainerDark,
-                contentColor = PrimaryCyan,
-            ),
-        label = {
-            Text(
-                text = stringResource(R.string.wear_finish_session),
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-            )
-        },
-        modifier =
-            Modifier
-                .fillMaxWidth(CHIP_WIDTH_FRACTION)
-                .height(36.dp),
-        shape = RoundedCornerShape(18.dp),
-    )
-}
-
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
 internal fun WearActiveWorkoutScreenPreview1() {
     val uiState = WearActiveWorkoutUiState()
+    MaterialThemeComposeUI {
+        WearActiveWorkoutScreen(
+            uiState = uiState,
+            onIncrementReps = {},
+            onDecrementReps = { },
+            onIncrementWgt = {},
+            onDecrementWgt = { },
+            modifier = Modifier,
+            onCompleteSet = {},
+            onStartNextExercise = {},
+            onTogglePause = {},
+            onNextExercise = {},
+            onPreviousExercise = {},
+        )
+    }
+}
+
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Composable
+internal fun WearActiveWorkoutScreenPreview2() {
+    val vm = WearActiveWorkoutViewModel()
+    val uiState by vm.uiState.collectAsState()
+
     MaterialThemeComposeUI {
         WearActiveWorkoutScreen(
             uiState = uiState,
