@@ -240,7 +240,8 @@ class WearActiveWorkoutViewModel(
 
         val session = currentState.exerciseSession
         val completed = session.completedSets + 1
-        val updatedSession = session.copy(completedSets = completed)
+        val isDone = completed >= session.targetSets
+        val updatedSession = session.copy(completedSets = completed, isCompleted = isDone)
 
         val updatedList =
             _uiState.value.exerciseSessions.map {
