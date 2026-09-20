@@ -1,3 +1,5 @@
+@file:Suppress("LongMethod", "CyclomaticComplexMethod")
+
 package co.japl.android.synapsefit.ui.view
 
 import androidx.compose.runtime.Composable
@@ -27,7 +29,7 @@ import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutViewModel
 import co.japl.android.synapsefit.ui.viewmodel.WearDaySelectionViewModel
 import co.japl.android.synapsefit.ui.viewmodel.WearPostWorkoutSummaryViewModel
 
-@Suppress("LongMethod", "CyclomaticComplexMethod")
+@Suppress("LongMethod")
 @Composable
 fun WearNavHost(
     modifier: Modifier = Modifier,
@@ -47,7 +49,11 @@ fun WearNavHost(
             factory =
                 viewModelFactory {
                     initializer {
-                        WearDaySelectionViewModel(WearDependencyProvider.getTodayRoutineUseCase)
+                        WearDaySelectionViewModel(
+                            getTodayRoutineUseCase = WearDependencyProvider.getTodayRoutineUseCase,
+                            getActiveWorkoutSessionUseCase =
+                                WearDependencyProvider.getActiveWorkoutSessionUseCase,
+                        )
                     }
                 },
         )
@@ -60,54 +66,13 @@ fun WearNavHost(
                         WearActiveWorkoutViewModel(
                             sensorPort = WearDependencyProvider.wearSensorPort,
                             syncPort = WearDependencyProvider.wearSyncPort,
-                            workoutPlanRepositoryPort = WearDependencyProvider.workoutPlanRepository,
+                            workoutPlanRepositoryPort =
+                                WearDependencyProvider.workoutPlanRepository,
                             wearStateMirrorPort = WearDependencyProvider.wearStateMirrorPort,
                         )
                     }
                 },
         )
-
-    val activeUiState by activeWorkoutViewModel.uiState.collectAsState()
-
-    LaunchedEffect(activeUiState.isSessionStarted, activeUiState.isLiveSyncActive) {
-        if (activeUiState.isSessionStarted && activeUiState.isLiveSyncActive) {
-            val currentRoute = navController.currentDestination?.route
-            if (currentRoute == WearRoutes.DAY_SELECTION || currentRoute == WearRoutes.PRE_WORKOUT) {
-                val planId = activeUiState.activePlanTitle.ifBlank { "active_plan" }
-                val day = activeUiState.currentDay
-                navController.navigate(WearRoutes.activeWorkout(planId, day)) {
-                    popUpTo(WearRoutes.DAY_SELECTION)
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(
-        activeUiState.isSessionStarted,
-        activeUiState.activePlanDayId,
-        activeUiState.sessionStartTimestamp,
-        activeUiState.activeExerciseId,
-        activeUiState.exerciseStartTimestamp,
-        activeUiState.isRoutineCompleted,
-    ) {
-        if (activeUiState.isSessionStarted) {
-            daySelectionViewModel.updateActiveSessionState(
-                activePlanDayId = activeUiState.activePlanDayId ?: activeUiState.currentDay,
-                sessionStartTimestamp = activeUiState.sessionStartTimestamp,
-                activeExerciseId = activeUiState.activeExerciseId,
-                exerciseStartTimestamp = activeUiState.exerciseStartTimestamp,
-            )
-        } else {
-            daySelectionViewModel.updateActiveSessionState(null, null, null, null)
-        }
-        if (activeUiState.isRoutineCompleted) {
-            val planId = activeUiState.activePlanTitle.ifBlank { "active_plan" }
-            val day = activeUiState.currentDay
-            navController.navigate(WearRoutes.postWorkoutSummary(planId, day)) {
-                popUpTo(WearRoutes.DAY_SELECTION)
-            }
-        }
-    }
 
     val postWorkoutSummaryViewModel: WearPostWorkoutSummaryViewModel =
         viewModel(
@@ -122,6 +87,22 @@ fun WearNavHost(
                     }
                 },
         )
+
+    val activeUiState by activeWorkoutViewModel.uiState.collectAsState()
+
+    LaunchedEffect(activeUiState.isSessionStarted, activeUiState.isLiveSyncActive) {
+        if (activeUiState.isSessionStarted && activeUiState.isLiveSyncActive) {
+            val currentRoute = navController.currentDestination?.route
+            if (currentRoute == WearRoutes.DAY_SELECTION || currentRoute == WearRoutes.PRE_WORKOUT) {
+                navController.navigate(
+                    WearRoutes.activeWorkout(
+                        activeUiState.activePlanTitle,
+                        activeUiState.currentDay,
+                    ),
+                )
+            }
+        }
+    }
 
     SwipeDismissableNavHost(
         navController = navController,
@@ -228,7 +209,7 @@ private fun PreWorkoutDestination(
         onSelectExercise = { exercise, index ->
             activeWorkoutViewModel.selectExercise(exercise, index)
             val stepState = activeWorkoutViewModel.trainingStepState.value
-            if (stepState is co.japl.android.synapsefit.core.domain.model.TrainingStepState.Cooldown) {
+            if (stepState is TrainingStepState.Cooldown) {
                 navController.navigate(WearRoutes.cooldown(planId, day))
             } else {
                 navController.navigate(WearRoutes.activeWorkout(planId, day))
@@ -237,7 +218,7 @@ private fun PreWorkoutDestination(
         onStartSession = {
             activeWorkoutViewModel.startSession()
             val stepState = activeWorkoutViewModel.trainingStepState.value
-            if (stepState is co.japl.android.synapsefit.core.domain.model.TrainingStepState.Cooldown) {
+            if (stepState is TrainingStepState.Cooldown) {
                 navController.navigate(WearRoutes.cooldown(planId, day))
             } else {
                 navController.navigate(WearRoutes.activeWorkout(planId, day))
@@ -282,6 +263,12 @@ private fun ActiveWorkoutDestination(
         },
         onStartNextExercise = { activeWorkoutViewModel.startNextExercise() },
         onTogglePause = { activeWorkoutViewModel.togglePauseResume() },
+        onFinishSession = {
+            activeWorkoutViewModel.finishSession()
+            navController.navigate(WearRoutes.postWorkoutSummary(planId, day)) {
+                popUpTo(WearRoutes.DAY_SELECTION)
+            }
+        },
         onNextExercise = { activeWorkoutViewModel.navigateToNextExercise() },
         onPreviousExercise = { activeWorkoutViewModel.navigateToPreviousExercise() },
     )

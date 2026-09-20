@@ -165,9 +165,10 @@ private fun SessionCardItem(
     onClick: () -> Unit,
 ) {
     val isActiveSession = activePlanDayId != null && activePlanDayId == sessionItem.day
+    val isHighlighted = if (activePlanDayId != null) isActiveSession else sessionItem.isTodayScheduled
     val elapsedSeconds = rememberElapsedTimeSeconds(if (isActiveSession) sessionStartTimestamp else null)
 
-    if (isActiveSession || sessionItem.isTodayScheduled) {
+    if (isHighlighted) {
         TitleCard(
             onClick = onClick,
             title = {
@@ -222,7 +223,7 @@ private fun SessionCardItem(
                     fontWeight = FontWeight.SemiBold,
                     color = OnPrimaryDark,
                 )
-                if (isActiveSession && sessionStartTimestamp != null) {
+                if (isActiveSession && sessionStartTimestamp != null && sessionStartTimestamp > 0L) {
                     Spacer(modifier = Modifier.size(2.dp))
                     Text(
                         text = stringResource(R.string.wear_in_progress, formatElapsedTime(elapsedSeconds)),

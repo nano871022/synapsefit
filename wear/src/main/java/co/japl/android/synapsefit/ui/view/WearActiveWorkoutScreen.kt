@@ -98,6 +98,7 @@ fun WearActiveWorkoutScreen(
     onCompleteSet: (() -> Unit)? = null,
     onStartNextExercise: (() -> Unit)? = null,
     onTogglePause: (() -> Unit)? = null,
+    onFinishSession: (() -> Unit)? = null,
     onNextExercise: (() -> Unit)? = null,
     onPreviousExercise: (() -> Unit)? = null,
 ) {
@@ -125,6 +126,8 @@ fun WearActiveWorkoutScreen(
     val exerciseTitle =
         exerciseSession?.name
             ?: uiState.exerciseName.ifEmpty { stringResource(R.string.wear_default_exercise) }
+
+    val isPausedState = uiState.isPaused || uiState.trainingStepState is TrainingStepState.Paused
 
     val focusRequester = remember { FocusRequester() }
 
@@ -176,34 +179,61 @@ fun WearActiveWorkoutScreen(
                         .padding(horizontal = 8.dp),
             )
 
-            SetAndRepsContent(
-                uiState = uiState,
-                targetSets = exerciseSession?.targetSets ?: 0,
-                targetReps = exerciseSession?.targetReps ?: "0",
-                currentSet = currentSet,
-                onIncrementReps = onIncrementReps,
-                onDecrementReps = onDecrementReps,
-                onIncrementWgt = onIncrementWgt,
-                onDecrementWgt = onDecrementWgt,
-                onSelectFocus = onSelectFocus,
-                onOpenNumericKeypad = onOpenNumericKeypad,
-            )
+            if (isPausedState) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Chip(
+                    onClick = { onFinishSession?.invoke() },
+                    colors =
+                        ChipDefaults.chipColors(
+                            backgroundColor = ErrorContainerDark,
+                            contentColor = Color.White,
+                        ),
+                    label = {
+                        Text(
+                            text = stringResource(R.string.wear_finish_session),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                        )
+                    },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(CHIP_WIDTH_FRACTION)
+                            .height(36.dp),
+                    shape = RoundedCornerShape(18.dp),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            } else {
+                SetAndRepsContent(
+                    uiState = uiState,
+                    targetSets = exerciseSession?.targetSets ?: 0,
+                    targetReps = exerciseSession?.targetReps ?: "0",
+                    currentSet = currentSet,
+                    onIncrementReps = onIncrementReps,
+                    onDecrementReps = onDecrementReps,
+                    onIncrementWgt = onIncrementWgt,
+                    onDecrementWgt = onDecrementWgt,
+                    onSelectFocus = onSelectFocus,
+                    onOpenNumericKeypad = onOpenNumericKeypad,
+                )
 
-            WorkoutActionButton(
-                isReadyForNext = uiState.trainingStepState is TrainingStepState.ReadyForNext,
-                onStartNextExercise = onStartNextExercise,
-                onCompleteSet = onCompleteSet,
-            )
+                WorkoutActionButton(
+                    isReadyForNext = uiState.trainingStepState is TrainingStepState.ReadyForNext,
+                    onStartNextExercise = onStartNextExercise,
+                    onCompleteSet = onCompleteSet,
+                )
+            }
 
             WorkoutBottomControlRow(
-                isPaused = uiState.isPaused,
+                isPaused = isPausedState,
                 onTogglePause = onTogglePause,
                 onNextExercise = onNextExercise,
                 onPreviousExercise = onPreviousExercise,
             )
         }
 
-        if (uiState.isNumericKeypadOpen) {
+        if (uiState.isNumericKeypadOpen && !isPausedState) {
             val keypadTitle =
                 if (uiState.focusedInput == FocusedInput.REPS) {
                     stringResource(R.string.reps)
@@ -281,27 +311,17 @@ private fun WorkoutHeaderRow(
             }
         }
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        Text(
+            text = if (currentHeartRateBpm > 0) "$currentHeartRateBpm bpm" else "-- bpm",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Red,
             modifier = Modifier.padding(end = 45.dp),
-        ) {
-            Text(
-                text = if (currentHeartRateBpm > 0) "$currentHeartRateBpm" else "--",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = ErrorContainerDark,
-            )
-            Spacer(modifier = Modifier.width(2.dp))
-            Text(
-                text = stringResource(R.string.wear_bpm_unit),
-                fontSize = 9.sp,
-                color = OnSurfaceDark,
-            )
-        }
+        )
     }
 }
 
-@Suppress("LongParameterList")
+@Suppress("LongMethod", "LongParameterList")
 @Composable
 private fun SetAndRepsContent(
     uiState: WearActiveWorkoutUiState,
@@ -324,34 +344,36 @@ private fun SetAndRepsContent(
                 text = stringResource(R.string.set_of_target, currentSet, targetSets, targetReps),
                 fontSize = 11.sp,
                 color = OnSurfaceDark,
-                fontWeight = FontWeight.Medium,
             )
         }
 
-        Spacer(modifier = Modifier.height(2.dp))
-        Row {
-            FieldIntValueComponent(
-                name = R.string.reps,
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            InputControlColumn(
+                labelRes = R.string.reps,
                 value = "${uiState.currentReps}",
+                targetValue = targetReps,
                 isFocused = uiState.focusedInput == FocusedInput.REPS,
-                onSelectFocus = { onSelectFocus?.invoke(FocusedInput.REPS) },
-                onDecrement = onDecrementReps,
+                onSelect = { onSelectFocus?.invoke(FocusedInput.REPS) },
                 onIncrement = onIncrementReps,
+                onDecrement = onDecrementReps,
                 onOpenKeypad = {
                     onSelectFocus?.invoke(FocusedInput.REPS)
                     onOpenNumericKeypad?.invoke()
                 },
             )
 
-            Spacer(modifier = Modifier.width(4.dp))
-
-            FieldIntValueComponent(
-                name = R.string.weight,
+            InputControlColumn(
+                labelRes = R.string.weight,
                 value = "${uiState.currentWeight}",
+                targetValue = "kg",
                 isFocused = uiState.focusedInput == FocusedInput.WEIGHT,
-                onSelectFocus = { onSelectFocus?.invoke(FocusedInput.WEIGHT) },
-                onDecrement = onDecrementWgt,
+                onSelect = { onSelectFocus?.invoke(FocusedInput.WEIGHT) },
                 onIncrement = onIncrementWgt,
+                onDecrement = onDecrementWgt,
                 onOpenKeypad = {
                     onSelectFocus?.invoke(FocusedInput.WEIGHT)
                     onOpenNumericKeypad?.invoke()
@@ -363,41 +385,36 @@ private fun SetAndRepsContent(
 
 @Suppress("LongParameterList")
 @Composable
-private fun RowScope.FieldIntValueComponent(
-    @StringRes name: Int,
+private fun RowScope.InputControlColumn(
+    @StringRes labelRes: Int,
     value: String,
+    targetValue: String,
     isFocused: Boolean,
-    onSelectFocus: () -> Unit,
-    onDecrement: () -> Unit,
+    onSelect: () -> Unit,
     onIncrement: () -> Unit,
+    onDecrement: () -> Unit,
     onOpenKeypad: () -> Unit,
 ) {
-    val focusBorderModifier =
-        if (isFocused) {
-            Modifier.border(1.5.dp, PrimaryCyan, RoundedCornerShape(8.dp))
-        } else {
-            Modifier.border(1.dp, Color.Transparent, RoundedCornerShape(8.dp))
-        }
+    val borderColor = if (isFocused) PrimaryCyan else Color.Transparent
 
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier =
             Modifier
                 .weight(1f)
-                .clickable { onSelectFocus() }
-                .then(focusBorderModifier)
+                .clickable { onSelect() }
+                .border(1.dp, borderColor, RoundedCornerShape(8.dp))
                 .padding(2.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
             Text(
-                text = stringResource(name),
-                textAlign = TextAlign.Center,
-                fontSize = 10.sp,
-                color = if (isFocused) PrimaryCyan else OnSurfaceDark,
-                fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Normal,
+                text = "${stringResource(labelRes)} ($targetValue)",
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isFocused) PrimaryCyan else OnSurfaceDark.copy(alpha = 0.7f),
             )
             Spacer(modifier = Modifier.width(2.dp))
             Icon(

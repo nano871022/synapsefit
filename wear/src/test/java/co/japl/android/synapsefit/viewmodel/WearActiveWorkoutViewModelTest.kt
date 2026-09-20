@@ -85,14 +85,14 @@ class WearActiveWorkoutViewModelTest {
         viewModel.setFocusedInput(FocusedInput.WEIGHT)
         assertEquals(FocusedInput.WEIGHT, viewModel.uiState.value.focusedInput)
 
-        viewModel.incrementFocusedInput()
+        viewModel.handleRotaryScroll(1.0f)
         assertEquals(1.toShort(), viewModel.uiState.value.currentWeight)
 
-        viewModel.decrementFocusedInput()
+        viewModel.handleRotaryScroll(-1.0f)
         assertEquals(0.toShort(), viewModel.uiState.value.currentWeight)
 
         viewModel.setFocusedInput(FocusedInput.REPS)
-        viewModel.incrementFocusedInput()
+        viewModel.handleRotaryScroll(1.0f)
         assertEquals(1, viewModel.uiState.value.currentReps)
     }
 
@@ -105,11 +105,11 @@ class WearActiveWorkoutViewModelTest {
         viewModel.handleRotaryScroll(-1.0f)
         assertEquals(0, viewModel.uiState.value.currentReps)
 
-        val handledUp = viewModel.handleHardwareKey(KeyEvent.KEYCODE_VOLUME_UP)
+        val handledUp = viewModel.handleHardwareKey(KeyEvent.KEYCODE_STEM_1)
         assertTrue(handledUp)
         assertEquals(1, viewModel.uiState.value.currentReps)
 
-        val handledDown = viewModel.handleHardwareKey(KeyEvent.KEYCODE_VOLUME_DOWN)
+        val handledDown = viewModel.handleHardwareKey(KeyEvent.KEYCODE_STEM_2)
         assertTrue(handledDown)
         assertEquals(0, viewModel.uiState.value.currentReps)
     }
@@ -261,14 +261,14 @@ class WearActiveWorkoutViewModelTest {
         assertTrue(viewModel.trainingStepState.value is TrainingStepState.Cooldown)
         val cooldown = viewModel.trainingStepState.value as TrainingStepState.Cooldown
         assertEquals(1, cooldown.exerciseSession.completedSets)
-        assertTrue(cooldown.exerciseSession.isCompleted)
-        assertEquals(1, viewModel.uiState.value.activeExerciseIndex)
-        assertEquals("Press Militar", viewModel.uiState.value.exerciseName)
+        assertTrue(cooldown.exerciseSession.completedSets >= cooldown.exerciseSession.targetSets)
 
         viewModel.setCooldownTargetTimestamp(System.currentTimeMillis() - 1000L)
         viewModel.recalculateCooldownTimer()
 
         assertTrue(viewModel.trainingStepState.value is TrainingStepState.ReadyForNext)
+        val readyState = viewModel.trainingStepState.value as TrainingStepState.ReadyForNext
+        assertEquals("Press Militar", readyState.nextExerciseSession?.name)
 
         viewModel.startNextExercise()
         val activeState = viewModel.trainingStepState.value
@@ -325,6 +325,7 @@ class WearActiveWorkoutViewModelTest {
                 updatedAt = System.currentTimeMillis(),
             )
 
+        viewModel.startSession()
         viewModel.selectExercise(exercise, 0)
         assertTrue(viewModel.uiState.value.isSessionStarted)
         assertEquals("Press de Banca (Compuesto)", viewModel.uiState.value.exerciseName)
@@ -332,7 +333,7 @@ class WearActiveWorkoutViewModelTest {
         assertEquals("ex_1", viewModel.uiState.value.activeExerciseId)
         assertNotNull(viewModel.uiState.value.exerciseStartTimestamp)
 
-        viewModel.exitToSelectionHub()
+        viewModel.finishSession()
         assertFalse(viewModel.uiState.value.isSessionStarted)
 
         viewModel.startSession()
