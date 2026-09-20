@@ -100,7 +100,6 @@ fun WearNavHost(
         } else {
             daySelectionViewModel.updateActiveSessionState(null, null, null, null)
         }
-        
         if (activeUiState.isRoutineCompleted) {
             val planId = activeUiState.activePlanTitle.ifBlank { "active_plan" }
             val day = activeUiState.currentDay
