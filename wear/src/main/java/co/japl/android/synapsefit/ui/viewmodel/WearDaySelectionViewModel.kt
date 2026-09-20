@@ -80,7 +80,7 @@ class WearDaySelectionViewModel(
                     val isActive = activeState.isActive
                     _uiState.update {
                         it.copy(
-                            activePlanDayId = if (isActive) activeState.activePlanDayId else "",
+                            activePlanDayId = if (isActive) activeState.day else null,
                             sessionStartTimestamp = if (isActive) activeState.sessionStartTimestamp else 0L,
                             activeExerciseId = if (isActive) activeState.activeExerciseId else "",
                             exerciseStartTimestamp = if (isActive) activeState.exerciseStartTimestamp else 0L,

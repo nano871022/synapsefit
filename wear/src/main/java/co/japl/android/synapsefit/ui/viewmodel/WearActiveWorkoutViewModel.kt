@@ -80,7 +80,7 @@ class WearActiveWorkoutViewModel(
             val currentExId =
                 state.exerciseSessions.getOrNull(state.activeExerciseIndex)?.exerciseId ?: ""
             val completedIds =
-                state.exerciseSessions.filter { it.isCompleted }.map { it.exerciseId }
+                state.exerciseSessions.filter { it.isCompleted }.mapNotNull { it.exerciseId }
             viewModelScope.launch {
                 wearStateMirrorPort?.sendEvent(
                     LiveSyncEvent.ActiveSessionStatePayload(
@@ -202,12 +202,12 @@ class WearActiveWorkoutViewModel(
         _uiState.update { current ->
             val firstExId =
                 current.exerciseSessions.getOrNull(current.activeExerciseIndex)?.exerciseId
-                    ?: current.availableExercises.firstOrNull()?.id
+                    ?: current.availableExercises.firstOrNull()?.id ?: ""
             current.copy(
                 isSessionStarted = true,
                 activePlanDayId = current.currentDay,
                 sessionStartTimestamp = current.sessionStartTimestamp ?: now,
-                activeExerciseId = current.activeExerciseId ?: firstExId,
+                activeExerciseId = current.activeExerciseId.ifBlank { firstExId },
                 exerciseStartTimestamp = current.exerciseStartTimestamp ?: now,
             )
         }
@@ -406,7 +406,7 @@ class WearActiveWorkoutViewModel(
                 isSessionStarted = true,
                 activePlanDayId = it.currentDay,
                 sessionStartTimestamp = it.sessionStartTimestamp ?: now,
-                activeExerciseId = targetSession.exerciseId,
+                activeExerciseId = targetSession.exerciseId ?: "",
                 exerciseStartTimestamp = now,
                 isRoutineCompleted = false,
             )
@@ -468,7 +468,7 @@ class WearActiveWorkoutViewModel(
             }
 
         syncPort?.queueDataForDeferredSync(
-            exerciseId = session.exerciseId,
+            exerciseId = session.exerciseId ?: "",
             reps = _uiState.value.currentReps,
             heartRateBpm = _uiState.value.currentHeartRateBpm,
         )
@@ -613,7 +613,7 @@ class WearActiveWorkoutViewModel(
                 exerciseName = nextSession.name,
                 activeExerciseIndex = nextIndex,
                 trainingStepState = activeState,
-                activeExerciseId = nextSession.exerciseId,
+                activeExerciseId = nextSession.exerciseId ?: "",
                 exerciseStartTimestamp = now,
             )
         }
@@ -633,7 +633,7 @@ class WearActiveWorkoutViewModel(
                 exerciseName = nextSession.name,
                 activeExerciseIndex = nextIndex,
                 trainingStepState = activeState,
-                activeExerciseId = nextSession.exerciseId,
+                activeExerciseId = nextSession.exerciseId ?: "",
                 exerciseStartTimestamp = now,
             )
         }
@@ -658,7 +658,7 @@ class WearActiveWorkoutViewModel(
                 exerciseName = prevSession.name,
                 activeExerciseIndex = prevIndex,
                 trainingStepState = activeState,
-                activeExerciseId = prevSession.exerciseId,
+                activeExerciseId = prevSession.exerciseId ?: "",
                 exerciseStartTimestamp = now,
             )
         }

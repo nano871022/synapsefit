@@ -12,5 +12,6 @@ data class WearDaySelectionUiState(
     val sessionStartTimestamp: Long? = null,
     val activeExerciseId: String? = null,
     val exerciseStartTimestamp: Long? = null,
+    val elapsedSessionTimeFormatted: String = "",
     val elapsedExerciseTimeFormatted: String = "",
 )

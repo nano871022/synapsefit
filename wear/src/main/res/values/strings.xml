@@ -52,7 +52,7 @@
     <string name="wear_update_error">Error de Play Store</string>
     <string name="next_exercise">Siguiente Ejercicio</string>
     <string name="completed_set">Completar Serie</string>
-    <string name="set_of_target">Serie %d de %d • %s reps</string>
+    <string name="set_of_target">Serie %1$d de %2$d • %3$s reps</string>
     <string name="reps">Repeticiones</string>
     <string name="weight">Peso</string>
     <string name="weight_avg">Prom. %d Kg Peso</string>
