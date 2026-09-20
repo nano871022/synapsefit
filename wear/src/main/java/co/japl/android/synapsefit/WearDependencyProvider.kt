@@ -2,14 +2,17 @@ package co.japl.android.synapsefit
 
 import android.content.Context
 import androidx.room.Room
+import co.japl.android.synapsefit.core.port.secondary.ActiveSessionRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WearSensorPort
 import co.japl.android.synapsefit.core.port.secondary.WearStateMirrorPort
 import co.japl.android.synapsefit.core.port.secondary.WearSyncPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
+import co.japl.android.synapsefit.core.usecase.GetActiveWorkoutSessionUseCase
 import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
 import co.japl.android.synapsefit.core.usecase.GetTodayRoutineUseCase
 import co.japl.android.synapsefit.services.database.SynapseFitDatabase
+import co.japl.android.synapsefit.services.repository.InMemoryActiveSessionAdapter
 import co.japl.android.synapsefit.services.repository.WorkoutLogRepositoryAdapter
 import co.japl.android.synapsefit.services.repository.WorkoutPlanRepositoryAdapter
 import co.japl.android.synapsefit.services.wear.WearHeartRateSensorAdapter
@@ -26,11 +29,13 @@ object WearDependencyProvider {
     lateinit var database: SynapseFitDatabase
     lateinit var workoutPlanRepository: WorkoutPlanRepositoryPort
     lateinit var workoutLogRepository: WorkoutLogRepositoryPort
+    lateinit var activeSessionRepository: ActiveSessionRepositoryPort
     lateinit var wearSensorPort: WearSensorPort
     lateinit var wearSyncPort: WearSyncPort
     lateinit var wearStateMirrorPort: WearStateMirrorPort
 
     lateinit var getTodayRoutineUseCase: GetTodayRoutineUseCase
+    lateinit var getActiveWorkoutSessionUseCase: GetActiveWorkoutSessionUseCase
     lateinit var getGroupedWorkoutHistoryUseCase: GetGroupedWorkoutHistoryUseCase
 
     @Synchronized
@@ -48,11 +53,13 @@ object WearDependencyProvider {
 
         workoutPlanRepository = WorkoutPlanRepositoryAdapter(database.workoutPlanDao())
         workoutLogRepository = WorkoutLogRepositoryAdapter(database.workoutLogDao())
+        activeSessionRepository = InMemoryActiveSessionAdapter()
         wearSensorPort = WearHeartRateSensorAdapter(appContext)
         wearSyncPort = WearableSyncAdapter(appContext)
         wearStateMirrorPort = WearableStateMirrorAdapter(appContext)
 
         getTodayRoutineUseCase = GetTodayRoutineUseCase(workoutPlanRepository, workoutLogRepository)
+        getActiveWorkoutSessionUseCase = GetActiveWorkoutSessionUseCase(activeSessionRepository)
         getGroupedWorkoutHistoryUseCase = GetGroupedWorkoutHistoryUseCase(workoutLogRepository)
 
         isInitialized = true
