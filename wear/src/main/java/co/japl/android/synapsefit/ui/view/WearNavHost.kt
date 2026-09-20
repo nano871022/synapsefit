@@ -88,6 +88,7 @@ fun WearNavHost(
         activeUiState.sessionStartTimestamp,
         activeUiState.activeExerciseId,
         activeUiState.exerciseStartTimestamp,
+        activeUiState.isRoutineCompleted,
     ) {
         if (activeUiState.isSessionStarted) {
             daySelectionViewModel.updateActiveSessionState(
@@ -99,9 +100,7 @@ fun WearNavHost(
         } else {
             daySelectionViewModel.updateActiveSessionState(null, null, null, null)
         }
-    }
-
-    LaunchedEffect(activeUiState.isRoutineCompleted) {
+        
         if (activeUiState.isRoutineCompleted) {
             val planId = activeUiState.activePlanTitle.ifBlank { "active_plan" }
             val day = activeUiState.currentDay

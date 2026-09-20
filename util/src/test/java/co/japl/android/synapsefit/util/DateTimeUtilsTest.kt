@@ -54,4 +54,20 @@ class DateTimeUtilsTest {
         val formatted = DateTimeUtils.formatYearMonth(yearMonth, "MMMM yyyy", testLocale)
         assertEquals("March 2025", formatted)
     }
+
+    @Test
+    fun testCalculateElapsedTimeSeconds() {
+        val now = 1000000L
+        val start = 900000L
+        val elapsed = DateTimeUtils.calculateElapsedTimeSeconds(start, now)
+        assertEquals(100L, elapsed)
+    }
+
+    @Test
+    fun testFormatElapsedTime() {
+        assertEquals("00:00", DateTimeUtils.formatElapsedTime(0L))
+        assertEquals("00:45", DateTimeUtils.formatElapsedTime(45L))
+        assertEquals("05:23", DateTimeUtils.formatElapsedTime(323L))
+        assertEquals("01:01:05", DateTimeUtils.formatElapsedTime(3665L))
+    }
 }

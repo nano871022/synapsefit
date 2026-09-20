@@ -3,12 +3,15 @@ package co.japl.android.synapsefit.ui.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.japl.android.synapsefit.core.usecase.GetActiveWorkoutSessionUseCase
 import co.japl.android.synapsefit.core.usecase.GetTodayRoutineUseCase
+import co.japl.android.synapsefit.util.DateTimeUtils
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,18 +19,23 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 private const val UPDATE_REQUEST_CODE = 9999
+private const val TICKER_INTERVAL_MILLIS = 1000L
 
 class WearDaySelectionViewModel(
     private val getTodayRoutineUseCase: GetTodayRoutineUseCase? = null,
+    private val getActiveWorkoutSessionUseCase: GetActiveWorkoutSessionUseCase? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(WearDaySelectionUiState())
     val uiState: StateFlow<WearDaySelectionUiState> = _uiState.asStateFlow()
 
     private var loadJob: Job? = null
+    private var activeSessionJob: Job? = null
+    private var tickerJob: Job? = null
     private var cachedAppUpdateInfo: AppUpdateInfo? = null
 
     init {
         loadSessions()
+        observeActiveSession()
     }
 
     fun loadSessions() {
@@ -61,6 +69,48 @@ class WearDaySelectionViewModel(
                 exerciseStartTimestamp = exerciseStartTimestamp,
             )
         }
+    }
+    
+    private fun observeActiveSession() {
+        val useCase = getActiveWorkoutSessionUseCase ?: return
+        activeSessionJob?.cancel()
+        activeSessionJob =
+            viewModelScope.launch {
+                useCase.invoke().collect { activeState ->
+                    val isActive = activeState.isActive
+                    _uiState.update {
+                        it.copy(
+                            activePlanDayId = if (isActive) activeState.activePlanDayId else "",
+                            sessionStartTimestamp = if (isActive) activeState.sessionStartTimestamp else 0L,
+                            activeExerciseId = if (isActive) activeState.activeExerciseId else "",
+                            exerciseStartTimestamp = if (isActive) activeState.exerciseStartTimestamp else 0L,
+                        )
+                    }
+                    if (activeState.isActive && activeState.sessionStartTimestamp > 0L) {
+                        startTickerJob(activeState.sessionStartTimestamp)
+                    } else {
+                        tickerJob?.cancel()
+                        _uiState.update { it.copy(elapsedSessionTimeFormatted = "") }
+                    }
+                }
+            }
+    }
+
+    private fun startTickerJob(sessionStartTimestamp: Long) {
+        tickerJob?.cancel()
+        tickerJob =
+            viewModelScope.launch {
+                while (true) {
+                    val elapsed =
+                        DateTimeUtils.calculateElapsedTimeSeconds(
+                            sessionStartTimestamp,
+                            DateTimeUtils.getCurrentTimestamp(),
+                        )
+                    val formatted = DateTimeUtils.formatElapsedTime(elapsed)
+                    _uiState.update { it.copy(elapsedSessionTimeFormatted = formatted) }
+                    delay(TICKER_INTERVAL_MILLIS)
+                }
+            }
     }
 
     @Suppress("TooGenericExceptionCaught", "SwallowedException")

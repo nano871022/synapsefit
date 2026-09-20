@@ -58,4 +58,6 @@
     <string name="wear_finish_session">Finish Session</string>
     <string name="wear_in_progress">In progress • %1$s</string>
     <string name="wear_active_exercise_timer">Running • %1$s</string>
+    <string name="wear_session_in_progress">In progress • %1$s</string>
+    <string name="wear_exercise_in_progress">In progress • %1$s</string>
 </resources>
