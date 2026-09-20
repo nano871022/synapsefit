@@ -80,7 +80,7 @@ class WearActiveWorkoutViewModel(
             val currentExId =
                 state.exerciseSessions.getOrNull(state.activeExerciseIndex)?.exerciseId ?: ""
             val completedIds =
-                state.exerciseSessions.filter { it.isCompleted }.map { it.exerciseId }
+                state.exerciseSessions.filter { it.isCompleted }.mapNotNull { it.exerciseId }
             viewModelScope.launch {
                 wearStateMirrorPort?.sendEvent(
                     LiveSyncEvent.ActiveSessionStatePayload(
@@ -133,8 +133,10 @@ class WearActiveWorkoutViewModel(
                 _trainingStepState.value
             }
 
+        val now = DateTimeUtils.getCurrentTimestamp()
         _trainingStepState.value = nextState
         _uiState.update {
+            val exChanged = it.activeExerciseId != event.currentExerciseId
             it.copy(
                 isLiveSyncActive = true,
                 isSessionStarted = true,
@@ -143,6 +145,15 @@ class WearActiveWorkoutViewModel(
                 exerciseName = activeSession?.name ?: it.exerciseName,
                 cooldownTargetTimestamp = event.cooldownTargetTimestamp,
                 trainingStepState = nextState,
+                activePlanDayId = event.day,
+                sessionStartTimestamp = it.sessionStartTimestamp ?: now,
+                activeExerciseId = event.currentExerciseId,
+                exerciseStartTimestamp =
+                    if (exChanged || it.exerciseStartTimestamp == null) {
+                        now
+                    } else {
+                        it.exerciseStartTimestamp
+                    },
             )
         }
     }
@@ -186,7 +197,20 @@ class WearActiveWorkoutViewModel(
     }
 
     fun startSession() {
-        _uiState.update { it.copy(isSessionStarted = true) }
+        sensorPort?.startHeartRateMonitoring()
+        val now = DateTimeUtils.getCurrentTimestamp()
+        _uiState.update { current ->
+            val firstExId =
+                current.exerciseSessions.getOrNull(current.activeExerciseIndex)?.exerciseId
+                    ?: current.availableExercises.firstOrNull()?.id ?: ""
+            current.copy(
+                isSessionStarted = true,
+                activePlanDayId = current.currentDay,
+                sessionStartTimestamp = current.sessionStartTimestamp ?: now,
+                activeExerciseId = current.activeExerciseId.ifBlank { firstExId },
+                exerciseStartTimestamp = current.exerciseStartTimestamp ?: now,
+            )
+        }
         startWorkoutTimer()
     }
 
@@ -371,6 +395,7 @@ class WearActiveWorkoutViewModel(
         val initialSet = (targetSession.completedSets + 1).coerceAtMost(targetSession.targetSets)
         val initialState = TrainingStepState.Active(targetSession, initialSet)
 
+        val now = DateTimeUtils.getCurrentTimestamp()
         _trainingStepState.value = initialState
         _uiState.update {
             it.copy(
@@ -379,6 +404,10 @@ class WearActiveWorkoutViewModel(
                 activeExerciseIndex = index.coerceIn(0, maxOf(0, updatedSessions.lastIndex)),
                 trainingStepState = initialState,
                 isSessionStarted = true,
+                activePlanDayId = it.currentDay,
+                sessionStartTimestamp = it.sessionStartTimestamp ?: now,
+                activeExerciseId = targetSession.exerciseId ?: "",
+                exerciseStartTimestamp = now,
                 isRoutineCompleted = false,
             )
         }
@@ -439,7 +468,7 @@ class WearActiveWorkoutViewModel(
             }
 
         syncPort?.queueDataForDeferredSync(
-            exerciseId = session.exerciseId,
+            exerciseId = session.exerciseId ?: "",
             reps = _uiState.value.currentReps,
             heartRateBpm = _uiState.value.currentHeartRateBpm,
         )
@@ -572,6 +601,7 @@ class WearActiveWorkoutViewModel(
         val currentSet = (nextSession.completedSets + 1).coerceAtMost(nextSession.targetSets)
         val activeState = TrainingStepState.Active(nextSession, currentSet)
 
+        val now = DateTimeUtils.getCurrentTimestamp()
         _trainingStepState.value = activeState
         val nextIndex =
             _uiState.value.exerciseSessions.indexOfFirst {
@@ -583,6 +613,8 @@ class WearActiveWorkoutViewModel(
                 exerciseName = nextSession.name,
                 activeExerciseIndex = nextIndex,
                 trainingStepState = activeState,
+                activeExerciseId = nextSession.exerciseId ?: "",
+                exerciseStartTimestamp = now,
             )
         }
     }
@@ -594,12 +626,15 @@ class WearActiveWorkoutViewModel(
         val nextSession = sessions[nextIndex]
         val currentSet = (nextSession.completedSets + 1).coerceAtMost(nextSession.targetSets)
         val activeState = TrainingStepState.Active(nextSession, currentSet)
+        val now = DateTimeUtils.getCurrentTimestamp()
         _trainingStepState.value = activeState
         _uiState.update {
             it.copy(
                 exerciseName = nextSession.name,
                 activeExerciseIndex = nextIndex,
                 trainingStepState = activeState,
+                activeExerciseId = nextSession.exerciseId ?: "",
+                exerciseStartTimestamp = now,
             )
         }
     }
@@ -616,12 +651,15 @@ class WearActiveWorkoutViewModel(
         val prevSession = sessions[prevIndex]
         val currentSet = (prevSession.completedSets + 1).coerceAtMost(prevSession.targetSets)
         val activeState = TrainingStepState.Active(prevSession, currentSet)
+        val now = DateTimeUtils.getCurrentTimestamp()
         _trainingStepState.value = activeState
         _uiState.update {
             it.copy(
                 exerciseName = prevSession.name,
                 activeExerciseIndex = prevIndex,
                 trainingStepState = activeState,
+                activeExerciseId = prevSession.exerciseId ?: "",
+                exerciseStartTimestamp = now,
             )
         }
     }

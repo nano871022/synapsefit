@@ -12,8 +12,8 @@ android {
         applicationId = "co.japl.android.synapsefit"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 21_00_016
-        versionName = "1.00.016 Cout wear fix"
+        versionCode = 21_00_017
+        versionName = "1.00.017 Fix active session"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

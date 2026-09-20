@@ -52,11 +52,13 @@
     <string name="wear_update_error">Error de Play Store</string>
     <string name="next_exercise">Siguiente Ejercicio</string>
     <string name="completed_set">Completar Serie</string>
-    <string name="set_of_target">Serie %d de %d • %s reps</string>
+    <string name="set_of_target">Serie %1$d de %2$d • %3$s reps</string>
     <string name="reps">Repeticiones</string>
     <string name="weight">Peso</string>
     <string name="weight_avg">Prom. %d Kg Peso</string>
     <string name="wear_finish_session">Finalizar Sesión</string>
+    <string name="wear_in_progress">En progreso • %1$s</string>
+    <string name="wear_active_exercise_timer">En ejecución • %1$s</string>
     <string name="wear_session_in_progress">En progreso • %1$s</string>
     <string name="wear_exercise_in_progress">En curso • %1$s</string>
 </resources>

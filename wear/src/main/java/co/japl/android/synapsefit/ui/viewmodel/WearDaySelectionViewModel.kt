@@ -55,6 +55,22 @@ class WearDaySelectionViewModel(
             }
     }
 
+    fun updateActiveSessionState(
+        activePlanDayId: Int?,
+        sessionStartTimestamp: Long?,
+        activeExerciseId: String?,
+        exerciseStartTimestamp: Long?,
+    ) {
+        _uiState.update {
+            it.copy(
+                activePlanDayId = activePlanDayId,
+                sessionStartTimestamp = sessionStartTimestamp,
+                activeExerciseId = activeExerciseId,
+                exerciseStartTimestamp = exerciseStartTimestamp,
+            )
+        }
+    }
+
     private fun observeActiveSession() {
         val useCase = getActiveWorkoutSessionUseCase ?: return
         activeSessionJob?.cancel()
@@ -64,7 +80,7 @@ class WearDaySelectionViewModel(
                     val isActive = activeState.isActive
                     _uiState.update {
                         it.copy(
-                            activePlanDayId = if (isActive) activeState.activePlanDayId else "",
+                            activePlanDayId = if (isActive) activeState.day else null,
                             sessionStartTimestamp = if (isActive) activeState.sessionStartTimestamp else 0L,
                             activeExerciseId = if (isActive) activeState.activeExerciseId else "",
                             exerciseStartTimestamp = if (isActive) activeState.exerciseStartTimestamp else 0L,
