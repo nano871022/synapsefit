@@ -70,7 +70,7 @@ class WearDaySelectionViewModel(
             )
         }
     }
-    
+
     private fun observeActiveSession() {
         val useCase = getActiveWorkoutSessionUseCase ?: return
         activeSessionJob?.cancel()
