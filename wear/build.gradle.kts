@@ -12,8 +12,8 @@ android {
         applicationId = "co.japl.android.synapsefit"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 21_00_018
-        versionName = "1.00.018 Fix ui "
+        versionCode = 21_00_019
+        versionName = "1.00.019 fix active workout ui"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

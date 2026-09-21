@@ -2,7 +2,6 @@
 
 package co.japl.android.synapsefit.ui.view
 
-import android.icu.lang.UCharacter
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -13,12 +12,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,6 +26,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
@@ -154,20 +152,17 @@ fun WearActiveWorkoutScreen(
                 },
         contentAlignment = Alignment.Center,
     ) {
+        val scrollState = rememberScrollState()
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.Top,
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 5.dp, vertical = 5.dp)
-                    .scrollable(
-                        rememberScrollState(),
-                        orientation = androidx.compose.foundation.gestures.Orientation.Vertical,
-                        enabled = true
-                    ),
+                    .padding(horizontal = 5.dp, vertical = 10.dp)
+                    .verticalScroll(scrollState),
         ) {
-
             Text(
                 text = exerciseTitle,
                 fontSize = 20.sp,
@@ -241,7 +236,6 @@ fun WearActiveWorkoutScreen(
                     onCompleteSet = onCompleteSet,
                 )
             }
-
         }
 
         if (uiState.isNumericKeypadOpen && !isPausedState) {
@@ -280,11 +274,11 @@ private fun WorkoutHeaderRow(
                 .fillMaxWidth()
                 .padding(top = 20.dp),
     ) {
-        Row (
+        Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ){
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             if (isLiveSyncActive) {
                 val infiniteTransition = rememberInfiniteTransition(label = "wear_live_blink")
                 val alpha by infiniteTransition.animateFloat(
@@ -300,7 +294,7 @@ private fun WorkoutHeaderRow(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    modifier = Modifier.padding(start = 10.dp)
+                    modifier = Modifier.padding(start = 10.dp),
                 ) {
                     Box(
                         modifier =
@@ -323,7 +317,7 @@ private fun WorkoutHeaderRow(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Red,
-                modifier = Modifier.padding(end = 10.dp)
+                modifier = Modifier.padding(end = 10.dp),
             )
         }
 
@@ -360,10 +354,9 @@ private fun SetAndRepsContent(
                 text = stringResource(R.string.set_of_target, currentSet, targetSets, targetReps),
                 fontSize = 18.sp,
                 color = OnSurfaceDark,
-                modifier = Modifier.padding(bottom = 10.dp)
+                modifier = Modifier.padding(bottom = 10.dp),
             )
         }
-
 
         InputControlColumn(
             labelRes = R.string.reps,
@@ -393,7 +386,6 @@ private fun SetAndRepsContent(
             },
         )
     }
-
 }
 
 @Suppress("LongParameterList")
@@ -416,7 +408,7 @@ private fun InputControlColumn(
             Modifier
                 .clickable { onSelect() }
                 .border(1.dp, borderColor, RoundedCornerShape(8.dp))
-                .padding(6.dp)
+                .padding(6.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
