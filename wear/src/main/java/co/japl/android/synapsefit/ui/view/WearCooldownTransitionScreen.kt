@@ -1,6 +1,5 @@
 package co.japl.android.synapsefit.ui.view
 
-import android.se.omapi.Session
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -22,12 +22,15 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,8 +45,6 @@ import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.CardDefaults
-import androidx.wear.compose.material.Chip
-import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.PositionIndicator
@@ -61,6 +62,8 @@ import co.com.japl.ui.theme.SurfaceContainerHigh
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.core.domain.model.ExerciseSession
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
+import co.japl.android.synapsefit.ui.util.rememberRotaryScrollAdapter
+import co.japl.android.synapsefit.ui.util.rotaryScrollable
 import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutViewModel
 
 private const val SECONDS_PER_MINUTE = 60
@@ -80,6 +83,12 @@ fun WearCooldownTransitionScreen(
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberScalingLazyListState()
+    val focusRequester = remember { FocusRequester() }
+    val rotaryAdapter = rememberRotaryScrollAdapter(listState)
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     Scaffold(
         modifier =
@@ -90,7 +99,10 @@ fun WearCooldownTransitionScreen(
         positionIndicator = { PositionIndicator(scalingLazyListState = listState) },
     ) {
         ScalingLazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .rotaryScrollable(focusRequester, rotaryAdapter),
             state = listState,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -278,7 +290,8 @@ private fun ExerciseSessionCardItem(
     if (session.isCompleted) {
         SessionCompleted(
             session = session,
-            onClick = onClick)
+            onClick = onClick,
+        )
     } else if (isCurrentSession) {
         CurrentSession(
             session = session,
@@ -298,7 +311,7 @@ private fun ExerciseSessionCardItem(
 private fun SessionCard(
     session: ExerciseSession,
     onClick: () -> Unit,
-){
+) {
     TitleCard(
         onClick = onClick,
         title = {
@@ -306,7 +319,7 @@ private fun SessionCard(
                 text = session.name,
                 fontWeight = FontWeight.Bold,
                 color = OnSurfaceDark,
-                softWrap = true
+                softWrap = true,
             )
         },
         backgroundPainter =
@@ -319,6 +332,7 @@ private fun SessionCard(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .wrapContentHeight()
                 .padding(horizontal = 8.dp, vertical = 3.dp),
     ) {
         Text(
@@ -335,46 +349,61 @@ private fun SessionCard(
     }
 }
 
+@Suppress("UnusedParameter")
 @Composable
 private fun CurrentSession(
     session: ExerciseSession,
     onClick: () -> Unit,
     onStartNextExercise: () -> Unit,
     trainingStepState: TrainingStepState,
-){
+) {
+    val timeSlot: @Composable () -> Unit = {
+        val currentSet = (session.completedSets + 1).coerceAtMost(session.targetSets)
+        Text(
+            text =
+                stringResource(
+                    R.string.wear_next_set_format,
+                    currentSet,
+                    session.targetSets,
+                ),
+            style = MaterialTheme.typography.caption2,
+            fontWeight = FontWeight.Bold,
+            color = OnPrimaryDark,
+        )
+    }
+
     TitleCard(
         onClick = onClick,
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    tint = OnPrimaryDark,
-                    modifier = Modifier.size(16.dp),
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f, fill = false),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = OnPrimaryDark,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = session.name,
+                        fontWeight = FontWeight.Bold,
+                        color = OnPrimaryDark,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = session.name,
-                    fontWeight = FontWeight.Bold,
-                    color = OnPrimaryDark,
-                    softWrap = true,
-                )
+                timeSlot()
             }
         },
-        time = {
-            val currentSet = (session.completedSets + 1).coerceAtMost(session.targetSets)
-            Text(
-                text =
-                    stringResource(
-                        R.string.wear_next_set_format,
-                        currentSet,
-                        session.targetSets,
-                    ),
-                style = MaterialTheme.typography.caption2,
-                fontWeight = FontWeight.Bold,
-                color = OnPrimaryDark,
-            )
-        },
+        time = { timeSlot() },
         backgroundPainter =
             CardDefaults.cardBackgroundPainter(
                 startBackgroundColor = PrimaryCyan,
@@ -385,6 +414,7 @@ private fun CurrentSession(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .wrapContentHeight()
                 .padding(horizontal = 8.dp, vertical = 4.dp),
     ) {
         Column(modifier = Modifier.padding(top = 2.dp)) {
@@ -408,7 +438,7 @@ private fun CurrentSession(
 private fun SessionCompleted(
     session: ExerciseSession,
     onClick: () -> Unit,
-){
+) {
     TitleCard(
         onClick = onClick,
         enabled = false,
@@ -438,6 +468,7 @@ private fun SessionCompleted(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .wrapContentHeight()
                 .padding(horizontal = 8.dp, vertical = 3.dp)
                 .alpha(COMPLETED_ALPHA),
     ) {
