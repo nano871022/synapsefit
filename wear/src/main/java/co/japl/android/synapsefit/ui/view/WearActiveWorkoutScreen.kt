@@ -160,7 +160,7 @@ fun WearActiveWorkoutScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 5.dp, vertical = 5.dp)
+                    .padding(horizontal = 5.dp, vertical = 10.dp)
                     .verticalScroll(scrollState),
         ) {
             Text(
