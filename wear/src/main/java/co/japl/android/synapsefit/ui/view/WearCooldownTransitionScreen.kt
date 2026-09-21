@@ -1,5 +1,6 @@
 package co.japl.android.synapsefit.ui.view
 
+import android.se.omapi.Session
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -157,7 +158,7 @@ private fun HeaderCooldownSection(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(bottom = 8.dp, top = 20.dp),
+        modifier = Modifier.padding(bottom = 8.dp, top = 25.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -167,19 +168,19 @@ private fun HeaderCooldownSection(
                 imageVector = Icons.Default.Favorite,
                 contentDescription = null,
                 tint = ErrorContainerDark,
-                modifier = Modifier.size(14.dp),
+                modifier = Modifier.size(20.dp),
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = if (heartRateBpm > 0) "$heartRateBpm" else "--",
-                fontSize = 14.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = ErrorContainerDark,
             )
             Spacer(modifier = Modifier.width(2.dp))
             Text(
                 text = stringResource(R.string.wear_bpm_unit),
-                fontSize = 10.sp,
+                fontSize = 20.sp,
                 color = OnSurfaceDark,
             )
         }
@@ -203,16 +204,22 @@ private fun HeaderCooldownSection(
                 imageVector = Icons.Default.HourglassTop,
                 contentDescription = null,
                 tint = PrimaryCyan,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(20.dp),
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = stringResource(R.string.wear_rest_timer, mins, secs),
+                text = stringResource(R.string.wear_rest_timer),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = PrimaryCyan,
             )
         }
+        Text(
+            text = "%1$02d:%2$02d".format(mins, secs),
+            fontSize = 30.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = PrimaryCyan,
+        )
 
         Spacer(modifier = Modifier.height(4.dp))
 
@@ -222,7 +229,7 @@ private fun HeaderCooldownSection(
         ) {
             Button(
                 onClick = onSkipRest,
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(40.dp),
                 colors =
                     ButtonDefaults.buttonColors(
                         backgroundColor = SurfaceContainerHigh,
@@ -233,7 +240,7 @@ private fun HeaderCooldownSection(
                 Icon(
                     imageVector = Icons.Default.FastForward,
                     contentDescription = stringResource(R.string.wear_skip_rest),
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(20.dp),
                 )
             }
 
@@ -241,7 +248,7 @@ private fun HeaderCooldownSection(
 
             Button(
                 onClick = onAddExtraTime,
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(40.dp),
                 colors =
                     ButtonDefaults.buttonColors(
                         backgroundColor = SurfaceContainerHigh,
@@ -251,7 +258,7 @@ private fun HeaderCooldownSection(
             ) {
                 Text(
                     text = stringResource(R.string.wear_add_30s),
-                    fontSize = 10.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                 )
             }
@@ -269,170 +276,118 @@ private fun ExerciseSessionCardItem(
     onStartNextExercise: () -> Unit,
 ) {
     if (session.isCompleted) {
-        TitleCard(
-            onClick = onClick,
-            enabled = false,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = OnSurfaceDark.copy(alpha = COMPLETED_ALPHA),
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = session.name,
-                        fontWeight = FontWeight.Bold,
-                        color = OnSurfaceDark.copy(alpha = COMPLETED_ALPHA),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            },
-            backgroundPainter =
-                CardDefaults.cardBackgroundPainter(
-                    startBackgroundColor = SurfaceContainerHigh.copy(alpha = COMPLETED_ALPHA),
-                    endBackgroundColor = SurfaceContainerHigh.copy(alpha = COMPLETED_ALPHA),
-                ),
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 3.dp)
-                    .alpha(COMPLETED_ALPHA),
-        ) {
-            Column {
-                Text(
-                    text = stringResource(R.string.wear_completed_badge),
-                    style = MaterialTheme.typography.caption2,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryCyan.copy(alpha = COMPLETED_ALPHA),
-                )
-                Text(
-                    text =
-                        stringResource(
-                            R.string.wear_sets_ready_format,
-                            session.completedSets,
-                            session.targetSets,
-                            session.restSeconds,
-                        ),
-                    style = MaterialTheme.typography.caption2,
-                    color = OnSurfaceDark.copy(alpha = COMPLETED_ALPHA),
-                )
-                Text(
-                    text = stringResource(R.string.weight_avg, session.weightAvg),
-                    style = MaterialTheme.typography.caption2,
-                    color = OnSurfaceDark.copy(alpha = COMPLETED_ALPHA),
-                )
-            }
-        }
+        SessionCompleted(
+            session = session,
+            onClick = onClick)
     } else if (isCurrentSession) {
-        TitleCard(
+        CurrentSession(
+            session = session,
             onClick = onClick,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        tint = OnPrimaryDark,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = session.name,
-                        fontWeight = FontWeight.Bold,
-                        color = OnPrimaryDark,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            },
-            time = {
-                val currentSet = (session.completedSets + 1).coerceAtMost(session.targetSets)
-                Text(
-                    text =
-                        stringResource(
-                            R.string.wear_next_set_format,
-                            currentSet,
-                            session.targetSets,
-                        ),
-                    style = MaterialTheme.typography.caption2,
-                    fontWeight = FontWeight.Bold,
-                    color = OnPrimaryDark,
-                )
-            },
-            backgroundPainter =
-                CardDefaults.cardBackgroundPainter(
-                    startBackgroundColor = PrimaryCyan,
-                    endBackgroundColor = PrimaryCyan,
-                ),
-            contentColor = OnPrimaryDark,
-            titleColor = OnPrimaryDark,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-        ) {
-            Column(modifier = Modifier.padding(top = 2.dp)) {
-                Text(
-                    text =
-                        stringResource(
-                            R.string.wear_exercise_sets_reps_timer,
-                            session.targetSets,
-                            session.targetReps,
-                            session.restSeconds,
-                        ),
-                    style = MaterialTheme.typography.caption1,
-                    fontWeight = FontWeight.SemiBold,
-                    color = OnPrimaryDark,
-                )
-
-                if (trainingStepState is TrainingStepState.ReadyForNext) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Chip(
-                        onClick = onStartNextExercise,
-                        colors =
-                            ChipDefaults.chipColors(
-                                backgroundColor = OnPrimaryDark,
-                                contentColor = PrimaryCyan,
-                            ),
-                        label = {
-                            Text(
-                                text = stringResource(R.string.wear_ready_tap_to_start),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
-        }
+            onStartNextExercise = onStartNextExercise,
+            trainingStepState = trainingStepState,
+        )
     } else {
-        TitleCard(
+        SessionCard(
+            session = session,
             onClick = onClick,
-            title = {
+        )
+    }
+}
+
+@Composable
+private fun SessionCard(
+    session: ExerciseSession,
+    onClick: () -> Unit,
+){
+    TitleCard(
+        onClick = onClick,
+        title = {
+            Text(
+                text = session.name,
+                fontWeight = FontWeight.Bold,
+                color = OnSurfaceDark,
+                softWrap = true
+            )
+        },
+        backgroundPainter =
+            CardDefaults.cardBackgroundPainter(
+                startBackgroundColor = SurfaceContainerHigh,
+                endBackgroundColor = SurfaceContainerHigh,
+            ),
+        contentColor = OnSurfaceDark,
+        titleColor = OnSurfaceDark,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 3.dp),
+    ) {
+        Text(
+            text =
+                stringResource(
+                    R.string.wear_exercise_sets_reps_timer,
+                    session.targetSets,
+                    session.targetReps,
+                    session.restSeconds,
+                ),
+            style = MaterialTheme.typography.caption1,
+            color = OnSurfaceDark.copy(alpha = 0.8f),
+        )
+    }
+}
+
+@Composable
+private fun CurrentSession(
+    session: ExerciseSession,
+    onClick: () -> Unit,
+    onStartNextExercise: () -> Unit,
+    trainingStepState: TrainingStepState,
+){
+    TitleCard(
+        onClick = onClick,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = OnPrimaryDark,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = session.name,
                     fontWeight = FontWeight.Bold,
-                    color = OnSurfaceDark,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    color = OnPrimaryDark,
+                    softWrap = true,
                 )
-            },
-            backgroundPainter =
-                CardDefaults.cardBackgroundPainter(
-                    startBackgroundColor = SurfaceContainerHigh,
-                    endBackgroundColor = SurfaceContainerHigh,
-                ),
-            contentColor = OnSurfaceDark,
-            titleColor = OnSurfaceDark,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 3.dp),
-        ) {
+            }
+        },
+        time = {
+            val currentSet = (session.completedSets + 1).coerceAtMost(session.targetSets)
+            Text(
+                text =
+                    stringResource(
+                        R.string.wear_next_set_format,
+                        currentSet,
+                        session.targetSets,
+                    ),
+                style = MaterialTheme.typography.caption2,
+                fontWeight = FontWeight.Bold,
+                color = OnPrimaryDark,
+            )
+        },
+        backgroundPainter =
+            CardDefaults.cardBackgroundPainter(
+                startBackgroundColor = PrimaryCyan,
+                endBackgroundColor = PrimaryCyan,
+            ),
+        contentColor = OnPrimaryDark,
+        titleColor = OnPrimaryDark,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+    ) {
+        Column(modifier = Modifier.padding(top = 2.dp)) {
             Text(
                 text =
                     stringResource(
@@ -442,7 +397,72 @@ private fun ExerciseSessionCardItem(
                         session.restSeconds,
                     ),
                 style = MaterialTheme.typography.caption1,
-                color = OnSurfaceDark.copy(alpha = 0.8f),
+                fontWeight = FontWeight.SemiBold,
+                color = OnPrimaryDark,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SessionCompleted(
+    session: ExerciseSession,
+    onClick: () -> Unit,
+){
+    TitleCard(
+        onClick = onClick,
+        enabled = false,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = OnSurfaceDark.copy(alpha = COMPLETED_ALPHA),
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = session.name,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceDark.copy(alpha = COMPLETED_ALPHA),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        },
+        backgroundPainter =
+            CardDefaults.cardBackgroundPainter(
+                startBackgroundColor = SurfaceContainerHigh.copy(alpha = COMPLETED_ALPHA),
+                endBackgroundColor = SurfaceContainerHigh.copy(alpha = COMPLETED_ALPHA),
+            ),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 3.dp)
+                .alpha(COMPLETED_ALPHA),
+    ) {
+        Column {
+            Text(
+                text = stringResource(R.string.wear_completed_badge),
+                style = MaterialTheme.typography.caption2,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryCyan.copy(alpha = COMPLETED_ALPHA),
+            )
+            Text(
+                text =
+                    stringResource(
+                        R.string.wear_sets_ready_format,
+                        session.completedSets,
+                        session.targetSets,
+                        session.restSeconds,
+                    ),
+                style = MaterialTheme.typography.caption2,
+                color = OnSurfaceDark.copy(alpha = COMPLETED_ALPHA),
+            )
+            Text(
+                text = stringResource(R.string.weight_avg, session.weightAvg),
+                style = MaterialTheme.typography.caption2,
+                color = OnSurfaceDark.copy(alpha = COMPLETED_ALPHA),
             )
         }
     }

@@ -22,7 +22,7 @@
     <string name="wear_today_tag">TODAY</string>
     <string name="wear_day_title_with_exercises">Day %1$d • %2$d exercises</string>
     <string name="wear_no_sessions">No sessions available</string>
-    <string name="wear_rest_timer">REST %1$02d:%2$02d</string>
+    <string name="wear_rest_timer">Rest</string>
     <string name="wear_state_cooldown">Status: Cooldown</string>
     <string name="wear_state_ready">Status: Ready</string>
     <string name="wear_completed_badge">COMPLETED</string>
