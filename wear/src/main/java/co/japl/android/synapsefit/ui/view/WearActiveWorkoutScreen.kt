@@ -2,6 +2,7 @@
 
 package co.japl.android.synapsefit.ui.view
 
+import android.icu.lang.UCharacter
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -12,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -157,17 +160,17 @@ fun WearActiveWorkoutScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                    .padding(horizontal = 5.dp, vertical = 5.dp)
+                    .scrollable(
+                        rememberScrollState(),
+                        orientation = androidx.compose.foundation.gestures.Orientation.Vertical,
+                        enabled = true
+                    ),
         ) {
-            WorkoutHeaderRow(
-                workoutDurationSeconds = uiState.workoutDurationSeconds,
-                currentHeartRateBpm = uiState.currentHeartRateBpm,
-                isLiveSyncActive = uiState.isLiveSyncActive,
-            )
 
             Text(
                 text = exerciseTitle,
-                fontSize = 13.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryCyan,
                 textAlign = TextAlign.Center,
@@ -176,7 +179,21 @@ fun WearActiveWorkoutScreen(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
+                        .padding(top = 20.dp)
+                        .align(alignment = Alignment.CenterHorizontally),
+            )
+
+            WorkoutHeaderRow(
+                workoutDurationSeconds = uiState.workoutDurationSeconds,
+                currentHeartRateBpm = uiState.currentHeartRateBpm,
+                isLiveSyncActive = uiState.isLiveSyncActive,
+            )
+
+            WorkoutBottomControlRow(
+                isPaused = isPausedState,
+                onTogglePause = onTogglePause,
+                onNextExercise = onNextExercise,
+                onPreviousExercise = onPreviousExercise,
             )
 
             if (isPausedState) {
@@ -225,12 +242,6 @@ fun WearActiveWorkoutScreen(
                 )
             }
 
-            WorkoutBottomControlRow(
-                isPaused = isPausedState,
-                onTogglePause = onTogglePause,
-                onNextExercise = onNextExercise,
-                onPreviousExercise = onPreviousExercise,
-            )
         }
 
         if (uiState.isNumericKeypadOpen && !isPausedState) {
@@ -261,62 +272,67 @@ fun WearActiveWorkoutScreen(
 private fun WorkoutHeaderRow(
     workoutDurationSeconds: Long,
     currentHeartRateBpm: Int,
-    isLiveSyncActive: Boolean = false,
+    isLiveSyncActive: Boolean = true,
 ) {
-    Row(
+    Column(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .padding(top = 20.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = formatDuration(workoutDurationSeconds),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = PrimaryCyan,
-            modifier = Modifier.padding(start = 45.dp),
-        )
-
-        if (isLiveSyncActive) {
-            val infiniteTransition = rememberInfiniteTransition(label = "wear_live_blink")
-            val alpha by infiniteTransition.animateFloat(
-                initialValue = 1f,
-                targetValue = 0.2f,
-                animationSpec =
-                    infiniteRepeatable(
-                        animation = tween(LIVE_BLINK_DURATION_MS),
-                        repeatMode = RepeatMode.Reverse,
-                    ),
-                label = "wear_alpha_blink",
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Box(
-                    modifier =
-                        Modifier
-                            .size(6.dp)
-                            .alpha(alpha)
-                            .background(Color.Red, CircleShape),
+        Row (
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ){
+            if (isLiveSyncActive) {
+                val infiniteTransition = rememberInfiniteTransition(label = "wear_live_blink")
+                val alpha by infiniteTransition.animateFloat(
+                    initialValue = 1f,
+                    targetValue = 0.2f,
+                    animationSpec =
+                        infiniteRepeatable(
+                            animation = tween(LIVE_BLINK_DURATION_MS),
+                            repeatMode = RepeatMode.Reverse,
+                        ),
+                    label = "wear_alpha_blink",
                 )
-                Text(
-                    text = "LIVE",
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Red,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.padding(start = 10.dp)
+                ) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(6.dp)
+                                .alpha(alpha)
+                                .background(Color.Red, CircleShape),
+                    )
+                    Text(
+                        text = "LIVE",
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Red,
+                    )
+                }
             }
+
+            Text(
+                text = if (currentHeartRateBpm > 0) "$currentHeartRateBpm bpm" else "-- bpm",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Red,
+                modifier = Modifier.padding(end = 10.dp)
+            )
         }
 
         Text(
-            text = if (currentHeartRateBpm > 0) "$currentHeartRateBpm bpm" else "-- bpm",
-            fontSize = 12.sp,
+            text = formatDuration(workoutDurationSeconds),
+            fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Red,
-            modifier = Modifier.padding(end = 45.dp),
+            color = PrimaryCyan,
+            modifier = Modifier.padding(start = 45.dp, bottom = 10.dp),
         )
     }
 }
@@ -342,50 +358,47 @@ private fun SetAndRepsContent(
         if (targetSets > 0) {
             Text(
                 text = stringResource(R.string.set_of_target, currentSet, targetSets, targetReps),
-                fontSize = 11.sp,
+                fontSize = 18.sp,
                 color = OnSurfaceDark,
+                modifier = Modifier.padding(bottom = 10.dp)
             )
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            InputControlColumn(
-                labelRes = R.string.reps,
-                value = "${uiState.currentReps}",
-                targetValue = targetReps,
-                isFocused = uiState.focusedInput == FocusedInput.REPS,
-                onSelect = { onSelectFocus?.invoke(FocusedInput.REPS) },
-                onIncrement = onIncrementReps,
-                onDecrement = onDecrementReps,
-                onOpenKeypad = {
-                    onSelectFocus?.invoke(FocusedInput.REPS)
-                    onOpenNumericKeypad?.invoke()
-                },
-            )
 
-            InputControlColumn(
-                labelRes = R.string.weight,
-                value = "${uiState.currentWeight}",
-                targetValue = "kg",
-                isFocused = uiState.focusedInput == FocusedInput.WEIGHT,
-                onSelect = { onSelectFocus?.invoke(FocusedInput.WEIGHT) },
-                onIncrement = onIncrementWgt,
-                onDecrement = onDecrementWgt,
-                onOpenKeypad = {
-                    onSelectFocus?.invoke(FocusedInput.WEIGHT)
-                    onOpenNumericKeypad?.invoke()
-                },
-            )
-        }
+        InputControlColumn(
+            labelRes = R.string.reps,
+            value = "${uiState.currentReps}",
+            targetValue = targetReps,
+            isFocused = uiState.focusedInput == FocusedInput.REPS,
+            onSelect = { onSelectFocus?.invoke(FocusedInput.REPS) },
+            onIncrement = onIncrementReps,
+            onDecrement = onDecrementReps,
+            onOpenKeypad = {
+                onSelectFocus?.invoke(FocusedInput.REPS)
+                onOpenNumericKeypad?.invoke()
+            },
+        )
+
+        InputControlColumn(
+            labelRes = R.string.weight,
+            value = "${uiState.currentWeight}",
+            targetValue = "kg",
+            isFocused = uiState.focusedInput == FocusedInput.WEIGHT,
+            onSelect = { onSelectFocus?.invoke(FocusedInput.WEIGHT) },
+            onIncrement = onIncrementWgt,
+            onDecrement = onDecrementWgt,
+            onOpenKeypad = {
+                onSelectFocus?.invoke(FocusedInput.WEIGHT)
+                onOpenNumericKeypad?.invoke()
+            },
+        )
     }
+
 }
 
 @Suppress("LongParameterList")
 @Composable
-private fun RowScope.InputControlColumn(
+private fun InputControlColumn(
     @StringRes labelRes: Int,
     value: String,
     targetValue: String,
@@ -401,10 +414,9 @@ private fun RowScope.InputControlColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier =
             Modifier
-                .weight(1f)
                 .clickable { onSelect() }
                 .border(1.dp, borderColor, RoundedCornerShape(8.dp))
-                .padding(2.dp),
+                .padding(6.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -530,7 +542,7 @@ private fun WorkoutBottomControlRow(
     ) {
         Button(
             onClick = { onPreviousExercise?.invoke() },
-            modifier = Modifier.size(26.dp),
+            modifier = Modifier.size(40.dp),
             colors =
                 ButtonDefaults.buttonColors(
                     backgroundColor = SurfaceContainerLow,
@@ -543,7 +555,7 @@ private fun WorkoutBottomControlRow(
 
         Button(
             onClick = { onTogglePause?.invoke() },
-            modifier = Modifier.size(26.dp),
+            modifier = Modifier.size(40.dp),
             colors =
                 ButtonDefaults.buttonColors(
                     backgroundColor = if (isPaused) ErrorContainerDark else SurfaceContainerHigh,
@@ -560,7 +572,7 @@ private fun WorkoutBottomControlRow(
 
         Button(
             onClick = { onNextExercise?.invoke() },
-            modifier = Modifier.size(26.dp),
+            modifier = Modifier.size(40.dp),
             colors =
                 ButtonDefaults.buttonColors(
                     backgroundColor = SurfaceContainerLow,
@@ -709,6 +721,29 @@ internal fun WearActiveWorkoutScreenPreview1() {
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
 internal fun WearActiveWorkoutScreenPreview2() {
+    val vm = WearActiveWorkoutViewModel()
+    val uiState by vm.uiState.collectAsState()
+
+    MaterialThemeComposeUI {
+        WearActiveWorkoutScreen(
+            uiState = uiState,
+            onIncrementReps = {},
+            onDecrementReps = { },
+            onIncrementWgt = {},
+            onDecrementWgt = { },
+            modifier = Modifier,
+            onCompleteSet = {},
+            onStartNextExercise = {},
+            onTogglePause = {},
+            onNextExercise = {},
+            onPreviousExercise = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+internal fun WearActiveWorkoutScreenPreview3() {
     val vm = WearActiveWorkoutViewModel()
     val uiState by vm.uiState.collectAsState()
 
