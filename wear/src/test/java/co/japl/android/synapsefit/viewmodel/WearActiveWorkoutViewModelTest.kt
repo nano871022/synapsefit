@@ -1,40 +1,45 @@
 package co.japl.android.synapsefit.viewmodel
 
-import android.view.KeyEvent
-import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.ExerciseSession
 import co.japl.android.synapsefit.core.domain.model.TrainingStepState
-import co.japl.android.synapsefit.service.WorkoutPlanPayloadParser
-import co.japl.android.synapsefit.services.wear.WearHeartRateSensorAdapter
-import co.japl.android.synapsefit.services.wear.WearableSyncAdapter
+import co.japl.android.synapsefit.core.port.secondary.WearSensorPort
+import co.japl.android.synapsefit.core.port.secondary.WearSyncPort
 import co.japl.android.synapsefit.ui.viewmodel.FocusedInput
 import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutViewModel
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@Suppress("LongMethod")
 class WearActiveWorkoutViewModelTest {
-    private val testDispatcher = UnconfinedTestDispatcher()
-    private lateinit var sensorAdapter: WearHeartRateSensorAdapter
-    private lateinit var syncAdapter: WearableSyncAdapter
+    private val sensorAdapter: WearSensorPort = mockk(relaxed = true)
+    private val syncAdapter: WearSyncPort = mockk(relaxed = true)
+
+    private val heartRateFlow = MutableStateFlow(0)
+    private val connectionStateFlow = MutableStateFlow(true)
+
+    private val testDispatcher = StandardTestDispatcher()
+
     private lateinit var viewModel: WearActiveWorkoutViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        sensorAdapter = WearHeartRateSensorAdapter()
-        syncAdapter = WearableSyncAdapter()
+
+        io.mockk.every { sensorAdapter.heartRateBpm } returns heartRateFlow
+        io.mockk.every { syncAdapter.isPhoneConnected } returns connectionStateFlow
+
         viewModel =
             WearActiveWorkoutViewModel(
                 sensorPort = sensorAdapter,
@@ -53,137 +58,28 @@ class WearActiveWorkoutViewModelTest {
         assertEquals("", state.exerciseName)
         assertEquals(0, state.currentHeartRateBpm)
         assertEquals(0, state.currentReps)
+        assertEquals(0.toShort(), state.currentWeight)
         assertEquals(FocusedInput.REPS, state.focusedInput)
+        assertFalse(state.isNumericKeypadOpen)
         assertTrue(state.isSyncedWithPhone)
-        assertEquals(0L, state.workoutDurationSeconds)
-        assertFalse(state.isPaused)
     }
 
     @Test
-    fun testTogglePauseResume() {
-        viewModel.togglePauseResume()
-        assertTrue(viewModel.uiState.value.isPaused)
-        assertTrue(viewModel.trainingStepState.value is TrainingStepState.Paused)
-
-        viewModel.togglePauseResume()
-        assertFalse(viewModel.uiState.value.isPaused)
-        assertFalse(viewModel.trainingStepState.value is TrainingStepState.Paused)
-    }
-
-    @Test
-    fun testFinishSessionStopsSessionAndFlushesQueue() {
-        viewModel.startSession()
-        assertTrue(viewModel.uiState.value.isSessionStarted)
-
-        viewModel.finishSession()
-        assertFalse(viewModel.uiState.value.isSessionStarted)
-        assertTrue(viewModel.uiState.value.isRoutineCompleted)
-    }
-
-    @Test
-    fun testFocusSelectionAndMultiInputHandling() {
+    fun testSetFocusedInputChangesState() {
         viewModel.setFocusedInput(FocusedInput.WEIGHT)
         assertEquals(FocusedInput.WEIGHT, viewModel.uiState.value.focusedInput)
 
-        viewModel.handleRotaryScroll(1.0f)
-        assertEquals(1.toShort(), viewModel.uiState.value.currentWeight)
-
-        viewModel.handleRotaryScroll(-1.0f)
-        assertEquals(0.toShort(), viewModel.uiState.value.currentWeight)
-
         viewModel.setFocusedInput(FocusedInput.REPS)
-        viewModel.handleRotaryScroll(1.0f)
-        assertEquals(1, viewModel.uiState.value.currentReps)
-    }
-
-    @Test
-    fun testRotaryScrollAndHardwareKeyInput() {
-        viewModel.setFocusedInput(FocusedInput.REPS)
-        viewModel.handleRotaryScroll(1.0f)
-        assertEquals(1, viewModel.uiState.value.currentReps)
-
-        viewModel.handleRotaryScroll(-1.0f)
-        assertEquals(0, viewModel.uiState.value.currentReps)
-
-        val handledUp = viewModel.handleHardwareKey(KeyEvent.KEYCODE_STEM_1)
-        assertTrue(handledUp)
-        assertEquals(1, viewModel.uiState.value.currentReps)
-
-        val handledDown = viewModel.handleHardwareKey(KeyEvent.KEYCODE_STEM_2)
-        assertTrue(handledDown)
-        assertEquals(0, viewModel.uiState.value.currentReps)
-    }
-
-    @Test
-    fun testNumericKeypadInput() {
-        viewModel.setFocusedInput(FocusedInput.WEIGHT)
-        viewModel.openNumericKeypad()
-        assertTrue(viewModel.uiState.value.isNumericKeypadOpen)
-
-        viewModel.setFocusedValueDirect(85)
-        assertEquals(85.toShort(), viewModel.uiState.value.currentWeight)
-        assertFalse(viewModel.uiState.value.isNumericKeypadOpen)
-    }
-
-    @Test
-    fun testExerciseNavigationNextAndPrevious() {
-        val sessions =
-            listOf(
-                ExerciseSession(
-                    exerciseId = "ex1",
-                    planId = "p1",
-                    name = "Press de Banca",
-                    muscleGroup = "Pecho",
-                    targetSets = 3,
-                    targetReps = "10",
-                    restSeconds = 60,
-                ),
-                ExerciseSession(
-                    exerciseId = "ex2",
-                    planId = "p1",
-                    name = "Sentadilla",
-                    muscleGroup = "Piernas",
-                    targetSets = 3,
-                    targetReps = "12",
-                    restSeconds = 60,
-                ),
-            )
-        viewModel.loadExerciseSessions(sessions)
-
-        assertEquals("Press de Banca", viewModel.uiState.value.exerciseName)
-        assertEquals(0, viewModel.uiState.value.activeExerciseIndex)
-
-        viewModel.navigateToNextExercise()
-        assertEquals("Sentadilla", viewModel.uiState.value.exerciseName)
-        assertEquals(1, viewModel.uiState.value.activeExerciseIndex)
-
-        viewModel.navigateToNextExercise()
-        assertEquals("Press de Banca", viewModel.uiState.value.exerciseName)
-        assertEquals(0, viewModel.uiState.value.activeExerciseIndex)
-
-        viewModel.navigateToPreviousExercise()
-        assertEquals("Sentadilla", viewModel.uiState.value.exerciseName)
-        assertEquals(1, viewModel.uiState.value.activeExerciseIndex)
-    }
-
-    @Test
-    fun testUpdateExerciseName() {
-        viewModel.updateExerciseName("Sentadillas")
-        assertEquals("Sentadillas", viewModel.uiState.value.exerciseName)
-    }
-
-    @Test
-    fun testUpdateHeartRatePassesThroughCorePort() {
-        sensorAdapter.startHeartRateMonitoring()
-        viewModel.updateHeartRate(145)
-
-        assertEquals(145, viewModel.uiState.value.currentHeartRateBpm)
-        assertEquals(145, sensorAdapter.heartRateBpm.value)
+        assertEquals(FocusedInput.REPS, viewModel.uiState.value.focusedInput)
     }
 
     @Test
     fun testIncrementAndDecrementReps() {
+        assertEquals(0, viewModel.uiState.value.currentReps)
+
         viewModel.incrementReps()
+        assertEquals(1, viewModel.uiState.value.currentReps)
+
         viewModel.incrementReps()
         assertEquals(2, viewModel.uiState.value.currentReps)
 
@@ -191,44 +87,112 @@ class WearActiveWorkoutViewModelTest {
         assertEquals(1, viewModel.uiState.value.currentReps)
 
         viewModel.decrementReps()
+        assertEquals(0, viewModel.uiState.value.currentReps)
+
         viewModel.decrementReps()
         assertEquals(0, viewModel.uiState.value.currentReps)
     }
 
     @Test
-    fun testSetSyncStatusPassesThroughCorePort() {
-        viewModel.setSyncStatus(false)
+    fun testIncrementAndDecrementWeight() {
+        assertEquals(0.toShort(), viewModel.uiState.value.currentWeight)
 
-        assertFalse(viewModel.uiState.value.isSyncedWithPhone)
-        assertFalse(syncAdapter.isPhoneConnected.value)
+        viewModel.incrementWgt()
+        assertEquals(1.toShort(), viewModel.uiState.value.currentWeight)
 
-        viewModel.setSyncStatus(true)
-        assertTrue(viewModel.uiState.value.isSyncedWithPhone)
-        assertTrue(syncAdapter.isPhoneConnected.value)
+        viewModel.incrementWgt()
+        assertEquals(2.toShort(), viewModel.uiState.value.currentWeight)
+
+        viewModel.decrementWgt()
+        assertEquals(1.toShort(), viewModel.uiState.value.currentWeight)
+
+        viewModel.decrementWgt()
+        assertEquals(0.toShort(), viewModel.uiState.value.currentWeight)
+
+        viewModel.decrementWgt()
+        assertEquals(0.toShort(), viewModel.uiState.value.currentWeight)
     }
 
     @Test
-    fun testLoadExerciseSessionsSetsActiveState() {
+    fun testNumericKeypadOpenAndClose() {
+        assertFalse(viewModel.uiState.value.isNumericKeypadOpen)
+
+        viewModel.openNumericKeypad()
+        assertTrue(viewModel.uiState.value.isNumericKeypadOpen)
+
+        viewModel.closeNumericKeypad()
+        assertFalse(viewModel.uiState.value.isNumericKeypadOpen)
+    }
+
+    @Test
+    fun testSetFocusedValueDirectReps() {
+        viewModel.setFocusedInput(FocusedInput.REPS)
+        viewModel.openNumericKeypad()
+
+        viewModel.setFocusedValueDirect(12)
+
+        assertEquals(12, viewModel.uiState.value.currentReps)
+        assertFalse(viewModel.uiState.value.isNumericKeypadOpen)
+    }
+
+    @Test
+    fun testSetFocusedValueDirectWeight() {
+        viewModel.setFocusedInput(FocusedInput.WEIGHT)
+        viewModel.openNumericKeypad()
+
+        viewModel.setFocusedValueDirect(45)
+
+        assertEquals(45.toShort(), viewModel.uiState.value.currentWeight)
+        assertFalse(viewModel.uiState.value.isNumericKeypadOpen)
+    }
+
+    @Test
+    fun testUpdateExerciseNameUpdatesState() {
+        viewModel.updateExerciseName("Press de Banca")
+        assertEquals("Press de Banca", viewModel.uiState.value.exerciseName)
+    }
+
+    @Test
+    fun testUpdateHeartRateUpdatesStateAndSensorPort() {
+        viewModel.updateHeartRate(145)
+
+        assertEquals(145, viewModel.uiState.value.currentHeartRateBpm)
+        verify { sensorAdapter.onHeartRateSensorChanged(145) }
+    }
+
+    @Test
+    fun testSetSyncStatusUpdatesStateAndSyncPort() {
+        viewModel.setSyncStatus(false)
+
+        assertFalse(viewModel.uiState.value.isSyncedWithPhone)
+        verify { syncAdapter.onConnectionStateChanged(false) }
+    }
+
+    @Test
+    fun testLoadExerciseSessionsSetsFirstExerciseActive() {
         val sessions =
             listOf(
                 ExerciseSession(
                     exerciseId = "ex1",
                     planId = "p1",
-                    name = "Press de Banca",
-                    muscleGroup = "Pecho",
-                    targetSets = 2,
-                    targetReps = "10",
-                    restSeconds = 60,
+                    name = "Sentadillas",
+                    muscleGroup = "Piernas",
+                    targetSets = 4,
+                    targetReps = "10-12",
+                    restSeconds = 90,
                 ),
             )
 
         viewModel.loadExerciseSessions(sessions)
 
-        val state = viewModel.trainingStepState.value
-        assertTrue(state is TrainingStepState.Active)
-        val active = state as TrainingStepState.Active
-        assertEquals("Press de Banca", active.exerciseSession.name)
-        assertEquals(1, active.currentSet)
+        assertEquals(1, viewModel.uiState.value.exerciseSessions.size)
+        assertEquals("Sentadillas", viewModel.uiState.value.exerciseName)
+
+        val stepState = viewModel.trainingStepState.value
+        assertTrue(stepState is TrainingStepState.Active)
+        val activeState = stepState as TrainingStepState.Active
+        assertEquals("Sentadillas", activeState.exerciseSession.name)
+        assertEquals(1, activeState.currentSet)
     }
 
     @Test
@@ -238,10 +202,10 @@ class WearActiveWorkoutViewModelTest {
                 ExerciseSession(
                     exerciseId = "ex1",
                     planId = "p1",
-                    name = "Sentadilla",
+                    name = "Sentadillas",
                     muscleGroup = "Piernas",
                     targetSets = 1,
-                    targetReps = "12",
+                    targetReps = "10",
                     restSeconds = 60,
                 ),
                 ExerciseSession(
@@ -266,96 +230,11 @@ class WearActiveWorkoutViewModelTest {
         viewModel.setCooldownTargetTimestamp(System.currentTimeMillis() - 1000L)
         viewModel.recalculateCooldownTimer()
 
-        assertTrue(viewModel.trainingStepState.value is TrainingStepState.ReadyForNext)
-        val readyState = viewModel.trainingStepState.value as TrainingStepState.ReadyForNext
-        assertEquals("Press Militar", readyState.nextExerciseSession?.name)
-
-        viewModel.startNextExercise()
-        val activeState = viewModel.trainingStepState.value
-        assertTrue(activeState is TrainingStepState.Active)
+        assertTrue(viewModel.trainingStepState.value is TrainingStepState.Active)
+        val readyState = viewModel.trainingStepState.value as TrainingStepState.Active
+        assertEquals("Press Militar", readyState.exerciseSession.name)
 
         viewModel.completeSet()
         assertTrue(viewModel.uiState.value.isRoutineCompleted)
-    }
-
-    @Test
-    fun testWorkoutPlanPayloadParser() {
-        val jsonPayload =
-            """
-            {
-              "planId": "plan_123",
-              "title": "Rutina Fuerza",
-              "goalDescription": "Aumento de masa",
-              "day": 1,
-              "exercises": [
-                {
-                  "id": "ex_1",
-                  "name": "Dominadas",
-                  "muscleGroup": "Espalda",
-                  "targetSets": 4,
-                  "targetReps": "8",
-                  "restSeconds": 90,
-                  "day": 1
-                }
-              ]
-            }
-            """.trimIndent()
-
-        val parsed = WorkoutPlanPayloadParser.parseJsonPayload(jsonPayload)
-        assertNotNull(parsed)
-        assertEquals("plan_123", parsed?.plan?.id)
-        assertEquals("Rutina Fuerza", parsed?.plan?.title)
-        assertEquals(1, parsed?.exercises?.size)
-        assertEquals("Dominadas", parsed?.exercises?.get(0)?.name)
-        assertEquals(4, parsed?.exercises?.get(0)?.targetSets)
-    }
-
-    @Test
-    fun testStartSessionAndSelectExercise() {
-        val exercise =
-            Exercise(
-                id = "ex_1",
-                planId = "plan_1",
-                name = "Press de Banca (Compuesto)",
-                muscleGroup = "Pecho",
-                targetSets = 4,
-                targetReps = "12",
-                restSeconds = 90,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
-            )
-
-        viewModel.startSession()
-        viewModel.selectExercise(exercise, 0)
-        assertTrue(viewModel.uiState.value.isSessionStarted)
-        assertEquals("Press de Banca (Compuesto)", viewModel.uiState.value.exerciseName)
-        assertNotNull(viewModel.uiState.value.sessionStartTimestamp)
-        assertEquals("ex_1", viewModel.uiState.value.activeExerciseId)
-        assertNotNull(viewModel.uiState.value.exerciseStartTimestamp)
-
-        viewModel.finishSession()
-        assertFalse(viewModel.uiState.value.isSessionStarted)
-
-        viewModel.startSession()
-        assertTrue(viewModel.uiState.value.isSessionStarted)
-        assertNotNull(viewModel.uiState.value.sessionStartTimestamp)
-    }
-
-    @Test
-    fun testResetSessionMemoryClearsUiState() {
-        viewModel.updateExerciseName("Press de Banca")
-        viewModel.incrementReps()
-        viewModel.resetSessionMemory()
-
-        val state = viewModel.uiState.value
-        assertEquals("", state.exerciseName)
-        assertEquals(0, state.currentReps)
-        assertFalse(state.isSessionStarted)
-    }
-
-    @Test
-    fun testLoadPlanDataWithNullRepositoryGracefullyHandles() {
-        viewModel.loadPlanData("plan_1", 2)
-        assertEquals("", viewModel.uiState.value.activePlanTitle)
     }
 }

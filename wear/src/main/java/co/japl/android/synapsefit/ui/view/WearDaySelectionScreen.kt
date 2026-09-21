@@ -51,6 +51,7 @@ fun WearDaySelectionScreen(
     sessions: List<WorkoutSessionItem>,
     onSelectSession: (planId: String, day: Int) -> Unit,
     modifier: Modifier = Modifier,
+    activePlanId: String? = null,
     activePlanDayId: Int? = null,
     sessionStartTimestamp: Long? = null,
     checkingUpdate: Boolean = false,
@@ -98,6 +99,7 @@ fun WearDaySelectionScreen(
                 items(sessions) { sessionItem ->
                     SessionCardItem(
                         sessionItem = sessionItem,
+                        activePlanId = activePlanId,
                         activePlanDayId = activePlanDayId,
                         sessionStartTimestamp = sessionStartTimestamp,
                         onClick = { onSelectSession(sessionItem.planId, sessionItem.day) },
@@ -160,11 +162,15 @@ fun WearDaySelectionScreen(
 @Composable
 private fun SessionCardItem(
     sessionItem: WorkoutSessionItem,
+    activePlanId: String?,
     activePlanDayId: Int?,
     sessionStartTimestamp: Long?,
     onClick: () -> Unit,
 ) {
-    val isActiveSession = activePlanDayId != null && activePlanDayId == sessionItem.day
+    val isActiveSession =
+        activePlanDayId != null &&
+            activePlanDayId == sessionItem.day &&
+            (activePlanId.isNullOrBlank() || activePlanId == sessionItem.planId)
     val isHighlighted = if (activePlanDayId != null) isActiveSession else sessionItem.isTodayScheduled
     val elapsedSeconds = rememberElapsedTimeSeconds(if (isActiveSession) sessionStartTimestamp else null)
 

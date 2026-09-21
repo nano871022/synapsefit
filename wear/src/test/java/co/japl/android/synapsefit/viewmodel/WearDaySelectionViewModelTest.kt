@@ -81,6 +81,7 @@ class WearDaySelectionViewModelTest {
     fun testUpdateActiveSessionStateUpdatesUiState() {
         viewModel = WearDaySelectionViewModel(null)
         viewModel.updateActiveSessionState(
+            activePlanId = "p1",
             activePlanDayId = 2,
             sessionStartTimestamp = 1000000L,
             activeExerciseId = "ex_123",
@@ -88,6 +89,7 @@ class WearDaySelectionViewModelTest {
         )
 
         val state = viewModel.uiState.value
+        assertEquals("p1", state.activePlanId)
         assertEquals(2, state.activePlanDayId)
         assertEquals(1000000L, state.sessionStartTimestamp)
         assertEquals("ex_123", state.activeExerciseId)
