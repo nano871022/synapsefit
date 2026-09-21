@@ -19,16 +19,20 @@ abstract class CopyGoogleServicesTask : DefaultTask() {
     @get:OutputFile
     abstract val targetFile: RegularFileProperty
 
+    @get:Input
+    abstract val projectName: Property<String>
+
     @TaskAction
     fun copy() {
         val srcPath = sourceFilePath.orNull
         val dest = targetFile.get().asFile
+        val pName = projectName.get()
 
         if (!dest.exists() && srcPath != null && srcPath.exists()) {
             srcPath.copyTo(dest, overwrite = true)
-            logger.lifecycle("--> [Build Local] [${project.name}] google-services.json copiado exitosamente.")
+            logger.lifecycle("--> [Build Local] [${pName}] google-services.json copiado exitosamente.")
         } else {
-            logger.lifecycle("--> [Build Local] [${project.name}] google-services.json No fue encontrado o ya existe.")
+            logger.lifecycle("--> [Build Local] [${pName}] google-services.json No fue encontrado o ya existe.")
         }
     }
 }
@@ -54,6 +58,8 @@ subprojects {
         val copyGoogleServicesJson =
             tasks.register<CopyGoogleServicesTask>("copyGoogleServicesJson") {
                 description = "Copia el archivo google-services.json si no existe localmente."
+
+                projectName.set(project.name)
 
                 val localProperties = java.util.Properties()
                 val localPropertiesFile = rootProject.file("local.properties")
