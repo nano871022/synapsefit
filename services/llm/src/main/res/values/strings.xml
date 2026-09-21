@@ -31,8 +31,8 @@
         IMPORTANT: The user\'s language is %2$s. You MUST respond in %2$s.
         Respond in plain JSON format with this exact structure without any other text:
         {
-          "videoUrl": "https://www.youtube.com/results?search_query=...",
-          "imageUrl": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
+          &#8230;videoUrl&#8230;: &#8230;https://www.youtube.com/results?search_query=…&#8230;,
+          &#8230;imageUrl&#8230;: &#8230;https://images.unsplash.com/photo-1517838277536-f5f99be501cd&#8230;
         }
     </string>
 
