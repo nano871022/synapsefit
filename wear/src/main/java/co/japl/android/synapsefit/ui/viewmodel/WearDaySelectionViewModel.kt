@@ -56,6 +56,7 @@ class WearDaySelectionViewModel(
     }
 
     fun updateActiveSessionState(
+        activePlanId: String?,
         activePlanDayId: Int?,
         sessionStartTimestamp: Long?,
         activeExerciseId: String?,
@@ -63,6 +64,7 @@ class WearDaySelectionViewModel(
     ) {
         _uiState.update {
             it.copy(
+                activePlanId = activePlanId,
                 activePlanDayId = activePlanDayId,
                 sessionStartTimestamp = sessionStartTimestamp,
                 activeExerciseId = activeExerciseId,
@@ -80,6 +82,7 @@ class WearDaySelectionViewModel(
                     val isActive = activeState.isActive
                     _uiState.update {
                         it.copy(
+                            activePlanId = if (isActive) activeState.planId.ifBlank { null } else null,
                             activePlanDayId = if (isActive) activeState.day else null,
                             sessionStartTimestamp = if (isActive) activeState.sessionStartTimestamp else 0L,
                             activeExerciseId = if (isActive) activeState.activeExerciseId else "",
