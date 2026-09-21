@@ -239,6 +239,32 @@
     <string name="sign_in_google">Sign in with Google</string>
     <string name="sign_out">Sign out</string>
     <string name="restore_from_drive">Restore from Google Drive</string>
+
+    <string name="google_auth_title">Google Auth</string>
+    <string name="google_auth_subtitle">Conecta tu cuenta de Google para sincronizar tus datos de entrenamiento y respaldar tu progreso en la nube.</string>
+    <string name="google_auth_sign_in_button">Continue with Google</string>
+    <string name="google_auth_select_account_title">Select Account Google</string>
+    <string name="google_auth_add_another_account">Add Another Account</string>
+    <string name="google_auth_status_title">Google Account Connected</string>
+    <string name="google_auth_status_active">Connected</string>
+    <string name="google_auth_status_inactive">No Connected</string>
+    <string name="google_auth_authenticating">Authing with Goolgle...</string>
+    <string name="google_auth_error_generic">Error de autenticación con Google. Intente nuevamente.</string>
+    <string name="google_auth_privacy_note">Tus datos están protegidos y sólo se sincronizan con tu Google Drive privado.</string>
+    <!-- Profile & Connection / Database Explorer -->
+    <string name="profile_and_connection_title">Profile and Connection</string>
+    <string name="tools_and_storage">Tools and Space</string>
+    <string name="backup_sync_desc">Realiza respaldos y restaura copias de seguridad en Google Drive</string>
+    <string name="db_explorer_title">Explor Data Base</string>
+    <string name="db_explorer_desc">Muestra el resumen e información de las tablas en la base de datos</string>
+    <string name="db_general_info">Información General de la Base de Datos</string>
+    <string name="db_version_prefix">Versión DB: %1$d</string>
+    <string name="db_tables_count">Total de Tablas: %1$d</string>
+    <string name="db_tables_summary">Resumen de Tablas</string>
+    <string name="db_records_count">%1$d registros</string>
+    <string name="db_columns_count">%1$d columnas</string>
+    <string name="refresh">Actualizar</string>
+
     <string name="active_session_title">Active Session</string>
     <string name="exercises_progress">Exercises Progress</string>
     <string name="continue_session">Continue Session</string>

@@ -1,50 +1,9 @@
-abstract class CopyGoogleServicesTask : DefaultTask() {
-    @get:Input
-    @get:Optional
-    abstract val sourceFilePath: Property<File>
-
-    @get:OutputFile
-    abstract val targetFile: RegularFileProperty
-
-    @TaskAction
-    fun copy() {
-        val srcPath = sourceFilePath.orNull
-        val dest = targetFile.get().asFile
-
-        if (!dest.exists() && srcPath != null && srcPath.exists()) {
-            srcPath.copyTo(dest, overwrite = true)
-            logger.lifecycle("--> [Build Local] google-services.json copiado exitosamente.")
-        } else {
-            logger.lifecycle("--> [Build Local] google-services.json No fue encontrado.")
-        }
-    }
-}
-
-val copyGoogleServicesJson =
-    tasks.register<CopyGoogleServicesTask>("copyGoogleServicesJson") {
-        description = "Copia el archivo google-services.json si no existe localmente."
-        // Cambia la ruta según la ubicación de tu repositorio externo
-        var externalFile = layout.projectDirectory.file("../../japl-properties/synapseefit/google-services.json").asFile
-        var target = layout.projectDirectory.file("google-services.json")
-        sourceFilePath.set(externalFile)
-        targetFile.set(target)
-
-        onlyIf {
-            !target.asFile.exists()
-        }
-    }
-
-tasks.configureEach {
-    if ((name.startsWith("process") && name.endsWith("GoogleServices")) || name == "preBuild") {
-        dependsOn(copyGoogleServicesJson)
-    }
-}
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     id("com.google.gms.google-services")
+    alias(libs.plugins.google.firebase.crashlytics)
 }
 
 android {
@@ -55,8 +14,8 @@ android {
         applicationId = "co.japl.android.synapsefit"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 11_00_019
-        versionName = "1.00.019 fix active workout ui"
+        versionCode = 11_00_020
+        versionName = "1.00.020 Fix issue found in code"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -102,8 +61,12 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.fragment.ktx)
 
+    implementation(libs.app.update)
+    implementation(libs.app.update.ktx)
+
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
