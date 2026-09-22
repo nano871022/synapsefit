@@ -14,8 +14,8 @@ android {
         applicationId = "co.japl.android.synapsefit"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 21_00_021
-        versionName = "1.00.021 Fix rotatiori and view cooldown "
+        versionCode = 21_00_022
+        versionName = "1.00.022 Fix sync"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
