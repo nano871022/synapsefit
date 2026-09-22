@@ -80,7 +80,6 @@ fun WearCooldownTransitionScreen(
     heartRateBpm: Int,
     onAddExtraTime: () -> Unit,
     onSkipRest: () -> Unit,
-    onStartNextExercise: () -> Unit,
     onSelectExercise: (ExerciseSession, Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -581,7 +580,6 @@ internal fun WearCooldownTransitionScreenPreview() {
             heartRateBpm = 20,
             onAddExtraTime = {},
             onSkipRest = { },
-            onStartNextExercise = {},
             onSelectExercise = { exe, id -> },
             modifier = Modifier,
         )
