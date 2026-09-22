@@ -31,12 +31,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
@@ -78,7 +80,6 @@ fun WearCooldownTransitionScreen(
     heartRateBpm: Int,
     onAddExtraTime: () -> Unit,
     onSkipRest: () -> Unit,
-    onStartNextExercise: () -> Unit,
     onSelectExercise: (ExerciseSession, Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -147,7 +148,6 @@ fun WearCooldownTransitionScreen(
                             onSelectExercise(session, index)
                         }
                     },
-                    onStartNextExercise = onStartNextExercise,
                 )
             }
 
@@ -199,15 +199,6 @@ private fun HeaderCooldownSection(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        val remainingSeconds =
-            when (trainingStepState) {
-                is TrainingStepState.Cooldown ->
-                    (trainingStepState.remainingMillis / MILLIS_PER_SECOND).toInt()
-                else -> 0
-            }
-        val mins = remainingSeconds / SECONDS_PER_MINUTE
-        val secs = remainingSeconds % SECONDS_PER_MINUTE
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
@@ -226,12 +217,8 @@ private fun HeaderCooldownSection(
                 color = PrimaryCyan,
             )
         }
-        Text(
-            text = "%1$02d:%2$02d".format(mins, secs),
-            fontSize = 30.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = PrimaryCyan,
-        )
+
+        Timer(trainingStepState)
 
         Spacer(modifier = Modifier.height(4.dp))
 
@@ -278,6 +265,29 @@ private fun HeaderCooldownSection(
     }
 }
 
+@Composable
+private fun Timer(
+    trainingStepState: TrainingStepState,
+    fontSize: TextUnit = 30.sp,
+    color: Color = PrimaryCyan,
+) {
+    val remainingSeconds =
+        when (trainingStepState) {
+            is TrainingStepState.Cooldown ->
+                (trainingStepState.remainingMillis / MILLIS_PER_SECOND).toInt()
+            else -> 0
+        }
+    val mins = remainingSeconds / SECONDS_PER_MINUTE
+    val secs = remainingSeconds % SECONDS_PER_MINUTE
+
+    Text(
+        text = "%1$02d:%2$02d".format(mins, secs),
+        fontSize = fontSize,
+        fontWeight = FontWeight.ExtraBold,
+        color = color,
+    )
+}
+
 @Suppress("LongMethod")
 @Composable
 private fun ExerciseSessionCardItem(
@@ -285,7 +295,6 @@ private fun ExerciseSessionCardItem(
     isCurrentSession: Boolean,
     trainingStepState: TrainingStepState,
     onClick: () -> Unit,
-    onStartNextExercise: () -> Unit,
 ) {
     if (session.isCompleted) {
         SessionCompleted(
@@ -295,9 +304,8 @@ private fun ExerciseSessionCardItem(
     } else if (isCurrentSession) {
         CurrentSession(
             session = session,
-            onClick = onClick,
-            onStartNextExercise = onStartNextExercise,
             trainingStepState = trainingStepState,
+            onClick = onClick,
         )
     } else {
         SessionCard(
@@ -353,9 +361,8 @@ private fun SessionCard(
 @Composable
 private fun CurrentSession(
     session: ExerciseSession,
-    onClick: () -> Unit,
-    onStartNextExercise: () -> Unit,
     trainingStepState: TrainingStepState,
+    onClick: () -> Unit,
 ) {
     val timeSlot: @Composable () -> Unit = {
         val currentSet = (session.completedSets + 1).coerceAtMost(session.targetSets)
@@ -375,10 +382,8 @@ private fun CurrentSession(
     TitleCard(
         onClick = onClick,
         title = {
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -403,7 +408,6 @@ private fun CurrentSession(
                 timeSlot()
             }
         },
-        time = { timeSlot() },
         backgroundPainter =
             CardDefaults.cardBackgroundPainter(
                 startBackgroundColor = PrimaryCyan,
@@ -418,6 +422,8 @@ private fun CurrentSession(
                 .padding(horizontal = 8.dp, vertical = 4.dp),
     ) {
         Column(modifier = Modifier.padding(top = 2.dp)) {
+            Timer(trainingStepState)
+
             Text(
                 text =
                     stringResource(
@@ -573,7 +579,6 @@ internal fun WearCooldownTransitionScreenPreview() {
             heartRateBpm = 20,
             onAddExtraTime = {},
             onSkipRest = { },
-            onStartNextExercise = {},
             onSelectExercise = { exe, id -> },
             modifier = Modifier,
         )
