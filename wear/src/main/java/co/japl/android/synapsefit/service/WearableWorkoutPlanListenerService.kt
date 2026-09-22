@@ -35,6 +35,7 @@ class WearableWorkoutPlanListenerService(
             customLogRepository = co.japl.android.synapsefit.WearDependencyProvider.workoutLogRepository
         }
         requestActivePlanStartupIngestion()
+        co.japl.android.synapsefit.WearDependencyProvider.requestActivePlanFromPhone(applicationContext)
     }
 
     fun requestActivePlanStartupIngestion() {
