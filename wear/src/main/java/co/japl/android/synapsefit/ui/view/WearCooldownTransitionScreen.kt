@@ -271,7 +271,6 @@ private fun Timer(
     fontSize: TextUnit = 30.sp,
     color: Color = PrimaryCyan,
 ) {
-
     val remainingSeconds =
         when (trainingStepState) {
             is TrainingStepState.Cooldown ->
@@ -423,7 +422,6 @@ private fun CurrentSession(
                 .padding(horizontal = 8.dp, vertical = 4.dp),
     ) {
         Column(modifier = Modifier.padding(top = 2.dp)) {
-
             Timer(trainingStepState)
 
             Text(
