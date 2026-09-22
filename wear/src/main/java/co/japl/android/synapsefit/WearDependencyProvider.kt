@@ -63,6 +63,7 @@ object WearDependencyProvider {
         getGroupedWorkoutHistoryUseCase = GetGroupedWorkoutHistoryUseCase(workoutLogRepository)
 
         isInitialized = true
+        requestActivePlanFromPhone(appContext)
     }
 
     @Suppress("TooGenericExceptionCaught")
