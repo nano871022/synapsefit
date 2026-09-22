@@ -270,7 +270,8 @@ private fun Timer(
     trainingStepState: TrainingStepState,
     fontSize: TextUnit = 30.sp,
     color: Color = PrimaryCyan,
-    ){
+) {
+
     val remainingSeconds =
         when (trainingStepState) {
             is TrainingStepState.Cooldown ->

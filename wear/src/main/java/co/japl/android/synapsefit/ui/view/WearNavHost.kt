@@ -315,12 +315,6 @@ private fun CooldownDestination(
                 }
             }
         },
-        onStartNextExercise = {
-            activeWorkoutViewModel.startNextExercise()
-            navController.navigate(WearRoutes.activeWorkout(planId, day)) {
-                popUpTo(WearRoutes.ACTIVE_WORKOUT) { inclusive = true }
-            }
-        },
         onSelectExercise = { exerciseSession, index ->
             val exercise =
                 activeUiState.availableExercises.firstOrNull {
