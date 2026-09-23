@@ -18,7 +18,7 @@ import co.japl.android.synapsefit.services.database.entity.UserProfileEntity
 import co.japl.android.synapsefit.services.database.entity.WorkoutLogEntity
 import co.japl.android.synapsefit.services.database.entity.WorkoutPlanEntity
 
-private const val DB_VERSION_7 = 7
+private const val DB_VERSION_8 = 8
 
 @Database(
     entities = [
@@ -30,7 +30,7 @@ private const val DB_VERSION_7 = 7
         WorkoutLogEntity::class,
         LlmConfigEntity::class,
     ],
-    version = DB_VERSION_7,
+    version = DB_VERSION_8,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -88,6 +88,33 @@ abstract class SynapseFitDatabase : RoomDatabase() {
                     db.execSQL("DROP TABLE `exercises`")
                     db.execSQL("ALTER TABLE `exercises_new` RENAME TO `exercises`")
                     db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercises_plan_id` ON `exercises` (`plan_id`)")
+                }
+            }
+
+        @Suppress("MagicNumber")
+        val MIGRATION_7_8 =
+            object : Migration(7, 8) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    // Step 1: Add the new column 'detail'
+                    db.execSQL("ALTER TABLE exercises ADD COLUMN detail TEXT DEFAULT NULL")
+
+                    // Step 2: Extract text inside parentheses into the 'detail' column
+                    db.execSQL(
+                        """
+                        UPDATE exercises
+                        SET detail = substr(name, instr(name, '(') + 1, instr(name, ')') - instr(name, '(') - 1)
+                        WHERE name LIKE '%(%'
+                        """.trimIndent(),
+                    )
+
+                    // Step 3: Remove parentheses and details from the 'name' column and trim
+                    db.execSQL(
+                        """
+                        UPDATE exercises
+                        SET name = trim(substr(name, 1, instr(name, '(') - 1))
+                        WHERE name LIKE '%(%'
+                        """.trimIndent(),
+                    )
                 }
             }
     }

@@ -4,6 +4,7 @@ data class Exercise(
     val id: String,
     val planId: String,
     val name: String,
+    val detail: String? = null,
     val muscleGroup: String,
     val targetSets: Int,
     val targetReps: String,
