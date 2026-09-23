@@ -18,6 +18,7 @@ import co.japl.android.synapsefit.navigation.AppNavHost
 import co.japl.android.synapsefit.navigation.AppNavigatorImpl
 import co.japl.android.synapsefit.navigation.MainScaffold
 import co.japl.android.synapsefit.navigation.Routes
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher =
@@ -28,6 +29,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(!BuildConfig.DEBUG)
         enableEdgeToEdge()
         requestNotificationPermission()
 
