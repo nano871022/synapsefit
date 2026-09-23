@@ -519,10 +519,10 @@ fun AppNavHost(
         composable(Routes.SETTINGS_ABOUT) {
             val appContext = LocalContext.current
             val packageInfo = appContext.packageManager.getPackageInfo(appContext.packageName, 0)
-            // About(
-            //     versionDetail = packageInfo.versionName.orEmpty(),
-            //     applicationId = appContext.packageName,
-            // )
+            co.com.japl.homeconnect.about.ui.About(
+                versionDetail = packageInfo.versionName.orEmpty(),
+                applicationId = appContext.packageName,
+            )
         }
     }
 }
