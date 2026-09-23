@@ -16,6 +16,10 @@ abstract class CopyGoogleServicesTask : DefaultTask() {
     @get:Optional
     abstract val sourceFilePath: Property<File>
 
+    @get:Input
+    @get:Optional
+    abstract val jsonContentEnv: Property<String>
+
     @get:OutputFile
     abstract val targetFile: RegularFileProperty
 
@@ -25,14 +29,32 @@ abstract class CopyGoogleServicesTask : DefaultTask() {
     @TaskAction
     fun copy() {
         val srcPath = sourceFilePath.orNull
+        val rawEnv = jsonContentEnv.orNull
         val dest = targetFile.get().asFile
         val pName = projectName.get()
 
-        if (!dest.exists() && srcPath != null && srcPath.exists()) {
-            srcPath.copyTo(dest, overwrite = true)
-            logger.lifecycle("--> [Build Local] [${pName}] google-services.json copiado exitosamente.")
+        if (!dest.exists()) {
+            if (!rawEnv.isNullOrBlank()) {
+                val trimmed = rawEnv.trim()
+                val content = if (!trimmed.startsWith("{")) {
+                    try {
+                        String(java.util.Base64.getDecoder().decode(trimmed))
+                    } catch (e: Exception) {
+                        trimmed
+                    }
+                } else {
+                    trimmed
+                }
+                dest.writeText(content)
+                logger.lifecycle("--> [Build Local] [${pName}] google-services.json creado desde variable de entorno.")
+            } else if (srcPath != null && srcPath.exists()) {
+                srcPath.copyTo(dest, overwrite = true)
+                logger.lifecycle("--> [Build Local] [${pName}] google-services.json copiado exitosamente desde ${srcPath.path}.")
+            } else {
+                logger.lifecycle("--> [Build Local] [${pName}] google-services.json no fue encontrado.")
+            }
         } else {
-            logger.lifecycle("--> [Build Local] [${pName}] google-services.json No fue encontrado o ya existe.")
+            logger.lifecycle("--> [Build Local] [${pName}] google-services.json ya existe.")
         }
     }
 }
@@ -71,7 +93,11 @@ subprojects {
 
                 val externalFile = rootProject.file(googleServicesPath)
                 val target = project.layout.projectDirectory.file("google-services.json")
+
+                val envJson = System.getenv("GOOGLE_SERVICES_JSON") ?: System.getenv("GOOGLE_SERVICES_BASE64")
+
                 sourceFilePath.set(externalFile)
+                jsonContentEnv.set(envJson)
                 targetFile.set(target)
 
                 onlyIf {
