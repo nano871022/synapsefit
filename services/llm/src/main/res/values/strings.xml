@@ -15,7 +15,8 @@
           "exercises": [
             {
               "day": 1,
-              "name": "Exercise name with execution notes in %4$s",
+              "name": "Exercise name",
+              "detail": "Exercise detail in %4$s",
               "muscleGroup": "Muscle Group",
               "sets": 3,
               "reps": "10-12",
@@ -26,13 +27,17 @@
     </string>
 
     <string name="llm_exercise_media_prompt">
-        Provide a relevant YouTube video URL and an image URL for performing the exercise \'%1$s\'.
-        The image URL MUST point to an anatomical illustration or diagram drawing showing the specific targeted muscles being trained in this exercise.
-        IMPORTANT: The user\'s language is %2$s. You MUST respond in %2$s.
-        Respond in plain JSON format with this exact structure without any other text:
+        You are an expert fitness coach and anatomy specialist. Your task is to generate specific search URLs to find visual resources for the exercise: \'%1$s\'.
+
+        1. videoUrl: Provide a YouTube search URL using exactly this format: "https://www.youtube.com/results?search_query=&#8230;". Replace the "&#8230;" with a highly specific search query (URL-encoded, using \'+\' for spaces) to find a high-quality form tutorial for this exercise.
+        2. imageUrl: Provide a Google Image search URL using exactly this format: "https://www.google.com/search?tbm=isch&amp;q=&#8230;". Replace the "&#8230;" with a highly specific search query (URL-encoded, using \'+\' for spaces) to find a clear anatomical diagram highlighting the specific targeted muscles trained in this exercise.
+
+        IMPORTANT: The user\'s language is %2$s. Ensure the search query terms appended to the URLs are in %2$s.
+
+        Respond ONLY with a valid, plain JSON object using this exact structure. Do NOT include Markdown formatting (like ```json), comments, or any additional text:
         {
-          &#8230;videoUrl&#8230;: &#8230;https://www.youtube.com/results?search_query=…&#8230;,
-          &#8230;imageUrl&#8230;: &#8230;https://images.unsplash.com/photo-1517838277536-f5f99be501cd&#8230;
+            "videoUrl": "https://www.youtube.com/results?search_query=ejemplo+de+busqueda+video",
+            "imageUrl": "https://www.google.com/search?tbm=isch&amp;q=ejemplo+de+busqueda+imagen+anatomia"
         }
     </string>
 

@@ -48,7 +48,7 @@ object WearDependencyProvider {
                 appContext,
                 SynapseFitDatabase::class.java,
                 "synapsefit_database.db",
-            ).addMigrations(SynapseFitDatabase.MIGRATION_6_7)
+            ).addMigrations(SynapseFitDatabase.MIGRATION_6_7, SynapseFitDatabase.MIGRATION_7_8)
                 .build()
 
         workoutPlanRepository = WorkoutPlanRepositoryAdapter(database.workoutPlanDao())

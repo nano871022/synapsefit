@@ -24,6 +24,8 @@ data class ExerciseEntity(
     @ColumnInfo(name = "plan_id")
     val planId: String,
     val name: String,
+    @ColumnInfo(name = "detail")
+    val detail: String? = null,
     @ColumnInfo(name = "muscle_group")
     val muscleGroup: String,
     @ColumnInfo(name = "target_sets")
