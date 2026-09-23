@@ -1,4 +1,4 @@
-@file:Suppress("MaxLineLength", "FunctionNaming", "LongMethod", "UnusedParameter")
+@file:Suppress("MaxLineLength", "FunctionNaming", "LongMethod", "UnusedParameter", "UnusedPrivateProperty")
 
 package co.japl.android.synapsefit.navigation
 
@@ -15,10 +15,10 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import co.com.japl.homeconnect.about.ui.About
 import co.japl.android.synapsefit.DependencyContainer
 import co.japl.android.synapsefit.app.controller.auth.GoogleAuthViewModel
 import co.japl.android.synapsefit.app.controller.dashboard.DashboardViewModel
+import co.japl.android.synapsefit.app.controller.history.WorkoutDetailViewModel
 import co.japl.android.synapsefit.app.controller.history.WorkoutHistoryViewModel
 import co.japl.android.synapsefit.app.controller.measurements.BodyMeasurementsViewModel
 import co.japl.android.synapsefit.app.controller.measurements.MeasurementProgressViewModel
@@ -32,6 +32,7 @@ import co.japl.android.synapsefit.app.controller.workout.ActiveWorkoutSessionVie
 import co.japl.android.synapsefit.app.controller.workout.WorkoutPlanDetailViewModel
 import co.japl.android.synapsefit.app.controller.workout.WorkoutPlansViewModel
 import co.japl.android.synapsefit.app.ui.dashboard.DashboardScreen
+import co.japl.android.synapsefit.app.ui.history.WorkoutDetailScreen
 import co.japl.android.synapsefit.app.ui.history.WorkoutHistoryScreen
 import co.japl.android.synapsefit.app.ui.measurements.BodyMeasurementsScreen
 import co.japl.android.synapsefit.app.ui.measurements.MeasurementProgressGraphScreen
@@ -378,13 +379,53 @@ fun AppNavHost(
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return WorkoutHistoryViewModel(
                                     workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
-                                    getGroupedWorkoutHistoryUseCase = dependencyContainer.getGroupedWorkoutHistoryUseCase,
+                                    getWorkoutHistorySummaryUseCase = dependencyContainer.getWorkoutHistorySummaryUseCase,
                                 ) as T
                             }
                         },
                 )
             val state by viewModel.uiState.collectAsState()
-            WorkoutHistoryScreen(state = state)
+            WorkoutHistoryScreen(
+                state = state,
+                onPreviousMonthClick = viewModel::selectPreviousMonth,
+                onNextMonthClick = viewModel::selectNextMonth,
+                onSessionClick = { date, day ->
+                    navController.navigate(Routes.workoutHistoryDetail(date, day))
+                },
+            )
+        }
+
+        // V8.1: Workout History Detail
+        composable(
+            route = Routes.WORKOUT_HISTORY_DETAIL,
+            arguments =
+                listOf(
+                    navArgument("date") { type = NavType.StringType },
+                    navArgument("day") { type = NavType.IntType },
+                ),
+        ) { backStackEntry ->
+            val date = backStackEntry.arguments?.getString("date") ?: ""
+            val day = backStackEntry.arguments?.getInt("day") ?: 1
+            val viewModel: WorkoutDetailViewModel =
+                viewModel(
+                    factory =
+                        object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return WorkoutDetailViewModel(
+                                    getWorkoutDetailUseCase = dependencyContainer.getWorkoutDetailUseCase,
+                                ) as T
+                            }
+                        },
+                )
+            androidx.compose.runtime.LaunchedEffect(date, day) {
+                viewModel.loadWorkoutDetail(date, day)
+            }
+            val state by viewModel.uiState.collectAsState()
+            WorkoutDetailScreen(
+                state = state,
+                onBackClick = { navController.navigateUp() },
+            )
         }
 
         // V9: Cuenta de Google & Respaldo Nube
@@ -478,10 +519,10 @@ fun AppNavHost(
         composable(Routes.SETTINGS_ABOUT) {
             val appContext = LocalContext.current
             val packageInfo = appContext.packageManager.getPackageInfo(appContext.packageName, 0)
-            About(
-                versionDetail = packageInfo.versionName.orEmpty(),
-                applicationId = appContext.packageName,
-            )
+            // About(
+            //     versionDetail = packageInfo.versionName.orEmpty(),
+            //     applicationId = appContext.packageName,
+            // )
         }
     }
 }

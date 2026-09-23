@@ -59,3 +59,54 @@ data class WorkoutHistoryGroup(
     val totalDurationSeconds: Long,
     val muscleGroups: List<String>,
 )
+
+data class WorkoutSummaryItem(
+    val sessionId: String,
+    val sessionTitle: String,
+    val avgWeightKg: Double,
+    val totalDurationSeconds: Long,
+    val dateIso: String,
+    val day: Int,
+    val totalExercisesCount: Int,
+    val timestamp: Long,
+)
+
+data class WorkoutDetailRecord(
+    val logId: String,
+    val exerciseId: String,
+    val planId: String,
+    val planTitle: String,
+    val day: Int,
+    val exerciseName: String,
+    val exerciseDetail: String?,
+    val muscleGroup: String,
+    val repsCompleted: Int,
+    val weightLiftedKg: Double,
+    val heartRateBpm: Int?,
+    val durationSeconds: Long,
+    val sourceDevice: SourceDevice,
+    val timestamp: Long,
+    val dateIso: String,
+)
+
+data class ExerciseDetailHistory(
+    val exerciseId: String,
+    val exerciseName: String,
+    val exerciseDetail: String?,
+    val muscleGroup: String,
+    val sets: List<ExerciseSetHistory>,
+    val averageReps: Double,
+    val averageWeightKg: Double,
+)
+
+data class WorkoutDetailGroup(
+    val sessionId: String,
+    val planId: String,
+    val planTitle: String,
+    val day: Int,
+    val dateIso: String,
+    val timestamp: Long,
+    val exercises: List<ExerciseDetailHistory>,
+    val totalVolumeKg: Double,
+    val totalDurationSeconds: Long,
+)

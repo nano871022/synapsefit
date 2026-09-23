@@ -4,9 +4,9 @@ package co.japl.android.synapsefit.app.controller.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryGroup
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutSummaryItem
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
-import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
+import co.japl.android.synapsefit.core.usecase.GetWorkoutHistorySummaryUseCase
 import co.japl.android.synapsefit.util.MathUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,9 +15,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 
@@ -58,9 +55,9 @@ data class ExerciseSessionDetailUiModel(
     val exerciseId: String,
     val exerciseName: String,
     val muscleGroup: String = "",
-    val sets: List<ExerciseLogSetUiModel>,
-    val averageReps: Double,
-    val averageWeightKg: Double,
+    val sets: List<ExerciseLogSetUiModel> = emptyList(),
+    val averageReps: Double = 0.0,
+    val averageWeightKg: Double = 0.0,
 )
 
 /**
@@ -72,10 +69,12 @@ data class WorkoutSessionGroupUiModel(
     val dateFormatted: String,
     val durationMinutes: Int,
     val timestamp: Long,
-    val muscleGroups: List<String>,
+    val muscleGroups: List<String> = emptyList(),
     val totalExercisesCount: Int,
-    val totalVolumeKg: Double,
-    val exercises: List<ExerciseSessionDetailUiModel>,
+    val totalVolumeKg: Double = 0.0,
+    val exercises: List<ExerciseSessionDetailUiModel> = emptyList(),
+    val day: Int = 1,
+    val avgWeightKg: Double = 0.0,
 )
 
 // Legacy compatibility model kept for tests or flat representations
@@ -99,7 +98,7 @@ data class WorkoutHistoryUiState(
     val weeklyTotalVolumeKg: Double = 0.0,
     val activePlanStats: ActivePlanStatsUiModel = ActivePlanStatsUiModel(),
     val globalHistoryStats: GlobalHistoryStatsUiModel = GlobalHistoryStatsUiModel(),
-    val recordedSessions: List<SessionHistoryUiModel> = emptyList(),
+    val summaryItems: List<WorkoutSummaryItem> = emptyList(),
     val sessionGroups: List<WorkoutSessionGroupUiModel> = emptyList(),
     val filteredSessionGroups: List<WorkoutSessionGroupUiModel> = emptyList(),
     val isLoading: Boolean = false,
@@ -107,12 +106,10 @@ data class WorkoutHistoryUiState(
 
 class WorkoutHistoryViewModel(
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
-    private val getGroupedWorkoutHistoryUseCase: GetGroupedWorkoutHistoryUseCase? = null,
+    private val getWorkoutHistorySummaryUseCase: GetWorkoutHistorySummaryUseCase? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(WorkoutHistoryUiState())
     val uiState: StateFlow<WorkoutHistoryUiState> = _uiState.asStateFlow()
-
-    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault())
 
     init {
         val currentCal = Calendar.getInstance()
@@ -130,76 +127,55 @@ class WorkoutHistoryViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            val historyFlow = getGroupedWorkoutHistoryUseCase?.invoke() ?: flowOf(emptyList())
+            val summaryFlow = getWorkoutHistorySummaryUseCase?.invoke() ?: flowOf(emptyList())
             val plansFlow = workoutPlanRepositoryPort?.getAllPlans() ?: flowOf(emptyList())
 
-            combine(historyFlow, plansFlow) { groups, plans ->
+            combine(summaryFlow, plansFlow) { summaries, plans ->
                 val activePlan = plans.firstOrNull { it.isActive } ?: plans.firstOrNull()
                 val activePlanTitle = activePlan?.title ?: ""
                 val activePlanTotalSessions = activePlan?.totalSessions ?: 12
 
-                Triple(groups, activePlanTitle, activePlanTotalSessions)
-            }.collect { (groups, activePlanTitle, activePlanTotalSessions) ->
-                updateStateWithGroups(groups, activePlanTitle, activePlanTotalSessions)
+                Triple(summaries, activePlanTitle, activePlanTotalSessions)
+            }.collect { (summaries, activePlanTitle, activePlanTotalSessions) ->
+                updateStateWithSummaries(summaries, activePlanTitle, activePlanTotalSessions)
             }
         }
     }
 
-    private fun updateStateWithGroups(
-        groups: List<WorkoutHistoryGroup>,
+    private fun updateStateWithSummaries(
+        summaries: List<WorkoutSummaryItem>,
         activePlanTitle: String,
         activePlanTotalSessions: Int,
     ) {
         val uiGroups =
-            groups.map { group ->
+            summaries.map { summary ->
                 WorkoutSessionGroupUiModel(
-                    sessionId = group.sessionId,
-                    sessionTitle = "Día ${group.day}",
-                    dateFormatted = dateFormatter.format(Instant.ofEpochMilli(group.timestamp)),
-                    durationMinutes = (group.totalDurationSeconds / 60).toInt().coerceAtLeast(1),
-                    timestamp = group.timestamp,
-                    muscleGroups = group.muscleGroups,
-                    totalExercisesCount = group.exercises.size,
-                    totalVolumeKg = MathUtils.roundToDecimals(group.totalVolumeKg, 1),
-                    exercises =
-                        group.exercises.map { ex ->
-                            ExerciseSessionDetailUiModel(
-                                exerciseId = ex.exerciseId,
-                                exerciseName = ex.exerciseName,
-                                muscleGroup = ex.muscleGroup,
-                                sets =
-                                    ex.sets.map { s ->
-                                        ExerciseLogSetUiModel(
-                                            setIndex = s.setIndex,
-                                            repsCompleted = s.repsCompleted,
-                                            weightLiftedKg = s.weightLiftedKg,
-                                            heartRateBpm = s.heartRateBpm,
-                                            durationSeconds = s.durationSeconds,
-                                            timestamp = s.timestamp,
-                                        )
-                                    },
-                                averageReps = ex.averageReps,
-                                averageWeightKg = ex.averageWeightKg,
-                            )
-                        },
+                    sessionId = summary.sessionId,
+                    sessionTitle = summary.sessionTitle,
+                    dateFormatted = summary.dateIso,
+                    durationMinutes = (summary.totalDurationSeconds / 60).toInt().coerceAtLeast(1),
+                    timestamp = summary.timestamp,
+                    muscleGroups = emptyList(),
+                    totalExercisesCount = summary.totalExercisesCount,
+                    totalVolumeKg = summary.avgWeightKg,
+                    exercises = emptyList(),
+                    day = summary.day,
+                    avgWeightKg = MathUtils.roundToDecimals(summary.avgWeightKg, 1),
                 )
             }
 
         val targetYearMonth = _uiState.value.selectedYearMonth
         val filteredGroups = uiGroups.filter { it.dateFormatted.startsWith(targetYearMonth) }
-        val grid = buildCalendarGrid(targetYearMonth, uiGroups.map { it.dateFormatted }.toSet())
+        val grid = buildCalendarGrid(targetYearMonth, summaries.map { it.dateIso }.toSet())
 
         // Weekly metrics
         val now = System.currentTimeMillis()
         val weekAgo = now - (7 * 24 * 60 * 60 * 1000L)
         val weeklyGroups = uiGroups.filter { it.timestamp >= weekAgo }
-        val weeklyVol = weeklyGroups.sumOf { it.totalVolumeKg }
         val weeklyDurationSec = weeklyGroups.sumOf { it.durationMinutes * 60L }
         val weeklyHours = MathUtils.roundToDecimals(weeklyDurationSec / 3600.0, 1)
 
         // Active plan stats
-        val totalPlanVolKg = uiGroups.sumOf { it.totalVolumeKg }
-        val totalPlanVolTons = MathUtils.roundToDecimals(totalPlanVolKg / 1000.0, 1)
         val totalPlanDurationSec = uiGroups.sumOf { it.durationMinutes * 60L }
         val totalPlanHours = MathUtils.roundToDecimals(totalPlanDurationSec / 3600.0, 1)
         val completedCount = uiGroups.size
@@ -212,25 +188,26 @@ class WorkoutHistoryViewModel(
                 totalWeeks = 8,
                 completedSessionsCount = completedCount,
                 totalSessionsGoal = activePlanTotalSessions,
-                totalVolumeTons = totalPlanVolTons,
+                totalVolumeTons = 0.0,
                 totalHours = totalPlanHours,
             )
 
         val globalStats =
             GlobalHistoryStatsUiModel(
                 totalWorkoutsCount = uiGroups.size,
-                totalVolumeFormatted = formatVolume(totalPlanVolKg),
+                totalVolumeFormatted = "${uiGroups.size} Sesiones",
                 totalHours = totalPlanHours,
             )
 
         _uiState.update {
             it.copy(
                 calendarGrid = grid,
+                summaryItems = summaries,
                 sessionGroups = uiGroups,
                 filteredSessionGroups = if (filteredGroups.isNotEmpty()) filteredGroups else uiGroups,
                 weeklySessionsCount = weeklyGroups.size,
                 weeklyTotalHours = weeklyHours,
-                weeklyTotalVolumeKg = MathUtils.roundToDecimals(weeklyVol, 1),
+                weeklyTotalVolumeKg = 0.0,
                 activePlanStats = activeStats,
                 globalHistoryStats = globalStats,
                 isLoading = false,
@@ -281,18 +258,6 @@ class WorkoutHistoryViewModel(
 
     private fun String.capitalizeLocale(): String =
         replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-
-    private fun formatVolume(kg: Double): String {
-        return if (kg >= 1_000_000) {
-            val millions = MathUtils.roundToDecimals(kg / 1_000_000.0, 2)
-            "${millions}M kg"
-        } else if (kg >= 1000) {
-            val tons = MathUtils.roundToDecimals(kg / 1000.0, 1)
-            "${tons}t"
-        } else {
-            "${kg.toInt()} kg"
-        }
-    }
 
     private fun buildCalendarGrid(
         yearMonth: String,

@@ -139,6 +139,18 @@
     <string name="accept_and_close">Aceptar y Cerrar</string>
 
     <!-- V8: Workout History -->
+    <string name="history_title">Historial de Entrenamiento</string>
+    <string name="weekly_metrics_header">MÉTRICAS DE LA SEMANA</string>
+    <string name="workouts">Entrenamientos</string>
+    <string name="total_time">Tiempo Total</string>
+    <string name="completed_sessions">Sesiones Completadas</string>
+    <string name="accumulated_hours">Horas Acumuladas</string>
+    <string name="global_history">HISTORIAL GLOBAL</string>
+    <string name="previous_month">Mes anterior</string>
+    <string name="next_month">Mes siguiente</string>
+    <string name="sessions_summary_title">Resumen de Sesiones</string>
+    <string name="no_history_records">No hay registros de sesiones para este periodo</string>
+
     <string name="workout_history">Historial de Entrenamiento</string>
     <string name="records_stat">Registros</string>
     <string name="total_volume_stat">Volumen Total</string>
