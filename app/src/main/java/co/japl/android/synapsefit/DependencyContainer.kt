@@ -21,6 +21,8 @@ import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
 import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
 import co.japl.android.synapsefit.core.usecase.GetMedicalRecommendationsUseCase
 import co.japl.android.synapsefit.core.usecase.GetUserProfileUseCase
+import co.japl.android.synapsefit.core.usecase.GetWorkoutDetailUseCase
+import co.japl.android.synapsefit.core.usecase.GetWorkoutHistorySummaryUseCase
 import co.japl.android.synapsefit.core.usecase.PerformDriveSyncUseCase
 import co.japl.android.synapsefit.core.usecase.RecordWorkoutSessionUseCase
 import co.japl.android.synapsefit.core.usecase.SaveBodyMeasurementUseCase
@@ -160,6 +162,14 @@ class DependencyContainer(context: Context) {
 
     val getGroupedWorkoutHistoryUseCase: GetGroupedWorkoutHistoryUseCase by lazy {
         GetGroupedWorkoutHistoryUseCase(workoutLogRepository)
+    }
+
+    val getWorkoutHistorySummaryUseCase: GetWorkoutHistorySummaryUseCase by lazy {
+        GetWorkoutHistorySummaryUseCase(workoutLogRepository)
+    }
+
+    val getWorkoutDetailUseCase: GetWorkoutDetailUseCase by lazy {
+        GetWorkoutDetailUseCase(workoutLogRepository)
     }
 
     val optimizeWorkoutPromptUseCase: co.japl.android.synapsefit.core.usecase.OptimizeWorkoutPromptUseCase by lazy {

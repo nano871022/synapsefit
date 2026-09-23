@@ -17,6 +17,13 @@ object Routes {
     fun workoutActive(planId: String) = "workout/active/$planId"
 
     const val WORKOUT_HISTORY = "workout/history"
+    const val WORKOUT_HISTORY_DETAIL = "workout/history/detail/{date}/{day}"
+
+    fun workoutHistoryDetail(
+        date: String,
+        day: Int,
+    ) = "workout/history/detail/$date/$day"
+
     const val SETTINGS_BACKUP = "settings/backup"
     const val DATABASE_EXPLORER = "settings/db-explorer"
     const val SETTINGS_LLM = "settings/llm"

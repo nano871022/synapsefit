@@ -1,11 +1,10 @@
 package co.japl.android.synapsefit.app.controller.history
 
-import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
-import co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutSummaryItem
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
-import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
+import co.japl.android.synapsefit.core.usecase.GetWorkoutHistorySummaryUseCase
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -23,8 +22,6 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class WorkoutHistoryViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
-    private val workoutLogRepositoryPort = mockk<WorkoutLogRepositoryPort>()
-    private val workoutPlanRepositoryPort = mockk<WorkoutPlanRepositoryPort>()
 
     @Before
     fun setUp() {
@@ -37,58 +34,48 @@ class WorkoutHistoryViewModelTest {
     }
 
     @Test
-    fun `loadHistory updates state with history records and plans`() =
+    fun loadHistory_updatesStateWithSummaries() =
         runTest {
-            val now = System.currentTimeMillis()
-            val records =
+            val logRepository = mockk<WorkoutLogRepositoryPort>()
+            val planRepository = mockk<WorkoutPlanRepositoryPort>()
+
+            val summaries =
                 listOf(
-                    WorkoutHistoryRecord(
-                        logId = "1",
-                        exerciseId = "ex1",
-                        planId = "plan1",
-                        planTitle = "Plan Hipertrofia",
+                    WorkoutSummaryItem(
+                        sessionId = "plan1_1_2023-10-05",
+                        sessionTitle = "Plan 1 - Día 1",
+                        avgWeightKg = 65.5,
+                        totalDurationSeconds = 3600L,
+                        dateIso = "2023-10-05",
                         day = 1,
-                        exerciseName = "Ex 1",
-                        muscleGroup = "Pecho",
-                        repsCompleted = 10,
-                        weightLiftedKg = 50.0,
-                        heartRateBpm = 120,
-                        durationSeconds = 60L,
-                        sourceDevice = SourceDevice.MOBILE,
-                        timestamp = now,
-                    ),
-                    WorkoutHistoryRecord(
-                        logId = "2",
-                        exerciseId = "ex1",
-                        planId = "plan1",
-                        planTitle = "Plan Hipertrofia",
-                        day = 1,
-                        exerciseName = "Ex 1",
-                        muscleGroup = "Pecho",
-                        repsCompleted = 10,
-                        weightLiftedKg = 60.0,
-                        heartRateBpm = 125,
-                        durationSeconds = 60L,
-                        sourceDevice = SourceDevice.MOBILE,
-                        timestamp = now,
+                        totalExercisesCount = 5,
+                        timestamp = 1696500000000L,
                     ),
                 )
-            val plan = WorkoutPlan("plan1", "Plan Hipertrofia", "Ganar músculo", true, true, 12, now, now)
+            val plan =
+                WorkoutPlan(
+                    id = "plan1",
+                    title = "Plan 1",
+                    goalDescription = "Goal",
+                    createdAt = 0L,
+                    updatedAt = 0L,
+                    isActive = true,
+                )
 
-            every { workoutLogRepositoryPort.getHistoryRecords() } returns flowOf(records)
-            every { workoutPlanRepositoryPort.getAllPlans() } returns flowOf(listOf(plan))
+            every { logRepository.getWorkoutSummaries() } returns flowOf(summaries)
+            every { planRepository.getAllPlans() } returns flowOf(listOf(plan))
 
-            val getGroupedWorkoutHistoryUseCase = GetGroupedWorkoutHistoryUseCase(workoutLogRepositoryPort)
+            val useCase = GetWorkoutHistorySummaryUseCase(logRepository)
             val viewModel =
                 WorkoutHistoryViewModel(
-                    getGroupedWorkoutHistoryUseCase = getGroupedWorkoutHistoryUseCase,
-                    workoutPlanRepositoryPort = workoutPlanRepositoryPort,
+                    workoutPlanRepositoryPort = planRepository,
+                    getWorkoutHistorySummaryUseCase = useCase,
                 )
 
             val state = viewModel.uiState.value
-
-            assertEquals(false, state.isLoading)
-            assertEquals(1, state.sessionGroups.size)
-            assertEquals(1, state.sessionGroups.size)
+            assertEquals(1, state.summaryItems.size)
+            assertEquals("Plan 1 - Día 1", state.summaryItems.first().sessionTitle)
+            assertEquals(65.5, state.summaryItems.first().avgWeightKg, 0.01)
+            assertEquals(5, state.summaryItems.first().totalExercisesCount)
         }
 }

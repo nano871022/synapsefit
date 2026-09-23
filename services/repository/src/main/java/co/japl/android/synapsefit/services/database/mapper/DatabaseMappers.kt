@@ -11,13 +11,19 @@ import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.UserProfile
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutDetailRecord
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutSummaryItem
 import co.japl.android.synapsefit.services.database.entity.BodyMeasurementEntity
 import co.japl.android.synapsefit.services.database.entity.ExerciseEntity
 import co.japl.android.synapsefit.services.database.entity.LlmConfigEntity
 import co.japl.android.synapsefit.services.database.entity.MedicalRecommendationEntity
 import co.japl.android.synapsefit.services.database.entity.UserProfileEntity
+import co.japl.android.synapsefit.services.database.entity.WorkoutDetailRecordEntity
 import co.japl.android.synapsefit.services.database.entity.WorkoutLogEntity
+import co.japl.android.synapsefit.services.database.entity.WorkoutLogWithExerciseEntity
 import co.japl.android.synapsefit.services.database.entity.WorkoutPlanEntity
+import co.japl.android.synapsefit.services.database.entity.WorkoutSummaryEntity
 
 fun UserProfileEntity.toDomain(): UserProfile =
     UserProfile(
@@ -203,9 +209,8 @@ fun LlmConfig.toEntity(): LlmConfigEntity =
         updatedAt = updatedAt,
     )
 
-fun co.japl.android.synapsefit.services.database.entity.WorkoutLogWithExerciseEntity.toDomain():
-    co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord =
-    co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord(
+fun WorkoutLogWithExerciseEntity.toDomain(): WorkoutHistoryRecord =
+    WorkoutHistoryRecord(
         logId = logId,
         exerciseId = exerciseId,
         planId = planId,
@@ -219,4 +224,35 @@ fun co.japl.android.synapsefit.services.database.entity.WorkoutLogWithExerciseEn
         durationSeconds = durationSeconds,
         sourceDevice = runCatching { SourceDevice.valueOf(sourceDevice) }.getOrDefault(SourceDevice.MOBILE),
         timestamp = timestamp,
+    )
+
+fun WorkoutSummaryEntity.toDomain(): WorkoutSummaryItem =
+    WorkoutSummaryItem(
+        sessionId = sessionId,
+        sessionTitle = sessionTitle,
+        avgWeightKg = avgWeightKg,
+        totalDurationSeconds = totalDurationSeconds,
+        dateIso = dateIso,
+        day = day,
+        totalExercisesCount = totalExercisesCount,
+        timestamp = timestamp,
+    )
+
+fun WorkoutDetailRecordEntity.toDomain(): WorkoutDetailRecord =
+    WorkoutDetailRecord(
+        logId = logId,
+        exerciseId = exerciseId,
+        planId = planId,
+        planTitle = planTitle,
+        day = day,
+        exerciseName = exerciseName,
+        exerciseDetail = exerciseDetail,
+        muscleGroup = muscleGroup,
+        repsCompleted = repsCompleted,
+        weightLiftedKg = weightLiftedKg,
+        heartRateBpm = heartRateBpm,
+        durationSeconds = durationSeconds,
+        sourceDevice = runCatching { SourceDevice.valueOf(sourceDevice) }.getOrDefault(SourceDevice.MOBILE),
+        timestamp = timestamp,
+        dateIso = dateIso,
     )

@@ -1,7 +1,9 @@
 package co.japl.android.synapsefit.core.port.secondary
 
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutDetailRecord
 import co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryRecord
+import co.japl.android.synapsefit.core.domain.model.history.WorkoutSummaryItem
 import kotlinx.coroutines.flow.Flow
 
 interface WorkoutLogRepositoryPort {
@@ -17,6 +19,13 @@ interface WorkoutLogRepositoryPort {
     fun getLatestLogsForPlan(planId: String): Flow<List<WorkoutLog>>
 
     fun getHistoryRecords(): Flow<List<WorkoutHistoryRecord>>
+
+    fun getWorkoutSummaries(): Flow<List<WorkoutSummaryItem>>
+
+    fun getWorkoutDetailRecords(
+        date: String,
+        day: Int,
+    ): Flow<List<WorkoutDetailRecord>>
 
     suspend fun saveLog(log: WorkoutLog)
 
