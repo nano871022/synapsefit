@@ -9,6 +9,11 @@ interface WorkoutPlanRepositoryPort {
 
     fun getPlanWithExercises(planId: String): Flow<Pair<WorkoutPlan, List<Exercise>>?>
 
+    fun getPlanWithExercisesForDay(
+        planId: String,
+        day: Int,
+    ): Flow<Pair<WorkoutPlan, List<Exercise>>?>
+
     fun getAllPlans(): Flow<List<WorkoutPlan>>
 
     suspend fun savePlan(

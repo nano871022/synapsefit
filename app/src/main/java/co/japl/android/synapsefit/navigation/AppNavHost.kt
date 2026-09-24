@@ -109,8 +109,8 @@ fun AppNavHost(
             val state by viewModel.uiState.collectAsState()
             DashboardScreen(
                 state = state,
-                onStartWorkoutClick = { planId ->
-                    navController.navigate(Routes.workoutActive(planId))
+                onStartWorkoutClick = { planId, day ->
+                    navController.navigate(Routes.workoutActive(planId, day))
                 },
                 onLogMeasurementClick = {
                     navController.navigate(Routes.MEASUREMENTS_ENTRY)
@@ -322,8 +322,8 @@ fun AppNavHost(
             val state by viewModel.uiState.collectAsState()
             WorkoutPlanDetailScreen(
                 state = state,
-                onStartSessionClick = { id ->
-                    navController.navigate(Routes.workoutActive(id))
+                onStartSessionClick = { id, day ->
+                    navController.navigate(Routes.workoutActive(id, day))
                 },
             )
         }
@@ -331,9 +331,17 @@ fun AppNavHost(
         // V7: Active Workout Session
         composable(
             route = Routes.WORKOUT_ACTIVE,
-            arguments = listOf(navArgument("planId") { type = NavType.StringType }),
+            arguments =
+                listOf(
+                    navArgument("planId") { type = NavType.StringType },
+                    navArgument("day") {
+                        type = NavType.IntType
+                        defaultValue = 1
+                    },
+                ),
         ) { backStackEntry ->
             val planId = backStackEntry.arguments?.getString("planId") ?: ""
+            val day = backStackEntry.arguments?.getInt("day") ?: 1
             val viewModel: ActiveWorkoutSessionViewModel =
                 viewModel(
                     factory =
@@ -350,8 +358,8 @@ fun AppNavHost(
                             }
                         },
                 )
-            androidx.compose.runtime.LaunchedEffect(planId) {
-                viewModel.startSession(planId)
+            androidx.compose.runtime.LaunchedEffect(planId, day) {
+                viewModel.startSession(planId, day)
             }
             val state by viewModel.uiState.collectAsState()
             ActiveWorkoutSessionScreen(

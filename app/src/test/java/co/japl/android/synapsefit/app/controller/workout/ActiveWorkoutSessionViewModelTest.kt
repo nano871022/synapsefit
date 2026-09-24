@@ -125,4 +125,44 @@ class ActiveWorkoutSessionViewModelTest {
             assertEquals(TrainingStepState.Active, state.stepState)
             assertEquals(null, state.cooldownTargetTimestamp)
         }
+
+    @Test
+    fun testStartSession_filtersExercisesStrictlyByPlanIdAndDay() =
+        runTest {
+            val repository = io.mockk.mockk<co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort>()
+            val plan =
+                co.japl.android.synapsefit.core.domain.model.WorkoutPlan(
+                    id = "p1",
+                    title = "Plan Day Test",
+                    goalDescription = "Goal",
+                    createdAt = 0L,
+                    updatedAt = 0L,
+                )
+            val day2Exercises =
+                listOf(
+                    co.japl.android.synapsefit.core.domain.model.Exercise(
+                        id = "e2",
+                        planId = "p1",
+                        name = "Day 2 Exercise",
+                        muscleGroup = "Legs",
+                        targetSets = 3,
+                        targetReps = "12",
+                        restSeconds = 60,
+                        day = 2,
+                        createdAt = 0L,
+                        updatedAt = 0L,
+                    ),
+                )
+
+            io.mockk.every { repository.getPlanWithExercisesForDay("p1", 2) } returns kotlinx.coroutines.flow.flowOf(plan to day2Exercises)
+
+            val viewModel = ActiveWorkoutSessionViewModel(workoutPlanRepositoryPort = repository)
+            viewModel.startSession("p1", 2)
+
+            val state = viewModel.uiState.value
+            assertEquals("p1", state.planId)
+            assertEquals(2, state.currentDay)
+            assertEquals(1, state.exercises.size)
+            assertEquals("Day 2 Exercise", state.currentExerciseName)
+        }
 }

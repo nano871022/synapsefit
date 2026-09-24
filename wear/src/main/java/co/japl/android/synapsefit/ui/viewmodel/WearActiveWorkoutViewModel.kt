@@ -167,12 +167,13 @@ class WearActiveWorkoutViewModel(
     ) {
         val repository = workoutPlanRepositoryPort ?: return
         viewModelScope.launch {
-            val targetPlan =
-                repository.getActivePlan().firstOrNull()
-                    ?: repository.getPlanWithExercises(planId).firstOrNull()?.first
-            val pair = repository.getPlanWithExercises(planId).firstOrNull()
-            val allExercises = pair?.second ?: emptyList()
-            val exercises = allExercises.filter { it.day == day }.ifEmpty { allExercises }
+            val pair =
+                repository.getPlanWithExercisesForDay(planId, day).firstOrNull()
+                    ?: repository.getActivePlan().firstOrNull()?.let { activePlan ->
+                        repository.getPlanWithExercisesForDay(activePlan.id, day).firstOrNull()
+                    }
+            val targetPlan = pair?.first
+            val exercises = pair?.second ?: emptyList()
 
             val sessions =
                 exercises.map { ex ->
@@ -205,9 +206,9 @@ class WearActiveWorkoutViewModel(
             repository.getActivePlan().collect { activePlan ->
                 if (activePlan == null) return@collect
                 if (_uiState.value.exerciseSessions.isNotEmpty()) return@collect
-                val pair = repository.getPlanWithExercises(activePlan.id).firstOrNull()
-                val allExercises = pair?.second ?: emptyList()
-                val exercises = allExercises.filter { it.day == 1 }.ifEmpty { allExercises }
+                val day = _uiState.value.currentDay
+                val pair = repository.getPlanWithExercisesForDay(activePlan.id, day).firstOrNull()
+                val exercises = pair?.second ?: emptyList()
 
                 val sessions =
                     exercises.map { ex ->
@@ -226,7 +227,7 @@ class WearActiveWorkoutViewModel(
                     current.copy(
                         activePlanId = activePlan.id,
                         activePlanTitle = activePlan.title,
-                        currentDay = 1,
+                        currentDay = day,
                         availableExercises = exercises,
                         exerciseSessions = sessions,
                     )

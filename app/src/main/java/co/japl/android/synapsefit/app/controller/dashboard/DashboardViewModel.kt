@@ -33,10 +33,12 @@ data class DashboardUiState(
     val weightTrendDeltaKg: Double? = null,
     val todayWorkoutTitle: String? = null,
     val todayWorkoutPlanId: String? = null,
+    val todayWorkoutDay: Int = 1,
     val isPlanCompletedAlertVisible: Boolean = false,
     val activePlanTotalSessions: Int = 12,
     val hasActiveSession: Boolean = false,
     val activeWorkoutPlanId: String? = null,
+    val activeWorkoutDay: Int = 1,
     val activeWorkoutPlanTitle: String? = null,
     val activeWorkoutElapsedSeconds: Long = 0L,
     val activeWorkoutCompletedExercises: Int = 0,
@@ -120,6 +122,7 @@ class DashboardViewModel(
                                 it.copy(
                                     todayWorkoutTitle = "Día $activeDayNumber - ${targetPlan.title}",
                                     todayWorkoutPlanId = targetPlan.id,
+                                    todayWorkoutDay = activeDayNumber,
                                     isPlanCompletedAlertVisible = isLimitReached,
                                     activePlanTotalSessions = totalSessions,
                                     isLoading = false,
@@ -130,6 +133,7 @@ class DashboardViewModel(
                                 it.copy(
                                     todayWorkoutTitle = "Sin rutina activa",
                                     todayWorkoutPlanId = null,
+                                    todayWorkoutDay = 1,
                                     isPlanCompletedAlertVisible = false,
                                     isLoading = false,
                                 )
@@ -159,6 +163,7 @@ class DashboardViewModel(
                             it.copy(
                                 hasActiveSession = true,
                                 activeWorkoutPlanId = restored.uiState.planId,
+                                activeWorkoutDay = restored.uiState.currentDay,
                                 activeWorkoutPlanTitle = restored.uiState.planTitle,
                                 activeWorkoutElapsedSeconds = elapsed,
                                 activeWorkoutCompletedExercises = completedEx,
@@ -173,6 +178,7 @@ class DashboardViewModel(
                 it.copy(
                     hasActiveSession = false,
                     activeWorkoutPlanId = null,
+                    activeWorkoutDay = 1,
                     activeWorkoutPlanTitle = null,
                     activeWorkoutElapsedSeconds = 0L,
                     activeWorkoutCompletedExercises = 0,

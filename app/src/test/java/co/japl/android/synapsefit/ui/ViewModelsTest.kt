@@ -122,12 +122,13 @@ class ViewModelsTest {
                     createdAt = 0L,
                     updatedAt = 0L,
                 )
-            every { planRepository.getPlanWithExercises("plan-123") } returns flowOf(plan to emptyList())
+            every { planRepository.getPlanWithExercisesForDay("plan-123", 1) } returns flowOf(plan to emptyList())
 
             val viewModel = ActiveWorkoutSessionViewModel(workoutPlanRepositoryPort = planRepository)
-            viewModel.startSession("plan-123")
+            viewModel.startSession("plan-123", 1)
 
             assertEquals("plan-123", viewModel.uiState.value.planId)
+            assertEquals(1, viewModel.uiState.value.currentDay)
             viewModel.finishSession()
         }
 

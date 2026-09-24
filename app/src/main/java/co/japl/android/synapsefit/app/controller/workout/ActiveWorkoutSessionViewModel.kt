@@ -64,6 +64,7 @@ sealed interface TrainingStepState {
 
 data class ActiveWorkoutUiState(
     val planId: String = "",
+    val currentDay: Int = 1,
     val planTitle: String = "",
     val elapsedTimeSeconds: Long = 0L,
     val restTimerSecondsRemaining: Int? = null,
@@ -246,14 +247,17 @@ class ActiveWorkoutSessionViewModel(
         }
     }
 
-    fun startSession(planId: String) {
-        if (_uiState.value.planId == planId && _uiState.value.exercises.isNotEmpty()) {
+    fun startSession(
+        planId: String,
+        day: Int = 1,
+    ) {
+        if (_uiState.value.planId == planId && _uiState.value.currentDay == day && _uiState.value.exercises.isNotEmpty()) {
             return
         }
 
         if (context != null && WorkoutSessionStateManager.hasActiveSession(context)) {
             val restored = WorkoutSessionStateManager.loadSession(context)
-            if (restored != null && (planId.isBlank() || restored.uiState.planId == planId)) {
+            if (restored != null && isRestoredSessionMatching(restored, planId, day)) {
                 sessionStartTimestamp = restored.sessionStartTimestamp
                 exerciseTimeSpent.clear()
                 exerciseTimeSpent.putAll(restored.exerciseTimeSpent)
@@ -296,10 +300,10 @@ class ActiveWorkoutSessionViewModel(
             val repository = workoutPlanRepositoryPort ?: return@launch
             val activePlanPair =
                 if (planId.isNotBlank()) {
-                    repository.getPlanWithExercises(planId).firstOrNull()
+                    repository.getPlanWithExercisesForDay(planId, day).firstOrNull()
                 } else {
                     val plan = repository.getActivePlan().firstOrNull()
-                    if (plan != null) repository.getPlanWithExercises(plan.id).firstOrNull() else null
+                    if (plan != null) repository.getPlanWithExercisesForDay(plan.id, day).firstOrNull() else null
                 }
 
             if (activePlanPair != null) {
@@ -331,6 +335,7 @@ class ActiveWorkoutSessionViewModel(
                     it.copy(
                         planId = planObj.id,
                         planTitle = planObj.title,
+                        currentDay = day,
                         exercises = exercisesUi,
                         currentExerciseIndex = 0,
                         currentExerciseId = firstEx?.id ?: "",
@@ -669,6 +674,15 @@ class ActiveWorkoutSessionViewModel(
                 exerciseMaxWeight = exerciseMaxWeight,
             )
         }
+    }
+
+    private fun isRestoredSessionMatching(
+        restored: RestoredSessionState?,
+        planId: String,
+        day: Int,
+    ): Boolean {
+        if (restored == null) return false
+        return planId.isBlank() || (restored.uiState.planId == planId && restored.uiState.currentDay == day)
     }
 
     private fun extractMinimumReps(target: String): Int {

@@ -236,6 +236,12 @@ private fun ActiveWorkoutDestination(
     val planId = backStackEntry.arguments?.getString(WearRoutes.ARG_PLAN_ID) ?: ""
     val day = backStackEntry.arguments?.getInt(WearRoutes.ARG_DAY) ?: 1
 
+    LaunchedEffect(planId, day) {
+        if (planId.isNotBlank()) {
+            activeWorkoutViewModel.loadPlanData(planId, day)
+        }
+    }
+
     val activeUiState by activeWorkoutViewModel.uiState.collectAsState()
 
     WearActiveWorkoutScreen(

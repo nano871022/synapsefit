@@ -33,12 +33,12 @@ import co.japl.android.synapsefit.ui.components.NeonButton
 @Composable
 fun WorkoutPlanDetailScreen(
     state: WorkoutPlanDetailUiState,
-    onStartSessionClick: (planId: String) -> Unit,
+    onStartSessionClick: (planId: String, day: Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val groupedExercises =
         state.exercises.groupBy { exercise ->
-            "Día ${exercise.day}"
+            exercise.day
         }
 
     Scaffold(
@@ -47,7 +47,7 @@ fun WorkoutPlanDetailScreen(
             if (state.planId.isNotBlank()) {
                 NeonButton(
                     text = stringResource(R.string.start_workout),
-                    onClick = { onStartSessionClick(state.planId) },
+                    onClick = { onStartSessionClick(state.planId, 1) },
                     modifier = Modifier.padding(MaterialTheme.spacing.marginEdge),
                 )
             }
@@ -84,11 +84,13 @@ fun WorkoutPlanDetailScreen(
                 )
             }
 
-            groupedExercises.forEach { (dayLabel, exercisesForDay) ->
+            groupedExercises.forEach { (dayNumber, exercisesForDay) ->
                 item {
                     DayExerciseCard(
-                        dayLabel = dayLabel,
+                        dayLabel = "Día $dayNumber",
+                        dayNumber = dayNumber,
                         exercises = exercisesForDay,
+                        onStartDayClick = { day -> onStartSessionClick(state.planId, day) },
                     )
                 }
             }
@@ -120,7 +122,7 @@ private fun WorkoutPlanDetailScreenPreview() {
                             ),
                         ),
                 ),
-            onStartSessionClick = {},
+            onStartSessionClick = { _, _ -> },
         )
     }
 }
@@ -128,7 +130,9 @@ private fun WorkoutPlanDetailScreenPreview() {
 @Composable
 fun DayExerciseCard(
     dayLabel: String,
+    dayNumber: Int,
     exercises: List<ExerciseUiModel>,
+    onStartDayClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -143,12 +147,22 @@ fun DayExerciseCard(
             modifier = Modifier.padding(MaterialTheme.spacing.medium),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
         ) {
-            Text(
-                text = dayLabel.uppercase(),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = dayLabel.uppercase(),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                NeonButton(
+                    text = stringResource(R.string.start_session),
+                    onClick = { onStartDayClick(dayNumber) },
+                )
+            }
 
             exercises.forEach { exercise ->
                 ExerciseListItem(exercise = exercise)
