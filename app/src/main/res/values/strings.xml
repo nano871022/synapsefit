@@ -280,4 +280,5 @@
     <string name="active_session_title">Sesion Activa</string>
     <string name="exercises_progress">Progreso ejercicio</string>
     <string name="continue_session">Continuar Sesion</string>
+    <string name="no_exercises_for_day">No hay ejercicios para el día</string>
 </resources>
