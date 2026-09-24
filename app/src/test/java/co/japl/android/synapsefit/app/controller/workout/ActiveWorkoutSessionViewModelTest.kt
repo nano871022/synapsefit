@@ -73,6 +73,7 @@ class ActiveWorkoutSessionViewModelTest {
             state.stepState is TrainingStepState.Cooldown ||
                 state.stepState is TrainingStepState.Active
         assertTrue(isCooldownOrActive)
+        viewModel.finishSession()
     }
 
     @Test
@@ -110,6 +111,7 @@ class ActiveWorkoutSessionViewModelTest {
                 state.stepState is TrainingStepState.Cooldown ||
                     state.stepState is TrainingStepState.Active
             assertTrue(isCooldownOrActive)
+            viewModel.finishSession()
         }
 
     @Test
@@ -164,5 +166,6 @@ class ActiveWorkoutSessionViewModelTest {
             assertEquals(2, state.currentDay)
             assertEquals(1, state.exercises.size)
             assertEquals("Day 2 Exercise", state.currentExerciseName)
+            viewModel.finishSession()
         }
 }
