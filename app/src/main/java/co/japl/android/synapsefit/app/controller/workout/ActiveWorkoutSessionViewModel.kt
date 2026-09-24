@@ -277,13 +277,7 @@ class ActiveWorkoutSessionViewModel(
                         val remainingSecs = ((targetTs - now) / 1000L).toInt()
                         startRestTimer(remainingSecs, targetTimestampOverride = targetTs)
                     } else {
-                        _uiState.update {
-                            it.copy(
-                                restTimerSecondsRemaining = 0,
-                                stepState = TrainingStepState.ReadyForNext,
-                                cooldownTargetTimestamp = null,
-                            )
-                        }
+                        nextSetOrExercise()
                     }
                 }
                 return
@@ -591,14 +585,8 @@ class ActiveWorkoutSessionViewModel(
                     val remainingMillis = targetTimestamp - now
 
                     if (remainingMillis <= 0) {
-                        _uiState.update {
-                            it.copy(
-                                restTimerSecondsRemaining = 0,
-                                stepState = TrainingStepState.ReadyForNext,
-                                cooldownTargetTimestamp = null,
-                            )
-                        }
                         WorkoutTimerManager.updateRestTime(0)
+                        nextSetOrExercise()
                         break
                     } else {
                         val remainingSeconds = (remainingMillis / 1000L).toInt() + (if (remainingMillis % 1000L > 0) 1 else 0)
