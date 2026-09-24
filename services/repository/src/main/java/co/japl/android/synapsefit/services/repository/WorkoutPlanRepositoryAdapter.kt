@@ -30,6 +30,21 @@ class WorkoutPlanRepositoryAdapter(
             }
         }
 
+    override fun getPlanWithExercisesForDay(
+        planId: String,
+        day: Int,
+    ): Flow<Pair<WorkoutPlan, List<Exercise>>?> =
+        combine(
+            dao.getPlanById(planId),
+            dao.getExercisesForPlanAndDay(planId, day),
+        ) { planEntity, exerciseEntities ->
+            if (planEntity == null) {
+                null
+            } else {
+                Pair(planEntity.toDomain(), exerciseEntities.map { it.toDomain() })
+            }
+        }
+
     override fun getAllPlans(): Flow<List<WorkoutPlan>> =
         dao.getAllPlans().map { entities ->
             entities.map { it.toDomain() }

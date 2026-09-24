@@ -12,9 +12,12 @@ object Routes {
 
     fun workoutDetail(planId: String) = "workout/detail/$planId"
 
-    const val WORKOUT_ACTIVE = "workout/active/{planId}"
+    const val WORKOUT_ACTIVE = "workout/active/{planId}?day={day}"
 
-    fun workoutActive(planId: String) = "workout/active/$planId"
+    fun workoutActive(
+        planId: String,
+        day: Int = 1,
+    ) = "workout/active/$planId?day=$day"
 
     const val WORKOUT_HISTORY = "workout/history"
     const val WORKOUT_HISTORY_DETAIL = "workout/history/detail/{date}/{day}"

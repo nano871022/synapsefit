@@ -21,6 +21,12 @@ interface WorkoutPlanDao {
     @Query("SELECT * FROM exercises WHERE plan_id = :planId ORDER BY created_at ASC")
     fun getExercisesForPlan(planId: String): Flow<List<ExerciseEntity>>
 
+    @Query("SELECT * FROM exercises WHERE plan_id = :planId AND day = :day ORDER BY created_at ASC")
+    fun getExercisesForPlanAndDay(
+        planId: String,
+        day: Int,
+    ): Flow<List<ExerciseEntity>>
+
     @Query("SELECT * FROM workout_plans ORDER BY updated_at DESC")
     fun getAllPlans(): Flow<List<WorkoutPlanEntity>>
 

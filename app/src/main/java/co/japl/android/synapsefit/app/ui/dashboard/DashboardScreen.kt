@@ -56,7 +56,7 @@ import co.japl.android.synapsefit.util.MathUtils
 @Composable
 fun DashboardScreen(
     state: DashboardUiState,
-    onStartWorkoutClick: (planId: String) -> Unit,
+    onStartWorkoutClick: (planId: String, day: Int) -> Unit,
     onLogMeasurementClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -114,13 +114,14 @@ fun DashboardScreen(
                     state.todayWorkoutTitle ?: stringResource(R.string.no_active_routine)
                 },
             planId = if (state.hasActiveSession) state.activeWorkoutPlanId else state.todayWorkoutPlanId,
+            day = if (state.hasActiveSession) state.activeWorkoutDay else state.todayWorkoutDay,
             hasActiveSession = state.hasActiveSession,
             elapsedSeconds = state.activeWorkoutElapsedSeconds,
             completedExercises = state.activeWorkoutCompletedExercises,
             totalExercises = state.activeWorkoutTotalExercises,
-            onStartWorkout = { planId ->
+            onStartWorkout = { planId, day ->
                 if (planId != null) {
-                    onStartWorkoutClick(planId)
+                    onStartWorkoutClick(planId, day)
                 }
             },
         )
@@ -207,7 +208,7 @@ private fun DashboardScreenPreview() {
                     isPlanCompletedAlertVisible = true,
                     activePlanTotalSessions = 12,
                 ),
-            onStartWorkoutClick = {},
+            onStartWorkoutClick = { _, _ -> },
             onLogMeasurementClick = {},
             onProfileClick = {},
         )
@@ -231,7 +232,7 @@ private fun ActiveDashboardScreenPreview() {
                     activeWorkoutCompletedExercises = 2,
                     activeWorkoutTotalExercises = 5,
                 ),
-            onStartWorkoutClick = {},
+            onStartWorkoutClick = { _, _ -> },
             onLogMeasurementClick = {},
             onProfileClick = {},
         )
@@ -335,7 +336,8 @@ fun LatestMeasurementCard(
 fun TodayWorkoutCard(
     title: String,
     planId: String?,
-    onStartWorkout: (String?) -> Unit,
+    day: Int = 1,
+    onStartWorkout: (planId: String?, day: Int) -> Unit,
     modifier: Modifier = Modifier,
     hasActiveSession: Boolean = false,
     elapsedSeconds: Long = 0L,
@@ -419,7 +421,7 @@ fun TodayWorkoutCard(
                     } else {
                         stringResource(R.string.start_session)
                     },
-                onClick = { onStartWorkout(planId) },
+                onClick = { onStartWorkout(planId, day) },
                 enabled = planId != null,
             )
         }

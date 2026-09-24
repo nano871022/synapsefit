@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
         val activeRestoredSession = WorkoutSessionStateManager.loadSession(this)
         val startDest =
             if (activeRestoredSession != null && activeRestoredSession.uiState.planId.isNotBlank()) {
-                Routes.workoutActive(activeRestoredSession.uiState.planId)
+                Routes.workoutActive(activeRestoredSession.uiState.planId, activeRestoredSession.uiState.currentDay)
             } else {
                 Routes.SPLASH
             }

@@ -177,9 +177,28 @@ fun ActiveWorkoutSessionScreen(
                 }
             }
 
-            Exercise(state, onOpenImagePopup, context)
-
-            ExercisesSet(state, isResting, onSetWeightChange, onSetRepsChange, onCompleteSet, onNextSetOrExercise, restingTime)
+            if (state.exercises.isEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(MaterialTheme.spacing.medium),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.no_exercises_for_day),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            } else {
+                Exercise(state, onOpenImagePopup, context)
+                ExercisesSet(state, isResting, onSetWeightChange, onSetRepsChange, onCompleteSet, onNextSetOrExercise, restingTime)
+            }
         }
     }
 
