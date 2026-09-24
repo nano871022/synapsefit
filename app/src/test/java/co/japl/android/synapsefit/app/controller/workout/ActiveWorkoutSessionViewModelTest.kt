@@ -69,11 +69,10 @@ class ActiveWorkoutSessionViewModelTest {
         viewModel.startRestTimer(cooldownDurationSeconds = 60)
 
         val state = viewModel.uiState.value
-        val isCooldownOrReady =
+        val isCooldownOrActive =
             state.stepState is TrainingStepState.Cooldown ||
-                state.stepState is TrainingStepState.ReadyForNext
-        assertTrue(isCooldownOrReady)
-        viewModel.nextSetOrExercise()
+                state.stepState is TrainingStepState.Active
+        assertTrue(isCooldownOrActive)
     }
 
     @Test
@@ -107,10 +106,23 @@ class ActiveWorkoutSessionViewModelTest {
             )
 
             val state = viewModel.uiState.value
-            val isCooldownOrReady =
+            val isCooldownOrActive =
                 state.stepState is TrainingStepState.Cooldown ||
-                    state.stepState is TrainingStepState.ReadyForNext
-            assertTrue(isCooldownOrReady)
-            viewModel.nextSetOrExercise()
+                    state.stepState is TrainingStepState.Active
+            assertTrue(isCooldownOrActive)
+        }
+
+    @Test
+    fun testRestTimerExpiration_automaticallyAdvancesToActiveState() =
+        runTest {
+            val viewModel = ActiveWorkoutSessionViewModel()
+
+            // Start timer with 0 seconds target timestamp in past so remainingMillis <= 0
+            val pastTargetTimestamp = System.currentTimeMillis() - 1000L
+            viewModel.startRestTimer(cooldownDurationSeconds = 0, targetTimestampOverride = pastTargetTimestamp)
+
+            val state = viewModel.uiState.value
+            assertEquals(TrainingStepState.Active, state.stepState)
+            assertEquals(null, state.cooldownTargetTimestamp)
         }
 }
