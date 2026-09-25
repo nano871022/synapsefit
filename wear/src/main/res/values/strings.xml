@@ -61,4 +61,15 @@
     <string name="wear_active_exercise_timer">En ejecución • %1$s</string>
     <string name="wear_session_in_progress">En progreso • %1$s</string>
     <string name="wear_exercise_in_progress">En curso • %1$s</string>
+    <string name="wear_sync_title">Sincronizando</string>
+    <string name="wear_sync_step1_downloading">Descargando planes y ejercicios...</string>
+    <string name="wear_sync_step2_configuring">Configurando siguiente plan...</string>
+    <string name="wear_sync_step3_verifying_offline">Verificando entrenamientos offline...</string>
+    <string name="wear_sync_step4_uploading_logs">Sincronizando %1$d de %2$d entrenamientos</string>
+    <string name="wear_sync_step4_no_logs">Sin entrenamientos pendientes</string>
+    <string name="wear_sync_step5_cleanup">Limpiando memoria de sesión...</string>
+    <string name="wear_sync_step6_verifying_active">Verificando entrenamiento activo...</string>
+    <string name="wear_sync_disconnected_prompt">Móvil desconectado. Abre la app en tu teléfono para sincronizar.</string>
+    <string name="wear_sync_cancel">Cancelar</string>
+    <string name="wear_sync_completed">Sincronización completada</string>
 </resources>

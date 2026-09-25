@@ -1,14 +1,18 @@
 package co.japl.android.synapsefit.ui.navigation
 
 object WearRoutes {
+    const val SYNC = "sync?isPostWorkout={isPostWorkout}"
     const val DAY_SELECTION = "day_selection"
     const val PRE_WORKOUT = "pre_workout/{planId}/{day}"
     const val ACTIVE_WORKOUT = "active_workout/{planId}/{day}"
     const val COOLDOWN = "cooldown/{planId}/{day}"
     const val POST_WORKOUT_SUMMARY = "post_workout_summary/{planId}/{day}"
 
+    const val ARG_IS_POST_WORKOUT = "isPostWorkout"
     const val ARG_PLAN_ID = "planId"
     const val ARG_DAY = "day"
+
+    fun sync(isPostWorkout: Boolean = false): String = "sync?isPostWorkout=$isPostWorkout"
 
     fun preWorkout(
         planId: String,

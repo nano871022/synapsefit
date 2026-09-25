@@ -11,6 +11,7 @@ import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.GetActiveWorkoutSessionUseCase
 import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
 import co.japl.android.synapsefit.core.usecase.GetTodayRoutineUseCase
+import co.japl.android.synapsefit.core.usecase.PerformWearSyncUseCase
 import co.japl.android.synapsefit.services.database.SynapseFitDatabase
 import co.japl.android.synapsefit.services.repository.InMemoryActiveSessionAdapter
 import co.japl.android.synapsefit.services.repository.WorkoutLogRepositoryAdapter
@@ -37,6 +38,7 @@ object WearDependencyProvider {
     lateinit var getTodayRoutineUseCase: GetTodayRoutineUseCase
     lateinit var getActiveWorkoutSessionUseCase: GetActiveWorkoutSessionUseCase
     lateinit var getGroupedWorkoutHistoryUseCase: GetGroupedWorkoutHistoryUseCase
+    lateinit var performWearSyncUseCase: PerformWearSyncUseCase
 
     @Synchronized
     fun initialize(context: Context) {
@@ -61,6 +63,14 @@ object WearDependencyProvider {
         getTodayRoutineUseCase = GetTodayRoutineUseCase(workoutPlanRepository, workoutLogRepository)
         getActiveWorkoutSessionUseCase = GetActiveWorkoutSessionUseCase(activeSessionRepository)
         getGroupedWorkoutHistoryUseCase = GetGroupedWorkoutHistoryUseCase(workoutLogRepository)
+        performWearSyncUseCase =
+            PerformWearSyncUseCase(
+                wearSyncPort = wearSyncPort,
+                wearStateMirrorPort = wearStateMirrorPort,
+                workoutPlanRepository = workoutPlanRepository,
+                workoutLogRepository = workoutLogRepository,
+                activeSessionRepository = activeSessionRepository,
+            )
 
         isInitialized = true
         requestActivePlanFromPhone(appContext)
