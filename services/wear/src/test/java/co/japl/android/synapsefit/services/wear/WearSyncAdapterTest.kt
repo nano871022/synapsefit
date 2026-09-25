@@ -17,6 +17,9 @@ class WearSyncAdapterTest {
     @Test
     fun testQueueDataAndConnectionState() {
         assertEquals(0, adapter.pendingSyncDataCount.value)
+        assertFalse(adapter.isPhoneConnected.value)
+
+        adapter.onConnectionStateChanged(true)
         assertTrue(adapter.isPhoneConnected.value)
 
         adapter.queueDataForDeferredSync("ex-1", 10, 120)

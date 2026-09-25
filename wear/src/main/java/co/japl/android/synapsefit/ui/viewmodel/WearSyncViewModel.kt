@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 class WearSyncViewModel(
     private val performWearSyncUseCase: PerformWearSyncUseCase? = null,
-    private val observeWearConnectionUseCase: ObserveWearConnectionUseCase? = null,
+    observeWearConnectionUseCase: ObserveWearConnectionUseCase? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(WearSyncUiState())
     val uiState: StateFlow<WearSyncUiState> = _uiState.asStateFlow()
@@ -28,7 +28,8 @@ class WearSyncViewModel(
             viewModelScope.launch {
                 useCase.isPhoneConnected.collect { isConnected ->
                     val currentStep = _uiState.value.stepState
-                    if (!isConnected && currentStep !is SyncStepState.Finished && currentStep !is SyncStepState.Idle && !isCancelled) {
+                    val isPendingStep = currentStep !is SyncStepState.Finished && currentStep !is SyncStepState.Idle
+                    if (!isConnected && isPendingStep && !isCancelled) {
                         lastStepBeforeDisconnect = currentStep
                         _uiState.update {
                             it.copy(

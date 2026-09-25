@@ -24,6 +24,9 @@ class WearServicesTest {
     @Test
     fun testWearableSyncAdapter() {
         val adapter = WearableSyncAdapter()
+        assertFalse(adapter.isPhoneConnected.value)
+
+        adapter.onConnectionStateChanged(true)
         assertTrue(adapter.isPhoneConnected.value)
 
         adapter.queueDataForDeferredSync("ex-101", 12, 140)
