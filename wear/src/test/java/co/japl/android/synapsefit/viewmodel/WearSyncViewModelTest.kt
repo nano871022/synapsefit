@@ -1,7 +1,7 @@
 package co.japl.android.synapsefit.viewmodel
 
 import co.japl.android.synapsefit.core.domain.model.SyncStepState
-import co.japl.android.synapsefit.core.port.secondary.WearSyncPort
+import co.japl.android.synapsefit.core.usecase.ObserveWearConnectionUseCase
 import co.japl.android.synapsefit.core.usecase.PerformWearSyncUseCase
 import co.japl.android.synapsefit.ui.viewmodel.WearSyncViewModel
 import io.mockk.every
@@ -26,7 +26,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class WearSyncViewModelTest {
     private val performWearSyncUseCase: PerformWearSyncUseCase = mockk()
-    private val syncPort: WearSyncPort = mockk(relaxed = true)
+    private val observeWearConnectionUseCase: ObserveWearConnectionUseCase = mockk()
 
     private val isPhoneConnectedFlow = MutableStateFlow(true)
     private val testDispatcher = StandardTestDispatcher()
@@ -36,7 +36,7 @@ class WearSyncViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        every { syncPort.isPhoneConnected } returns isPhoneConnectedFlow
+        every { observeWearConnectionUseCase.isPhoneConnected } returns isPhoneConnectedFlow
         every { performWearSyncUseCase.invoke(any()) } returns
             flowOf(
                 SyncStepState.DownloadingPlans,
@@ -47,7 +47,7 @@ class WearSyncViewModelTest {
         viewModel =
             WearSyncViewModel(
                 performWearSyncUseCase = performWearSyncUseCase,
-                syncPort = syncPort,
+                observeWearConnectionUseCase = observeWearConnectionUseCase,
             )
     }
 

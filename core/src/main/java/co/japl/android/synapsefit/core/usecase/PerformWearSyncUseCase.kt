@@ -23,6 +23,15 @@ class PerformWearSyncUseCase(
     @Suppress("MagicNumber", "LongMethod")
     operator fun invoke(isPostWorkout: Boolean = false): Flow<SyncStepState> =
         flow {
+            val isConnected = wearSyncPort.checkConnectionStatus()
+            if (!isConnected) {
+                if (!isPostWorkout) {
+                    activeSessionRepository.clearActiveSession()
+                }
+                emit(SyncStepState.Disconnected(SyncStepState.DownloadingPlans))
+                return@flow
+            }
+
             // Step 1: Downloading plans and exercises
             emit(SyncStepState.DownloadingPlans)
             wearSyncPort.flushSyncQueue()

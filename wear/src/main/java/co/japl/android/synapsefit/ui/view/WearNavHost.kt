@@ -1,5 +1,6 @@
 package co.japl.android.synapsefit.ui.view
 
+import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,7 +36,7 @@ fun WearNavHost(
         viewModel {
             WearSyncViewModel(
                 performWearSyncUseCase = WearDependencyProvider.performWearSyncUseCase,
-                syncPort = WearDependencyProvider.wearSyncPort,
+                observeWearConnectionUseCase = WearDependencyProvider.observeWearConnectionUseCase,
             )
         },
     daySelectionViewModel: WearDaySelectionViewModel =
@@ -59,7 +60,7 @@ fun WearNavHost(
         viewModel {
             WearPostWorkoutSummaryViewModel(
                 getGroupedWorkoutHistoryUseCase = WearDependencyProvider.getGroupedWorkoutHistoryUseCase,
-                syncPort = WearDependencyProvider.wearSyncPort,
+                syncPendingWorkoutLogsUseCase = WearDependencyProvider.syncPendingWorkoutLogsUseCase,
             )
         },
 ) {
@@ -231,7 +232,7 @@ private fun DaySelectionDestination(
         isUpdateAvailable = daySelectionState.isUpdateAvailable,
         onCheckUpdate = { viewModel.checkForUpdates(localContext) },
         onPerformUpdate = {
-            val activity = localContext as? android.app.Activity
+            val activity = localContext as? Activity
             if (activity != null) {
                 viewModel.performImmediateUpdate(activity)
             }

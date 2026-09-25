@@ -3,8 +3,8 @@ package co.japl.android.synapsefit.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.history.WorkoutHistoryGroup
-import co.japl.android.synapsefit.core.port.secondary.WearSyncPort
 import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
+import co.japl.android.synapsefit.core.usecase.SyncPendingWorkoutLogsUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +15,7 @@ import java.util.Locale
 
 class WearPostWorkoutSummaryViewModel(
     private val getGroupedWorkoutHistoryUseCase: GetGroupedWorkoutHistoryUseCase? = null,
-    private val syncPort: WearSyncPort? = null,
+    private val syncPendingWorkoutLogsUseCase: SyncPendingWorkoutLogsUseCase? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(WearPostWorkoutSummaryUiState())
     val uiState: StateFlow<WearPostWorkoutSummaryUiState> = _uiState.asStateFlow()
@@ -28,17 +28,17 @@ class WearPostWorkoutSummaryViewModel(
     }
 
     private fun observeSyncState() {
-        val syncPort = syncPort ?: return
+        val syncUseCase = syncPendingWorkoutLogsUseCase ?: return
         viewModelScope.launch {
-            syncPort.isPhoneConnected.collect { isConnected ->
+            syncUseCase.isPhoneConnected.collect { isConnected ->
                 _uiState.update { it.copy(isSyncedWithPhone = isConnected) }
                 if (isConnected) {
-                    syncPort.flushSyncQueue()
+                    syncUseCase.flushSyncQueue()
                 }
             }
         }
         viewModelScope.launch {
-            syncPort.pendingSyncDataCount.collect { pendingCount ->
+            syncUseCase.pendingSyncDataCount.collect { pendingCount ->
                 _uiState.update { it.copy(pendingSyncDataCount = pendingCount) }
             }
         }
@@ -66,7 +66,7 @@ class WearPostWorkoutSummaryViewModel(
                     if (targetGroup != null) {
                         populateStateFromGroup(targetGroup)
                         transmitWorkoutLogsToMobile(targetGroup)
-                        syncPort?.flushSyncQueue()
+                        syncPendingWorkoutLogsUseCase?.flushSyncQueue()
                     } else {
                         _uiState.update { it.copy(isLoading = false) }
                     }
@@ -91,7 +91,7 @@ class WearPostWorkoutSummaryViewModel(
                     if (targetGroup != null) {
                         populateStateFromGroup(targetGroup)
                         transmitWorkoutLogsToMobile(targetGroup)
-                        syncPort?.flushSyncQueue()
+                        syncPendingWorkoutLogsUseCase?.flushSyncQueue()
                     } else {
                         _uiState.update { it.copy(isLoading = false) }
                     }
@@ -122,10 +122,10 @@ class WearPostWorkoutSummaryViewModel(
     }
 
     private fun transmitWorkoutLogsToMobile(group: WorkoutHistoryGroup) {
-        val syncPort = syncPort ?: return
+        val syncUseCase = syncPendingWorkoutLogsUseCase ?: return
         for (exercise in group.exercises) {
             for (set in exercise.sets) {
-                syncPort.queueDataForDeferredSync(
+                syncUseCase.queueDataForDeferredSync(
                     exerciseId = exercise.exerciseId,
                     reps = set.repsCompleted,
                     heartRateBpm = set.heartRateBpm ?: 0,

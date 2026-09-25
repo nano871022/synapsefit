@@ -8,6 +8,8 @@ interface WearSyncPort {
 
     fun onConnectionStateChanged(isConnected: Boolean)
 
+    suspend fun checkConnectionStatus(): Boolean
+
     fun queueDataForDeferredSync(
         exerciseId: String,
         reps: Int,

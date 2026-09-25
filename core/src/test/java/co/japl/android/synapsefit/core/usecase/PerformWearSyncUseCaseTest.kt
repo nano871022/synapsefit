@@ -7,6 +7,7 @@ import co.japl.android.synapsefit.core.port.secondary.WearStateMirrorPort
 import co.japl.android.synapsefit.core.port.secondary.WearSyncPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -34,6 +36,7 @@ class PerformWearSyncUseCaseTest {
     fun setUp() {
         every { wearSyncPort.pendingSyncDataCount } returns pendingDataCountFlow
         every { wearStateMirrorPort.liveSyncEvents } returns liveSyncEventsFlow
+        coEvery { wearSyncPort.checkConnectionStatus() } returns true
 
         useCase =
             PerformWearSyncUseCase(
@@ -46,7 +49,7 @@ class PerformWearSyncUseCaseTest {
     }
 
     @Test
-    fun testInvokeEmitsSequentialSyncSteps() =
+    fun testInvokeEmitsSequentialSyncStepsWhenConnected() =
         runTest {
             pendingDataCountFlow.value = 2
 
@@ -61,6 +64,18 @@ class PerformWearSyncUseCaseTest {
             assertTrue(steps.contains(SyncStepState.VerifyingActiveTraining))
             assertTrue(steps.last() is SyncStepState.Finished)
 
+            coVerify { activeSessionRepository.clearActiveSession() }
+        }
+
+    @Test
+    fun testInvokeEmitsDisconnectedWhenDisconnected() =
+        runTest {
+            coEvery { wearSyncPort.checkConnectionStatus() } returns false
+
+            val steps = useCase(isPostWorkout = false).toList()
+
+            assertEquals(1, steps.size)
+            assertEquals(SyncStepState.Disconnected(SyncStepState.DownloadingPlans), steps.first())
             coVerify { activeSessionRepository.clearActiveSession() }
         }
 }
