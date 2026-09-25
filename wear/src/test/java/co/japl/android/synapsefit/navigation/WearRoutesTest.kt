@@ -7,12 +7,15 @@ import org.junit.Test
 class WearRoutesTest {
     @Test
     fun testRouteFormattingAndArguments() {
+        assertEquals("sync?isPostWorkout={isPostWorkout}", WearRoutes.SYNC)
         assertEquals("day_selection", WearRoutes.DAY_SELECTION)
         assertEquals("pre_workout/{planId}/{day}", WearRoutes.PRE_WORKOUT)
         assertEquals("active_workout/{planId}/{day}", WearRoutes.ACTIVE_WORKOUT)
         assertEquals("cooldown/{planId}/{day}", WearRoutes.COOLDOWN)
         assertEquals("post_workout_summary/{planId}/{day}", WearRoutes.POST_WORKOUT_SUMMARY)
 
+        assertEquals("sync?isPostWorkout=false", WearRoutes.sync(false))
+        assertEquals("sync?isPostWorkout=true", WearRoutes.sync(true))
         assertEquals("pre_workout/plan_123/2", WearRoutes.preWorkout("plan_123", 2))
         assertEquals("active_workout/plan_123/2", WearRoutes.activeWorkout("plan_123", 2))
         assertEquals("cooldown/plan_123/2", WearRoutes.cooldown("plan_123", 2))

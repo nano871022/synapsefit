@@ -1,5 +1,6 @@
 package co.japl.android.synapsefit.ui.view
 
+import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -24,12 +25,20 @@ import co.japl.android.synapsefit.ui.navigation.WearRoutes
 import co.japl.android.synapsefit.ui.viewmodel.WearActiveWorkoutViewModel
 import co.japl.android.synapsefit.ui.viewmodel.WearDaySelectionViewModel
 import co.japl.android.synapsefit.ui.viewmodel.WearPostWorkoutSummaryViewModel
+import co.japl.android.synapsefit.ui.viewmodel.WearSyncViewModel
 
-@Suppress("LongMethod", "CyclomaticComplexMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod", "LongParameterList")
 @Composable
 fun WearNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberSwipeDismissableNavController(),
+    syncViewModel: WearSyncViewModel =
+        viewModel {
+            WearSyncViewModel(
+                performWearSyncUseCase = WearDependencyProvider.performWearSyncUseCase,
+                observeWearConnectionUseCase = WearDependencyProvider.observeWearConnectionUseCase,
+            )
+        },
     daySelectionViewModel: WearDaySelectionViewModel =
         viewModel {
             WearDaySelectionViewModel(
@@ -51,7 +60,7 @@ fun WearNavHost(
         viewModel {
             WearPostWorkoutSummaryViewModel(
                 getGroupedWorkoutHistoryUseCase = WearDependencyProvider.getGroupedWorkoutHistoryUseCase,
-                syncPort = WearDependencyProvider.wearSyncPort,
+                syncPendingWorkoutLogsUseCase = WearDependencyProvider.syncPendingWorkoutLogsUseCase,
             )
         },
 ) {
@@ -85,21 +94,32 @@ fun WearNavHost(
                 activeWorkoutViewModel.completeSet()
             } else if (event is LiveSyncEvent.FinishSession) {
                 activeWorkoutViewModel.finishSession()
-                navController.navigate(
-                    WearRoutes.postWorkoutSummary(
-                        activeWorkoutViewModel.uiState.value.activePlanTitle,
-                        activeWorkoutViewModel.uiState.value.currentDay,
-                    ),
-                )
+                navController.navigate(WearRoutes.sync(isPostWorkout = true)) {
+                    popUpTo(WearRoutes.DAY_SELECTION)
+                }
             }
         }
     }
 
     SwipeDismissableNavHost(
         navController = navController,
-        startDestination = WearRoutes.DAY_SELECTION,
+        startDestination = WearRoutes.SYNC,
         modifier = modifier,
     ) {
+        composable(
+            route = WearRoutes.SYNC,
+            arguments =
+                listOf(
+                    navArgument(WearRoutes.ARG_IS_POST_WORKOUT) {
+                        type = NavType.BoolType
+                        defaultValue = false
+                    },
+                ),
+        ) { backStackEntry ->
+            val isPostWorkout = backStackEntry.arguments?.getBoolean(WearRoutes.ARG_IS_POST_WORKOUT) ?: false
+            SyncDestination(isPostWorkout, syncViewModel, activeWorkoutViewModel, navController)
+        }
+
         composable(WearRoutes.DAY_SELECTION) {
             DaySelectionDestination(daySelectionViewModel, navController)
         }
@@ -149,6 +169,49 @@ private fun standardNavArguments() =
     )
 
 @Composable
+private fun SyncDestination(
+    isPostWorkout: Boolean,
+    syncViewModel: WearSyncViewModel,
+    activeWorkoutViewModel: WearActiveWorkoutViewModel,
+    navController: NavHostController,
+) {
+    LaunchedEffect(isPostWorkout) {
+        syncViewModel.startSync(isPostWorkout)
+    }
+
+    val syncUiState by syncViewModel.uiState.collectAsState()
+
+    LaunchedEffect(syncUiState.isFinished) {
+        if (syncUiState.isFinished) {
+            if (syncUiState.activeSessionDetected && !syncUiState.planId.isNullOrBlank()) {
+                val planId = syncUiState.planId ?: ""
+                val day = syncUiState.day ?: 1
+                activeWorkoutViewModel.loadPlanData(planId, day)
+                navController.navigate(WearRoutes.activeWorkout(planId, day)) {
+                    popUpTo(WearRoutes.SYNC) { inclusive = true }
+                }
+            } else if (isPostWorkout) {
+                val state = activeWorkoutViewModel.uiState.value
+                val planId = state.activePlanId.orEmpty().ifEmpty { "default" }
+                val day = state.currentDay
+                navController.navigate(WearRoutes.postWorkoutSummary(planId, day)) {
+                    popUpTo(WearRoutes.SYNC) { inclusive = true }
+                }
+            } else {
+                navController.navigate(WearRoutes.DAY_SELECTION) {
+                    popUpTo(WearRoutes.SYNC) { inclusive = true }
+                }
+            }
+        }
+    }
+
+    WearSyncScreen(
+        uiState = syncUiState,
+        onCancel = { syncViewModel.cancelSync() },
+    )
+}
+
+@Composable
 private fun DaySelectionDestination(
     viewModel: WearDaySelectionViewModel,
     navController: NavHostController,
@@ -169,7 +232,7 @@ private fun DaySelectionDestination(
         isUpdateAvailable = daySelectionState.isUpdateAvailable,
         onCheckUpdate = { viewModel.checkForUpdates(localContext) },
         onPerformUpdate = {
-            val activity = localContext as? android.app.Activity
+            val activity = localContext as? Activity
             if (activity != null) {
                 viewModel.performImmediateUpdate(activity)
             }
@@ -260,7 +323,7 @@ private fun ActiveWorkoutDestination(
             activeWorkoutViewModel.completeSet()
             val state = activeWorkoutViewModel.uiState.value
             if (state.isRoutineCompleted) {
-                navController.navigate(WearRoutes.postWorkoutSummary(planId, day)) {
+                navController.navigate(WearRoutes.sync(isPostWorkout = true)) {
                     popUpTo(WearRoutes.DAY_SELECTION)
                 }
             } else if (activeWorkoutViewModel.trainingStepState.value is TrainingStepState.Cooldown) {
@@ -271,7 +334,7 @@ private fun ActiveWorkoutDestination(
         onTogglePause = { activeWorkoutViewModel.togglePauseResume() },
         onFinishSession = {
             activeWorkoutViewModel.finishSession()
-            navController.navigate(WearRoutes.postWorkoutSummary(planId, day)) {
+            navController.navigate(WearRoutes.sync(isPostWorkout = true)) {
                 popUpTo(WearRoutes.DAY_SELECTION)
             }
         },
@@ -293,7 +356,7 @@ private fun CooldownDestination(
 
     LaunchedEffect(activeUiState.trainingStepState, activeUiState.isRoutineCompleted) {
         if (activeUiState.isRoutineCompleted) {
-            navController.navigate(WearRoutes.postWorkoutSummary(planId, day)) {
+            navController.navigate(WearRoutes.sync(isPostWorkout = true)) {
                 popUpTo(WearRoutes.DAY_SELECTION)
             }
         } else if (activeUiState.trainingStepState is TrainingStepState.Active) {
@@ -312,7 +375,7 @@ private fun CooldownDestination(
             activeWorkoutViewModel.skipCooldown()
             val state = activeWorkoutViewModel.uiState.value
             if (state.isRoutineCompleted) {
-                navController.navigate(WearRoutes.postWorkoutSummary(planId, day)) {
+                navController.navigate(WearRoutes.sync(isPostWorkout = true)) {
                     popUpTo(WearRoutes.DAY_SELECTION)
                 }
             } else {

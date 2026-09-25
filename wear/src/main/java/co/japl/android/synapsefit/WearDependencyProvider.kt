@@ -1,6 +1,7 @@
 package co.japl.android.synapsefit
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Room
 import co.japl.android.synapsefit.core.port.secondary.ActiveSessionRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WearSensorPort
@@ -11,6 +12,9 @@ import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.GetActiveWorkoutSessionUseCase
 import co.japl.android.synapsefit.core.usecase.GetGroupedWorkoutHistoryUseCase
 import co.japl.android.synapsefit.core.usecase.GetTodayRoutineUseCase
+import co.japl.android.synapsefit.core.usecase.ObserveWearConnectionUseCase
+import co.japl.android.synapsefit.core.usecase.PerformWearSyncUseCase
+import co.japl.android.synapsefit.core.usecase.SyncPendingWorkoutLogsUseCase
 import co.japl.android.synapsefit.services.database.SynapseFitDatabase
 import co.japl.android.synapsefit.services.repository.InMemoryActiveSessionAdapter
 import co.japl.android.synapsefit.services.repository.WorkoutLogRepositoryAdapter
@@ -37,6 +41,9 @@ object WearDependencyProvider {
     lateinit var getTodayRoutineUseCase: GetTodayRoutineUseCase
     lateinit var getActiveWorkoutSessionUseCase: GetActiveWorkoutSessionUseCase
     lateinit var getGroupedWorkoutHistoryUseCase: GetGroupedWorkoutHistoryUseCase
+    lateinit var performWearSyncUseCase: PerformWearSyncUseCase
+    lateinit var observeWearConnectionUseCase: ObserveWearConnectionUseCase
+    lateinit var syncPendingWorkoutLogsUseCase: SyncPendingWorkoutLogsUseCase
 
     @Synchronized
     fun initialize(context: Context) {
@@ -61,6 +68,16 @@ object WearDependencyProvider {
         getTodayRoutineUseCase = GetTodayRoutineUseCase(workoutPlanRepository, workoutLogRepository)
         getActiveWorkoutSessionUseCase = GetActiveWorkoutSessionUseCase(activeSessionRepository)
         getGroupedWorkoutHistoryUseCase = GetGroupedWorkoutHistoryUseCase(workoutLogRepository)
+        observeWearConnectionUseCase = ObserveWearConnectionUseCase(wearSyncPort)
+        syncPendingWorkoutLogsUseCase = SyncPendingWorkoutLogsUseCase(wearSyncPort)
+        performWearSyncUseCase =
+            PerformWearSyncUseCase(
+                wearSyncPort = wearSyncPort,
+                wearStateMirrorPort = wearStateMirrorPort,
+                workoutPlanRepository = workoutPlanRepository,
+                workoutLogRepository = workoutLogRepository,
+                activeSessionRepository = activeSessionRepository,
+            )
 
         isInitialized = true
         requestActivePlanFromPhone(appContext)
@@ -79,7 +96,7 @@ object WearDependencyProvider {
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("WearDependencyProvider", "Error requesting active plan", e)
+                Log.e("WearDependencyProvider", "Error requesting active plan", e)
             }
         }
     }

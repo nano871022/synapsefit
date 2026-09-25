@@ -1,6 +1,7 @@
 package co.japl.android.synapsefit.services.wear
 
 import android.content.Context
+import android.util.Log
 import co.japl.android.synapsefit.core.port.secondary.WearSyncPort
 import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CoroutineScope
@@ -9,12 +10,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import org.json.JSONArray
 import org.json.JSONObject
 import java.nio.charset.StandardCharsets
+import kotlin.coroutines.resume
 
 class WearableSyncAdapter(private val context: Context? = null) : WearSyncPort {
-    private val _isPhoneConnected = MutableStateFlow(true)
+    private val _isPhoneConnected = MutableStateFlow(false)
     override val isPhoneConnected: StateFlow<Boolean> = _isPhoneConnected.asStateFlow()
 
     private val _pendingSyncDataCount = MutableStateFlow(0)
@@ -24,6 +27,28 @@ class WearableSyncAdapter(private val context: Context? = null) : WearSyncPort {
 
     override fun onConnectionStateChanged(isConnected: Boolean) {
         _isPhoneConnected.value = isConnected
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    override suspend fun checkConnectionStatus(): Boolean {
+        val ctx = context ?: return _isPhoneConnected.value
+        return suspendCancellableCoroutine { continuation ->
+            try {
+                Wearable.getNodeClient(ctx).connectedNodes
+                    .addOnSuccessListener { nodes ->
+                        val hasConnected = nodes.isNotEmpty()
+                        _isPhoneConnected.value = hasConnected
+                        if (continuation.isActive) continuation.resume(hasConnected)
+                    }
+                    .addOnFailureListener {
+                        _isPhoneConnected.value = false
+                        if (continuation.isActive) continuation.resume(false)
+                    }
+            } catch (_: Exception) {
+                _isPhoneConnected.value = false
+                if (continuation.isActive) continuation.resume(false)
+            }
+        }
     }
 
     override fun queueDataForDeferredSync(
@@ -64,7 +89,7 @@ class WearableSyncAdapter(private val context: Context? = null) : WearSyncPort {
                             }
                         }
                     } catch (e: Exception) {
-                        android.util.Log.e("WearableSyncAdapter", "Error flushing sync queue", e)
+                        Log.e("WearableSyncAdapter", "Error flushing sync queue", e)
                     }
                 }
             }
