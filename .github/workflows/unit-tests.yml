@@ -66,7 +66,7 @@ jobs:
 
       - name: Request Jules Fix
         if: failure()
-        uses: google-labs-code/jules-invoke@v1
+        uses: google-labs-code/jules-invoke@v1.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           prompt: |
