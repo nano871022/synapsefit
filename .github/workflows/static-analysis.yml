@@ -31,7 +31,29 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run Ktlint & Detekt
-        run: ./gradlew ktlintCheck detekt -x :about:ktlintCheck -x :about:detekt
+        id: run_lint
+        run: |
+          set -o pipefail
+          ./gradlew ktlintCheck detekt -x :about:ktlintCheck -x :about:detekt 2>&1 | tee build_errors.log
+
+      - name: Read Error Log
+        if: failure()
+        id: error_log
+        run: |
+          ERROR_CONTENT=$(tail -n 50 build_errors.log)
+          echo "log_content<<EOF" >> $GITHUB_ENV
+          echo "$ERROR_CONTENT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Request Jules Fix
+        if: failure()
+        uses: google/jules-sdk@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            The CI pipeline failed during the lint/test phase.
+            Please analyze the following error logs and apply a fix to the repository:
+            ${{ env.log_content }}
 
       - name: Upload Static Analysis Reports Artifact
         if: always()
