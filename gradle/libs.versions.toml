@@ -2,7 +2,7 @@
 # SDK Versions
 minSdk = "26"
 targetSdk = "36"
-compileSdk = "36"
+compileSdk = "37"
 
 # Build Tools / Plugins
 agp = "8.7.2"
