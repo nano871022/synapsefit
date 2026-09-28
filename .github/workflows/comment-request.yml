@@ -1,0 +1,41 @@
+name: PR Comment Request
+
+on:
+  workflow_call:
+    inputs:
+      error_log_test:
+        type: string
+        required: false
+      error_log_lint:
+        type: string
+        required: false
+
+jobs:
+  comment-request:
+    name: Comment failure errors on PR
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Post comment on PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          LINT_LOG: ${{ inputs.error_log_lint }}
+          TEST_LOG: ${{ inputs.error_log_test }}
+        run: |
+          printf '%s\n' \
+            '### CI failure details' \
+            '' \
+            "**Workflow:** ${{ github.workflow }}" \
+            "**Run:** ${{ github.run_number }}" \
+            "**Commit:** ${{ github.sha }}" \
+            '' \
+            '#### Lint errors' \
+            '```' "${LINT_LOG:-No lint errors reported.}" '```' \
+            '' \
+            '#### Test errors' \
+            '```' "${TEST_LOG:-No test errors reported.}" '```' > "$RUNNER_TEMP/ci-comment.md"
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/ci-comment.md"

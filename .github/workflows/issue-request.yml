@@ -1,0 +1,40 @@
+name: Issue Request
+
+on:
+  workflow_call:
+    inputs:
+      error_log_test:
+        type: string
+        required: false
+      error_log_lint:
+        type: string
+        required: false
+
+jobs:
+  issue-request:
+    name: Create issue on failure
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - name: Create GitHub issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINT_LOG: ${{ inputs.error_log_lint }}
+          TEST_LOG: ${{ inputs.error_log_test }}
+        run: |
+          printf '%s\n' \
+            'Automated issue created by the CI pipeline.' \
+            '' \
+            "**Workflow:** ${{ github.workflow }}" \
+            "**Run:** ${{ github.run_number }}" \
+            "**Commit:** ${{ github.sha }}" \
+            "**Ref:** ${{ github.ref }}" \
+            '' \
+            '### Lint errors' \
+            '```' "${LINT_LOG:-No lint errors reported.}" '```' \
+            '' \
+            '### Test errors' \
+            '```' "${TEST_LOG:-No test errors reported.}" '```' > "$RUNNER_TEMP/ci-issue.md"
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "[CI Alert] Pipeline failed on ${{ github.sha }}" --body-file "$RUNNER_TEMP/ci-issue.md" --label bug

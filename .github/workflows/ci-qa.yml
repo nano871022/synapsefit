@@ -5,6 +5,17 @@ on:
     branches: [ "main", "master", "develop" ]
   pull_request:
     branches: [ "main", "master", "develop" ]
+  workflow_dispatch:
+    inputs:
+      failure_action:
+        description: 'Action to take when CI fails'
+        required: true
+        type: choice
+        default: comments
+        options:
+          - comments
+          - issues
+          - jules
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -20,10 +31,44 @@ jobs:
     uses: ./.github/workflows/unit-tests.yml
     secrets: inherit
 
+  comment-request:
+    needs: [unit-tests, static-analysis]
+    if: failure() && github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/comment-request.yml
+    with:
+      error_log_test: ${{ needs.unit-tests.outputs.error_log }}
+      error_log_lint: ${{ needs.static-analysis.outputs.error_log }}
+
+  issue-request:
+    needs: [unit-tests, static-analysis]
+    if: failure() && github.event_name == 'workflow_dispatch' && inputs.failure_action == 'issues'
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/issue-request.yml
+    with:
+      error_log_test: ${{ needs.unit-tests.outputs.error_log }}
+      error_log_lint: ${{ needs.static-analysis.outputs.error_log }}
+
+  jules-request:
+    needs: [unit-tests, static-analysis]
+    if: failure() && github.event_name == 'workflow_dispatch' && inputs.failure_action == 'jules' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: ./.github/workflows/jules-request.yml
+    secrets: inherit
+    with:
+      error_log_test: ${{ needs.unit-tests.outputs.error_log }}
+      error_log_lint: ${{ needs.static-analysis.outputs.error_log }}
+
   build-release:
     name: Production Release Build
-    needs: static-analysis
-    if: github.ref == 'refs/heads/master'
+    needs: [static-analysis, unit-tests]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
     uses: ./.github/workflows/build-release.yml
     secrets: inherit
 

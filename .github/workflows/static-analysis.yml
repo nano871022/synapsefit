@@ -2,11 +2,17 @@ name: Static Analysis
 
 on:
   workflow_call:
+    outputs:
+      error_log:
+        description: "Static analysis error log"
+        value: ${{ jobs.static-analysis.outputs.error_log }}
 
 jobs:
   static-analysis:
     name: Code Formatting & Static Analysis Check
     runs-on: ubuntu-latest
+    outputs:
+      error_log: ${{ steps.error_log.outputs.log_content }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -40,22 +46,14 @@ jobs:
         if: failure()
         id: error_log
         run: |
-          ERROR_CONTENT=$(tail -n 50 build_errors.log)
-          echo "log_content<<EOF" >> $GITHUB_ENV
-          echo "$ERROR_CONTENT" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      - name: Request Jules Fix
-        if: failure()
-        uses: google-labs-code/jules-invoke@v1.0.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          prompt: |
-            The CI pipeline failed during the lint/test phase.
-            Please analyze the following error logs and apply a fix to the repository:
-            ${{ env.log_content }}
-          jules_api_key: ${{ secrets.API_KEY_JULES }}
-          starting_branch: ${{ github.head_ref || github.ref_name }}
+          if [ -f build_errors.log ]; then
+            ERROR_CONTENT=$(tail -n 50 build_errors.log)
+          else
+            ERROR_CONTENT="No build_errors.log file found."
+          fi
+          echo "log_content<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$ERROR_CONTENT" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Upload Static Analysis Reports Artifact
         if: always()

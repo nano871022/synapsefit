@@ -1,0 +1,33 @@
+name: Jules Invoke Request
+
+on:
+  workflow_call:
+    inputs:
+      error_log_test:
+        type: string
+        required: false
+      error_log_lint:
+        type: string
+        required: false
+
+jobs:
+  jules-request:
+    name: Request Jules fix
+    runs-on: ubuntu-latest
+    environment: PROD
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Request Jules fix
+        uses: google-labs-code/jules-invoke@v1.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            The CI pipeline failed during lint or tests. Analyze the logs and fix the repository.
+            Lint errors:
+            ${{ inputs.error_log_lint }}
+            Test errors:
+            ${{ inputs.error_log_test }}
+          jules_api_key: ${{ secrets.API_KEY_JULES }}
+          starting_branch: ${{ github.head_ref || github.ref_name }}
