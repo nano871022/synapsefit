@@ -525,12 +525,10 @@ fun AppNavHost(
 
         // V11: About Developer
         composable(Routes.SETTINGS_ABOUT) {
-            val appContext = LocalContext.current
-            val packageInfo = appContext.packageManager.getPackageInfo(appContext.packageName, 0)
-            co.com.japl.homeconnect.about.ui.About(
-                versionDetail = packageInfo.versionName.orEmpty(),
-                applicationId = appContext.packageName,
-            )
+            val viewModel: co.japl.android.synapsefit.app.controller.settings.AboutDeveloperViewModel =
+                androidx.lifecycle.viewmodel.compose.viewModel()
+            val state by viewModel.uiState.collectAsState()
+            co.japl.android.synapsefit.app.ui.settings.AboutDeveloperScreen(state = state)
         }
     }
 }
