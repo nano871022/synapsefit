@@ -1,3 +1,5 @@
+@file:Suppress("LongParameterList", "TooGenericExceptionCaught", "MagicNumber")
+
 package co.japl.android.synapsefit.core.usecase
 
 import co.japl.android.synapsefit.core.domain.model.AnatomicalZone
@@ -33,25 +35,28 @@ class DimensionalMetricTrackingUseCase(
             val now = System.currentTimeMillis()
             val startTime = if (timeRangeDays > 0) now - (timeRangeDays.toLong() * millisPerDay) else 0L
 
-            val filtered = measurements
-                .filter { it.createdAt >= startTime }
-                .sortedBy { it.createdAt }
+            val filtered =
+                measurements
+                    .filter { it.createdAt >= startTime }
+                    .sortedBy { it.createdAt }
 
-            val points = filtered.mapNotNull { m ->
-                val valForZone = when (metric) {
-                    AnatomicalZone.WEIGHT -> m.weightKg
-                    AnatomicalZone.CHEST -> m.chestCm
-                    AnatomicalZone.WAIST -> m.waistCm
-                    AnatomicalZone.HIP -> m.hipCm
-                    AnatomicalZone.BICEP_LEFT -> m.bicepLeftCm
-                    AnatomicalZone.BICEP_RIGHT -> m.bicepRightCm
-                    AnatomicalZone.THIGH_LEFT -> m.thighLeftCm
-                    AnatomicalZone.THIGH_RIGHT -> m.thighRightCm
+            val points =
+                filtered.mapNotNull { m ->
+                    val valForZone =
+                        when (metric) {
+                            AnatomicalZone.WEIGHT -> m.weightKg
+                            AnatomicalZone.CHEST -> m.chestCm
+                            AnatomicalZone.WAIST -> m.waistCm
+                            AnatomicalZone.HIP -> m.hipCm
+                            AnatomicalZone.BICEP_LEFT -> m.bicepLeftCm
+                            AnatomicalZone.BICEP_RIGHT -> m.bicepRightCm
+                            AnatomicalZone.THIGH_LEFT -> m.thighLeftCm
+                            AnatomicalZone.THIGH_RIGHT -> m.thighRightCm
+                        }
+                    valForZone?.let { v ->
+                        MeasurementDataPoint(timestamp = m.createdAt, value = v.toFloat())
+                    }
                 }
-                valForZone?.let { v ->
-                    MeasurementDataPoint(timestamp = m.createdAt, value = v.toFloat())
-                }
-            }
 
             val values = points.map { it.value.toDouble() }
             val avg = if (values.isNotEmpty()) values.average() else 0.0
@@ -88,20 +93,21 @@ class DimensionalMetricTrackingUseCase(
             )
         } else {
             val now = System.currentTimeMillis()
-            val measurement = BodyMeasurement(
-                id = java.util.UUID.randomUUID().toString(),
-                createdAt = now,
-                updatedAt = now,
-                weightKg = weightKg,
-                chestCm = chestCm,
-                waistCm = waistCm,
-                hipCm = hipCm,
-                bicepLeftCm = bicepLeftCm,
-                bicepRightCm = bicepRightCm,
-                thighLeftCm = thighLeftCm,
-                thighRightCm = thighRightCm,
-                notes = notes,
-            )
+            val measurement =
+                BodyMeasurement(
+                    id = java.util.UUID.randomUUID().toString(),
+                    createdAt = now,
+                    updatedAt = now,
+                    weightKg = weightKg,
+                    chestCm = chestCm,
+                    waistCm = waistCm,
+                    hipCm = hipCm,
+                    bicepLeftCm = bicepLeftCm,
+                    bicepRightCm = bicepRightCm,
+                    thighLeftCm = thighLeftCm,
+                    thighRightCm = thighRightCm,
+                    notes = notes,
+                )
             try {
                 bodyMeasurementRepositoryPort.saveMeasurement(measurement)
                 Result.success(Unit)

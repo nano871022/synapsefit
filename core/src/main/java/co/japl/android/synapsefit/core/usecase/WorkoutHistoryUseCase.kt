@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package co.japl.android.synapsefit.core.usecase
 
 import co.japl.android.synapsefit.core.domain.model.history.WorkoutSummaryItem
@@ -5,6 +7,8 @@ import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+
+private const val DEFAULT_TOTAL_SESSIONS = 12
 
 data class WorkoutHistoryData(
     val summaries: List<WorkoutSummaryItem>,
@@ -23,7 +27,7 @@ class WorkoutHistoryUseCase(
         return combine(summariesFlow, plansFlow) { summaries, plans ->
             val activePlan = plans.firstOrNull { it.isActive } ?: plans.firstOrNull()
             val activePlanTitle = activePlan?.title ?: ""
-            val activePlanTotalSessions = activePlan?.totalSessions ?: 12
+            val activePlanTotalSessions = activePlan?.totalSessions ?: DEFAULT_TOTAL_SESSIONS
 
             WorkoutHistoryData(
                 summaries = summaries,

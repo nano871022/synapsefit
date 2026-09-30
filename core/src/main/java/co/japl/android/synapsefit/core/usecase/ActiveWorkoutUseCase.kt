@@ -1,3 +1,5 @@
+@file:Suppress("LongParameterList", "TooGenericExceptionCaught", "UnusedParameter")
+
 package co.japl.android.synapsefit.core.usecase
 
 import co.japl.android.synapsefit.core.domain.model.ActiveWorkoutSessionState
@@ -19,7 +21,10 @@ class ActiveWorkoutUseCase(
     private val wearStateMirrorPort: WearStateMirrorPort? = null,
     private val getExerciseMediaUseCase: GetExerciseMediaUseCase? = null,
 ) {
-    fun getPlanWithExercisesForDay(planId: String, day: Int): Flow<Pair<WorkoutPlan, List<Exercise>>?> {
+    fun getPlanWithExercisesForDay(
+        planId: String,
+        day: Int,
+    ): Flow<Pair<WorkoutPlan, List<Exercise>>?> {
         return workoutPlanRepositoryPort.getPlanWithExercisesForDay(planId, day)
     }
 
@@ -38,18 +43,19 @@ class ActiveWorkoutUseCase(
         heartRateBpm: Int? = null,
     ): Result<Unit> {
         val now = System.currentTimeMillis()
-        val log = WorkoutLog(
-            id = java.util.UUID.randomUUID().toString(),
-            exerciseId = exerciseId,
-            repsCompleted = reps,
-            weightLiftedKg = weightKg,
-            heartRateBpm = heartRateBpm,
-            sourceDevice = SourceDevice.MOBILE,
-            durationSeconds = durationSeconds,
-            timestamp = now,
-            createdAt = now,
-            updatedAt = now,
-        )
+        val log =
+            WorkoutLog(
+                id = java.util.UUID.randomUUID().toString(),
+                exerciseId = exerciseId,
+                repsCompleted = reps,
+                weightLiftedKg = weightKg,
+                heartRateBpm = heartRateBpm,
+                sourceDevice = SourceDevice.MOBILE,
+                durationSeconds = durationSeconds,
+                timestamp = now,
+                createdAt = now,
+                updatedAt = now,
+            )
         return try {
             workoutLogRepositoryPort.saveLog(log)
             Result.success(Unit)

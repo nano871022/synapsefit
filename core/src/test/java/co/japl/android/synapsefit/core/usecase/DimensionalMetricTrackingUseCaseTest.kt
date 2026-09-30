@@ -15,7 +15,6 @@ import org.junit.Before
 import org.junit.Test
 
 class DimensionalMetricTrackingUseCaseTest {
-
     private lateinit var bodyMeasurementRepositoryPort: BodyMeasurementRepositoryPort
     private lateinit var useCase: DimensionalMetricTrackingUseCase
 
@@ -26,32 +25,35 @@ class DimensionalMetricTrackingUseCaseTest {
     }
 
     @Test
-    fun testGetMeasurementHistory() = runBlocking {
-        val now = System.currentTimeMillis()
-        val measurement = BodyMeasurement(id = "m1", createdAt = now, updatedAt = now, weightKg = 75.0)
-        every { bodyMeasurementRepositoryPort.getMeasurementsHistory() } returns flowOf(listOf(measurement))
+    fun testGetMeasurementHistory() =
+        runBlocking {
+            val now = System.currentTimeMillis()
+            val measurement = BodyMeasurement(id = "m1", createdAt = now, updatedAt = now, weightKg = 75.0)
+            every { bodyMeasurementRepositoryPort.getMeasurementsHistory() } returns flowOf(listOf(measurement))
 
-        val result = useCase.getMeasurementHistory().first()
-        assertEquals(1, result.size)
-        assertEquals("m1", result[0].id)
-    }
-
-    @Test
-    fun testGetMetricTrend() = runBlocking {
-        val now = System.currentTimeMillis()
-        val m1 = BodyMeasurement(id = "m1", createdAt = now - 1000, updatedAt = now, weightKg = 70.0)
-        val m2 = BodyMeasurement(id = "m2", createdAt = now, updatedAt = now, weightKg = 80.0)
-        every { bodyMeasurementRepositoryPort.getMeasurementsHistory() } returns flowOf(listOf(m1, m2))
-
-        val trend = useCase.getMetricTrend(AnatomicalZone.WEIGHT, 30).first()
-        assertEquals(2, trend.dataPoints.size)
-        assertEquals(75.0, trend.averageValue, 0.01)
-    }
+            val result = useCase.getMeasurementHistory().first()
+            assertEquals(1, result.size)
+            assertEquals("m1", result[0].id)
+        }
 
     @Test
-    fun testSaveMeasurement() = runBlocking {
-        val result = useCase.saveMeasurement(weightKg = 72.5)
-        assertTrue(result.isSuccess)
-        coVerify { bodyMeasurementRepositoryPort.saveMeasurement(any()) }
-    }
+    fun testGetMetricTrend() =
+        runBlocking {
+            val now = System.currentTimeMillis()
+            val m1 = BodyMeasurement(id = "m1", createdAt = now - 1000, updatedAt = now, weightKg = 70.0)
+            val m2 = BodyMeasurement(id = "m2", createdAt = now, updatedAt = now, weightKg = 80.0)
+            every { bodyMeasurementRepositoryPort.getMeasurementsHistory() } returns flowOf(listOf(m1, m2))
+
+            val trend = useCase.getMetricTrend(AnatomicalZone.WEIGHT, 30).first()
+            assertEquals(2, trend.dataPoints.size)
+            assertEquals(75.0, trend.averageValue, 0.01)
+        }
+
+    @Test
+    fun testSaveMeasurement() =
+        runBlocking {
+            val result = useCase.saveMeasurement(weightKg = 72.5)
+            assertTrue(result.isSuccess)
+            coVerify { bodyMeasurementRepositoryPort.saveMeasurement(any()) }
+        }
 }

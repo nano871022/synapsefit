@@ -15,7 +15,6 @@ import org.junit.Before
 import org.junit.Test
 
 class WorkoutDetailUseCaseTest {
-
     private lateinit var workoutLogRepositoryPort: WorkoutLogRepositoryPort
     private lateinit var useCase: GetWorkoutDetailUseCase
 
@@ -26,40 +25,43 @@ class WorkoutDetailUseCaseTest {
     }
 
     @Test
-    fun testInvokeWithEmptyRecords() = runBlocking {
-        every { workoutLogRepositoryPort.getWorkoutDetailRecords("2025-01-01", 1) } returns flowOf(emptyList())
+    fun testInvokeWithEmptyRecords() =
+        runBlocking {
+            every { workoutLogRepositoryPort.getWorkoutDetailRecords("2025-01-01", 1) } returns flowOf(emptyList())
 
-        val result = useCase("2025-01-01", 1).first()
-        assertNull(result)
-    }
+            val result = useCase("2025-01-01", 1).first()
+            assertNull(result)
+        }
 
     @Test
-    fun testInvokeWithRecords() = runBlocking {
-        val record = WorkoutDetailRecord(
-            logId = "l1",
-            exerciseId = "e1",
-            planId = "p1",
-            planTitle = "Plan 1",
-            day = 1,
-            exerciseName = "Bench Press",
-            exerciseDetail = "Detail",
-            muscleGroup = "Chest",
-            repsCompleted = 10,
-            weightLiftedKg = 80.0,
-            heartRateBpm = 120,
-            durationSeconds = 60L,
-            sourceDevice = SourceDevice.MOBILE,
-            timestamp = 1000L,
-            dateIso = "2025-01-01",
-        )
+    fun testInvokeWithRecords() =
+        runBlocking {
+            val record =
+                WorkoutDetailRecord(
+                    logId = "l1",
+                    exerciseId = "e1",
+                    planId = "p1",
+                    planTitle = "Plan 1",
+                    day = 1,
+                    exerciseName = "Bench Press",
+                    exerciseDetail = "Detail",
+                    muscleGroup = "Chest",
+                    repsCompleted = 10,
+                    weightLiftedKg = 80.0,
+                    heartRateBpm = 120,
+                    durationSeconds = 60L,
+                    sourceDevice = SourceDevice.MOBILE,
+                    timestamp = 1000L,
+                    dateIso = "2025-01-01",
+                )
 
-        every { workoutLogRepositoryPort.getWorkoutDetailRecords("2025-01-01", 1) } returns flowOf(listOf(record))
+            every { workoutLogRepositoryPort.getWorkoutDetailRecords("2025-01-01", 1) } returns flowOf(listOf(record))
 
-        val result = useCase("2025-01-01", 1).first()
-        assertNotNull(result)
-        assertEquals("p1", result?.planId)
-        assertEquals("Plan 1", result?.planTitle)
-        assertEquals(1, result?.exercises?.size)
-        assertEquals("Bench Press", result?.exercises?.get(0)?.exerciseName)
-    }
+            val result = useCase("2025-01-01", 1).first()
+            assertNotNull(result)
+            assertEquals("p1", result?.planId)
+            assertEquals("Plan 1", result?.planTitle)
+            assertEquals(1, result?.exercises?.size)
+            assertEquals("Bench Press", result?.exercises?.get(0)?.exerciseName)
+        }
 }
