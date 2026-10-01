@@ -3,13 +3,13 @@ package co.japl.android.synapsefit.core.usecase
 import co.japl.android.synapsefit.core.port.secondary.WearSyncPort
 import kotlinx.coroutines.flow.StateFlow
 
-class ObserveWearConnectionUseCase(
+class ObserveWearConnectionUseCase( : IObserveWearConnectionUseCase
     private val wearSyncPort: WearSyncPort,
-) {
-    val isPhoneConnected: StateFlow<Boolean>
+), IObserveWearConnectionUseCase : IObserveWearConnectionUseCase {
+    override val isPhoneConnected: StateFlow<Boolean>
         get() = wearSyncPort.isPhoneConnected
 
-    suspend fun checkConnection(): Boolean {
+    override suspend override fun checkConnection(): Boolean {
         return wearSyncPort.checkConnectionStatus()
     }
 }

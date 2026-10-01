@@ -33,6 +33,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":interfaces"))
     implementation(project(":core"))
     implementation(project(":util"))
 

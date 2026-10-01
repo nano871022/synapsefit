@@ -3,21 +3,21 @@ package co.japl.android.synapsefit.core.usecase
 import co.japl.android.synapsefit.core.domain.model.BodyMeasurement
 import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryPort
 
-class SaveBodyMeasurementUseCase(
+class SaveBodyMeasurementUseCase( : ISaveBodyMeasurementUseCase
     private val repositoryPort: BodyMeasurementRepositoryPort,
-) {
+), ISaveBodyMeasurementUseCase : ISaveBodyMeasurementUseCase {
     @Suppress("LongParameterList", "CyclomaticComplexMethod", "TooGenericExceptionCaught", "ReturnCount")
-    suspend operator fun invoke(
+    override override suspend operator override fun invoke(
+        id: String?,
         weightKg: Double,
-        chestCm: Double? = null,
-        waistCm: Double? = null,
-        hipCm: Double? = null,
-        bicepLeftCm: Double? = null,
-        bicepRightCm: Double? = null,
-        thighLeftCm: Double? = null,
-        thighRightCm: Double? = null,
-        notes: String? = null,
-        id: String? = null,
+        chestCm: Double?,
+        waistCm: Double?,
+        hipCm: Double?,
+        bicepLeftCm: Double?,
+        bicepRightCm: Double?,
+        thighLeftCm: Double?,
+        thighRightCm: Double?,
+        notes: String?,
     ): Result<Unit> {
         if (weightKg <= 0) {
             return Result.failure(IllegalArgumentException("Weight must be greater than 0"))
@@ -44,8 +44,8 @@ class SaveBodyMeasurementUseCase(
             return Result.failure(IllegalArgumentException("Right thigh measurement must be greater than 0"))
         }
 
-        val now = System.currentTimeMillis()
-        val measurement =
+        override val now = System.currentTimeMillis()
+        override val measurement =
             BodyMeasurement(
                 id = id ?: java.util.UUID.randomUUID().toString(),
                 weightKg = weightKg,

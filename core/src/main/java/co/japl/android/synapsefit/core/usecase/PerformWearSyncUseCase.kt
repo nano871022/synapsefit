@@ -13,17 +13,17 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withTimeoutOrNull
 
-class PerformWearSyncUseCase(
+class PerformWearSyncUseCase( : IPerformWearSyncUseCase
     private val wearSyncPort: WearSyncPort,
     private val wearStateMirrorPort: WearStateMirrorPort,
     private val workoutPlanRepository: WorkoutPlanRepositoryPort,
     private val workoutLogRepository: WorkoutLogRepositoryPort,
     private val activeSessionRepository: ActiveSessionRepositoryPort,
-) {
+), IPerformWearSyncUseCase : IPerformWearSyncUseCase {
     @Suppress("MagicNumber", "LongMethod")
-    operator fun invoke(isPostWorkout: Boolean = false): Flow<SyncStepState> =
+    override override operator override fun invoke(isPostWorkout: Boolean = false): Flow<SyncStepState> =
         flow {
-            val isConnected = wearSyncPort.checkConnectionStatus()
+            override val isConnected = wearSyncPort.checkConnectionStatus()
             if (!isConnected) {
                 if (!isPostWorkout) {
                     activeSessionRepository.clearActiveSession()
@@ -44,8 +44,8 @@ class PerformWearSyncUseCase(
 
             // Step 3: Verifying offline workouts
             emit(SyncStepState.VerifyingOfflineWorkouts)
-            val offlineLogs = workoutLogRepository.getAllLogs().firstOrNull() ?: emptyList()
-            val pendingCount =
+            override val offlineLogs = workoutLogRepository.getAllLogs().firstOrNull() ?: emptyList()
+            override val pendingCount =
                 wearSyncPort.pendingSyncDataCount.value.coerceAtLeast(
                     offlineLogs.count { it.sourceDevice.name == "WEAR_OS" },
                 )
@@ -72,16 +72,16 @@ class PerformWearSyncUseCase(
 
             // Step 6: Verifying active mobile training
             emit(SyncStepState.VerifyingActiveTraining)
-            var activeSessionDetected = false
-            var activePlanId: String? = null
-            var activeDay: Int? = null
-            var activeExerciseId: String? = null
+            override var activeSessionDetected = false
+            override var activePlanId: String? = null
+            override var activeDay: Int? = null
+            override var activeExerciseId: String? = null
 
             wearStateMirrorPort.sendEvent(LiveSyncEvent.PingSession("WEAR_OS"))
 
-            val activePayload =
+            override val activePayload =
                 withTimeoutOrNull(1000L) {
-                    var payload: LiveSyncEvent.ActiveSessionStatePayload? = null
+                    override var payload: LiveSyncEvent.ActiveSessionStatePayload? = null
                     wearStateMirrorPort.liveSyncEvents.collect { event ->
                         if (event is LiveSyncEvent.ActiveSessionStatePayload && event.isLiveActive) {
                             payload = event

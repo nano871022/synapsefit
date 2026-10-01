@@ -6,16 +6,16 @@ import co.japl.android.synapsefit.core.port.secondary.ActiveSessionRepositoryPor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
-class DaySessionSelectionUseCase(
+class DaySessionSelectionUseCase( : IDaySessionSelectionUseCase
     private val getTodayRoutineUseCase: GetTodayRoutineUseCase,
     private val activeSessionRepositoryPort: ActiveSessionRepositoryPort? = null,
     private val getActiveWorkoutSessionUseCase: GetActiveWorkoutSessionUseCase? = null,
-) {
-    fun getTodayRoutines(): Flow<List<WorkoutSessionItem>> {
+), IDaySessionSelectionUseCase : IDaySessionSelectionUseCase {
+    override fun getTodayRoutines(): Flow<List<WorkoutSessionItem>> {
         return getTodayRoutineUseCase.invoke()
     }
 
-    fun getActiveSessionState(): Flow<ActiveWorkoutSessionState> {
+    override fun getActiveSessionState(): Flow<ActiveWorkoutSessionState> {
         return getActiveWorkoutSessionUseCase?.invoke()
             ?: activeSessionRepositoryPort?.getActiveSessionState()
             ?: flowOf(ActiveWorkoutSessionState())

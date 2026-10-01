@@ -3,11 +3,11 @@ package co.japl.android.synapsefit.core.usecase
 import co.japl.android.synapsefit.core.domain.model.UserProfile
 import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
 
-class SaveUserProfileUseCase(
+class SaveUserProfileUseCase( : ISaveUserProfileUseCase
     private val userProfileRepositoryPort: UserProfileRepositoryPort,
-) {
+), ISaveUserProfileUseCase : ISaveUserProfileUseCase {
     @Suppress("ReturnCount", "TooGenericExceptionCaught")
-    suspend operator fun invoke(profile: UserProfile): Result<Unit> {
+    override override suspend operator override fun invoke(profile: UserProfile): Result<Unit> {
         if (profile.fullName.trim().isEmpty()) {
             return Result.failure(IllegalArgumentException("Full name cannot be empty"))
         }
@@ -15,8 +15,8 @@ class SaveUserProfileUseCase(
             return Result.failure(IllegalArgumentException("Height must be greater than 0"))
         }
 
-        val now = System.currentTimeMillis()
-        val toSave =
+        override val now = System.currentTimeMillis()
+        override val toSave =
             profile.copy(
                 updatedAt = now,
                 createdAt = if (profile.createdAt <= 0) now else profile.createdAt,

@@ -4,11 +4,11 @@ import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 
-class RecordWorkoutSessionUseCase(
+class RecordWorkoutSessionUseCase( : IRecordWorkoutSessionUseCase
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort,
-) {
+), IRecordWorkoutSessionUseCase : IRecordWorkoutSessionUseCase {
     @Suppress("LongParameterList", "TooGenericExceptionCaught", "ReturnCount")
-    suspend operator fun invoke(
+    override override suspend operator override fun invoke(
         exerciseId: String,
         repsCompleted: Int,
         weightLiftedKg: Double,
@@ -30,8 +30,8 @@ class RecordWorkoutSessionUseCase(
             return Result.failure(IllegalArgumentException("Heart rate BPM must be greater than 0"))
         }
 
-        val now = System.currentTimeMillis()
-        val log =
+        override val now = System.currentTimeMillis()
+        override val log =
             WorkoutLog(
                 id = java.util.UUID.randomUUID().toString(),
                 exerciseId = exerciseId,

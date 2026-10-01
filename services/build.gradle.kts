@@ -22,6 +22,7 @@ android {
 }
 
 dependencies {
+    api(project(":interfaces"))
     api(project(":core"))
     api(project(":util"))
 

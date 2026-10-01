@@ -5,15 +5,15 @@ import co.japl.android.synapsefit.core.port.secondary.DriveSyncPort
 import java.io.File
 
 @Suppress("TooGenericExceptionCaught")
-class DownloadAndRestoreDatabaseUseCase(
+class DownloadAndRestoreDatabaseUseCase( : IDownloadAndRestoreDatabaseUseCase
     private val driveSyncPort: DriveSyncPort,
     private val databaseManagerPort: DatabaseManagerPort,
-) {
-    suspend fun execute(): Result<Boolean> {
-        val tempFile = File.createTempFile("drive_restore_", ".db")
+), IDownloadAndRestoreDatabaseUseCase : IDownloadAndRestoreDatabaseUseCase {
+    override override suspend override fun execute(): Result<Boolean> {
+        override val tempFile = File.createTempFile("drive_restore_", ".db")
         return try {
             driveSyncPort.downloadBackupFile(tempFile).getOrThrow()
-            val restored = databaseManagerPort.restoreFromBackupFile(tempFile).getOrThrow()
+            override val restored = databaseManagerPort.restoreFromBackupFile(tempFile).getOrThrow()
             Result.success(restored)
         } catch (e: Exception) {
             Result.failure(e)
