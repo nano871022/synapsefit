@@ -11,6 +11,7 @@
 2. **State Hoisting:** Composables accept an immutable `UiState` data class and emit user events as lambda callbacks (e.g., `onSaveClick: () -> Unit`).
 3. **ViewModel Isolation:** Composables must NEVER instantiate or acquire ViewModels directly inside screen parameters. ViewModels are injected at the root navigation destination level.
 4. **Decoupled Navigation:** Composables must NEVER take `NavController` as a parameter. All routing events call ViewModel methods that communicate with `AppNavigator`.
+5. **Mandatory @Preview Coverage:** Every `*Screen` interface MUST provide `@Preview` composable functions covering all conditional states and UI options without requiring app deployment.
 
 ---
 
@@ -39,13 +40,20 @@ val OnMetricCardText = Color(0xFF2E3035)
 
 val OutlineVariantDark = Color(0xFF3A494A)
 val ErrorContainerDark = Color(0xFF93000A)
+```
 
-Typography Scale
- * Headlines (Hanken Grotesk): Metric values, total volumes, active timers.
- * Body & Titles (Inter): General labels, configuration options, exercise lists.
- * Technical Labels (JetBrains Mono): Timestamps, SHA-256 hashes, sensor units (BPM, kg, cm), sync indicators.
-3. Decoupled Navigation Pattern (AppNavigator)
-Interface & Navigation Host Integration
+### Typography Scale
+* **Headlines (Hanken Grotesk):** Metric values, total volumes, active timers.
+* **Body & Titles (Inter):** General labels, configuration options, exercise lists.
+* **Technical Labels (JetBrains Mono):** Timestamps, SHA-256 hashes, sensor units (BPM, kg, cm), sync indicators.
+
+---
+
+## 3. Decoupled Navigation Pattern (AppNavigator)
+
+### Interface & Navigation Host Integration
+
+```kotlin
 // File: :app/src/main/java/co/japl/android/synapsefit/app/navigation/AppNavHost.kt
 package co.japl.android.synapsefit.app.navigation
 
@@ -85,8 +93,13 @@ fun AppNavHost(
         composable("settings/llm") { LlmSettingsRoute() }
     }
 }
+```
 
-4. Screen Implementation Template
+---
+
+## 4. Screen Implementation Template
+
+```kotlin
 // File: :app/src/main/java/co/japl/android/synapsefit/app/ui/dashboard/DashboardScreen.kt
 package co.japl.android.synapsefit.app.ui.dashboard
 
@@ -102,7 +115,9 @@ import co.japl.android.synapsefit.ui.theme.SynapseFitTheme
 data class DashboardUiState(
     val userName: String = "",
     val latestWeightKg: Double? = null,
-    val isSyncing: Boolean = false
+    val isSyncing: Boolean = false,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 )
 
 @Composable
@@ -128,9 +143,13 @@ fun DashboardScreen(
     }
 }
 
-@Preview(showBackground = true)
+// -----------------------------------------------------------------------------
+// Preview Methods: Must provide preview functions for each conditional & option
+// -----------------------------------------------------------------------------
+
+@Preview(name = "Dashboard - Success State", showBackground = true)
 @Composable
-private fun DashboardScreenPreview() {
+private fun DashboardScreenPreview_Success() {
     SynapseFitTheme {
         DashboardScreen(
             state = DashboardUiState(userName = "Alex", latestWeightKg = 75.4),
@@ -140,14 +159,66 @@ private fun DashboardScreenPreview() {
     }
 }
 
-5. Adaptive Responsive Rules (WindowSizeClass)
- * Compact Width (<600dp):
-   * Display 1-column vertical layouts.
-   * Bottom Navigation Bar active (BottomNavBar).
- * Medium Width (600dp – 840dp - Foldables Unfolded):
-   * Use ListDetailPaneScaffold or SupportingPaneScaffold.
-   * Display 2-column grid layout with persistent Navigation Rail.
- * Expanded Width (>840dp - Tablets):
-   * Multi-column Bento Grid dashboard.
-   * Persistent ModalNavigationDrawer expanded by default.
+@Preview(name = "Dashboard - Loading State", showBackground = true)
+@Composable
+private fun DashboardScreenPreview_Loading() {
+    SynapseFitTheme {
+        DashboardScreen(
+            state = DashboardUiState(isLoading = true),
+            onStartWorkoutClick = {},
+            onLogMeasurementClick = {}
+        )
+    }
+}
 
+@Preview(name = "Dashboard - Syncing Option State", showBackground = true)
+@Composable
+private fun DashboardScreenPreview_Syncing() {
+    SynapseFitTheme {
+        DashboardScreen(
+            state = DashboardUiState(userName = "Alex", isSyncing = true),
+            onStartWorkoutClick = {},
+            onLogMeasurementClick = {}
+        )
+    }
+}
+
+@Preview(name = "Dashboard - Error State", showBackground = true)
+@Composable
+private fun DashboardScreenPreview_Error() {
+    SynapseFitTheme {
+        DashboardScreen(
+            state = DashboardUiState(errorMessage = "Failed to sync with cloud"),
+            onStartWorkoutClick = {},
+            onLogMeasurementClick = {}
+        )
+    }
+}
+```
+
+---
+
+## 5. Adaptive Responsive Rules (WindowSizeClass)
+
+* **Compact Width (<600dp):**
+  * Display 1-column vertical layouts.
+  * Bottom Navigation Bar active (`BottomNavBar`).
+* **Medium Width (600dp – 840dp - Foldables Unfolded):**
+  * Use `ListDetailPaneScaffold` or `SupportingPaneScaffold`.
+  * Display 2-column grid layout with persistent Navigation Rail.
+* **Expanded Width (>840dp - Tablets):**
+  * Multi-column Bento Grid dashboard.
+  * Persistent `ModalNavigationDrawer` expanded by default.
+
+---
+
+## 6. Mandatory `@Preview` Rules for Screen Interfaces (`*Screen`)
+
+1. **No-Deployment Visual Inspection:** Every UI screen interface (`*Screen`) MUST include `@Preview` annotated composable methods so developers and designers can inspect and verify the UI rendering directly in Android Studio without deploying the application to a physical device or emulator.
+2. **Conditional & Option Coverage:** A separate `@Preview` method MUST be provided for **every conditional state, UI option, or branch** present in the screen.
+   - **Default / Loaded State:** Render screen with complete data and standard options.
+   - **Loading State:** Render screen with loading indicators or skeleton shimmer components.
+   - **Empty State:** Render screen when lists, cards, or metrics are empty.
+   - **Error / Warning State:** Render screen displaying error banners, fallback messages, or retry actions.
+   - **Interactive Options / Dialogs:** Render screen with open modal dialogs, expanded cards, or specific UI toggle options enabled.
+3. **Theme Enclosure:** All preview functions MUST wrap the target composable in the project design system theme (`SynapseFitTheme` or `MaterialThemeComposeUI`).

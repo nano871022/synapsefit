@@ -52,6 +52,8 @@ Reactive UI: Views must continuously react to states emitted by the ViewModel (e
 
 Empty States: Always account for missing data and design graceful fallback UIs using the design system.
 
+Mandatory @Preview Methods for *Screen: Every UI interface (`*Screen`) MUST have `@Preview` composable methods to inspect the interface in Android Studio without deploying the application. Every screen must include a dedicated `@Preview` method for each conditional state, branch, or option displayed (e.g., Loading, Error, Empty, Loaded data/Success, Active Modals/Dialogs) wrapped in `SynapseFitTheme` / `MaterialThemeComposeUI`.
+
 🔄 4. Cross-Device Synchronization (Wearable Data Layer API)
 
 Live Mirroring: When both devices are active, states must mirror each other using MessageClient. Do not sync ticking seconds; sync only the targetTimestamp and let devices calculate time locally.
