@@ -26,3 +26,25 @@ data class BackupMetadata(
     val sha256Hash: String,
     val dbVersion: Int = 1,
 )
+
+sealed class RestoreCheckResult {
+    object UpToDate : RestoreCheckResult()
+
+    object CloudBackupNewer : RestoreCheckResult()
+
+    object LocalDataNewer : RestoreCheckResult()
+
+    data class Error(val message: String) : RestoreCheckResult()
+}
+
+data class ExerciseMedia(
+    val videoUrl: String?,
+    val imageUrl: String?,
+)
+
+data class WearSyncState(
+    val isSyncing: Boolean = false,
+    val lastSyncTimestamp: Long = 0L,
+    val pendingCount: Int = 0,
+    val error: String? = null,
+)

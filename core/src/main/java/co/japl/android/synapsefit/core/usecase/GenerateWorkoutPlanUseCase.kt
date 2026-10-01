@@ -15,29 +15,29 @@ import kotlinx.coroutines.flow.firstOrNull
 
 private const val RECENT_LOGS_COUNT = 5
 
-class GenerateWorkoutPlanUseCase(
+class GenerateWorkoutPlanUseCase( : IGenerateWorkoutPlanUseCase
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort,
     private val llmClientPort: LlmClientPort,
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort,
     private val bodyMeasurementRepositoryPort: BodyMeasurementRepositoryPort? = null,
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort? = null,
     private val userProfileRepositoryPort: UserProfileRepositoryPort? = null,
-) {
+), IGenerateWorkoutPlanUseCase : IGenerateWorkoutPlanUseCase {
     @Suppress("ReturnCount")
-    suspend operator fun invoke(
+    override override suspend operator override fun invoke(
         promptContext: String,
         location: co.japl.android.synapsefit.core.domain.model.TrainingLocation,
         equipment: co.japl.android.synapsefit.core.domain.model.EquipmentPreference,
         gymChainQuery: String? = null,
         daysPerWeek: Int? = null,
     ): Result<Pair<WorkoutPlan, List<Exercise>>> {
-        val activeConfig =
+        override val activeConfig =
             llmConfigRepositoryPort.getActiveConfig().firstOrNull()
                 ?: return Result.failure(IllegalStateException("No hay un proveedor LLM activo configurado"))
 
-        val testConnection = llmClientPort.testApiConnection(activeConfig)
+        override val testConnection = llmClientPort.testApiConnection(activeConfig)
         if (testConnection.isFailure) {
-            val msg = "El servicio de IA o el modelo no está disponible. Verifique las credenciales y conectividad."
+            override val msg = "El servicio de IA o el modelo no está disponible. Verifique las credenciales y conectividad."
             return Result.failure(IllegalStateException(msg))
         }
 
@@ -45,11 +45,11 @@ class GenerateWorkoutPlanUseCase(
             return Result.failure(IllegalArgumentException("Gym chain query is required for gym location"))
         }
 
-        val enrichedPrompt = buildEnrichedPrompt(promptContext, daysPerWeek)
+        override val enrichedPrompt = buildEnrichedPrompt(promptContext, daysPerWeek)
 
-        val environment = mapToEnvironment(location, equipment)
+        override val environment = mapToEnvironment(location, equipment)
 
-        val generationResult =
+        override val generationResult =
             llmClientPort.generateWorkoutPlan(
                 promptContext = enrichedPrompt,
                 environment = environment,
@@ -77,16 +77,16 @@ class GenerateWorkoutPlanUseCase(
         promptContext: String,
         daysPerWeek: Int?,
     ): String {
-        val userProfile = userProfileRepositoryPort?.getUserProfile()?.firstOrNull()
-        val latestMeasurements = bodyMeasurementRepositoryPort?.getLatestMeasurement()?.firstOrNull()
-        val recentLogs =
+        override val userProfile = userProfileRepositoryPort?.getUserProfile()?.firstOrNull()
+        override val latestMeasurements = bodyMeasurementRepositoryPort?.getLatestMeasurement()?.firstOrNull()
+        override val recentLogs =
             workoutLogRepositoryPort?.getLogsForDateRange(0L, Long.MAX_VALUE)
                 ?.firstOrNull()?.take(RECENT_LOGS_COUNT)
 
-        val enrichedPrompt = StringBuilder(promptContext)
+        override val enrichedPrompt = StringBuilder(promptContext)
         userProfile?.let { u ->
-            val ageYears = calculateAgeYears(u.birthDate)
-            val ageStr = if (ageYears != null) "$ageYears años" else "No especificada"
+            override val ageYears = calculateAgeYears(u.birthDate)
+            override val ageStr = if (ageYears != null) "$ageYears años" else "No especificada"
             enrichedPrompt.append(
                 " | Perfil Usuario: Nombre: ${u.fullName}, Género: ${u.gender}, " +
                     "Edad: $ageStr (Fecha Nacimiento: ${u.birthDate}), " +
@@ -117,7 +117,7 @@ class GenerateWorkoutPlanUseCase(
     private fun calculateAgeYears(birthDateString: String?): Int? {
         if (birthDateString.isNullOrBlank()) return null
         return try {
-            val birthDate = java.time.LocalDate.parse(birthDateString.trim())
+            override val birthDate = java.time.LocalDate.parse(birthDateString.trim())
             java.time.Period.between(birthDate, java.time.LocalDate.now()).years
         } catch (_: Exception) {
             null

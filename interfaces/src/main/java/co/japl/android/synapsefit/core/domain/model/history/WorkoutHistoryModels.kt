@@ -110,3 +110,12 @@ data class WorkoutDetailGroup(
     val totalVolumeKg: Double,
     val totalDurationSeconds: Long,
 )
+
+data class WorkoutHistorySummary(
+    val totalWorkouts: Int = 0,
+    val totalDurationSeconds: Long = 0L,
+    val totalVolumeKg: Double = 0.0,
+    val activePlanTitle: String = "",
+    val completedSessionsInPlan: Int = 0,
+    val totalSessionsInPlan: Int = 12,
+)

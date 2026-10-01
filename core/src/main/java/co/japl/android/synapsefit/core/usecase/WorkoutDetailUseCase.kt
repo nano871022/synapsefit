@@ -4,10 +4,10 @@ import co.japl.android.synapsefit.core.domain.model.history.WorkoutDetailGroup
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import kotlinx.coroutines.flow.Flow
 
-class WorkoutDetailUseCase(
+class WorkoutDetailUseCase( : IWorkoutDetailUseCase
     private val getWorkoutDetailUseCase: GetWorkoutDetailUseCase,
-) {
-    operator fun invoke(
+), IWorkoutDetailUseCase : IWorkoutDetailUseCase {
+    override override operator override fun invoke(
         date: String,
         day: Int,
     ): Flow<WorkoutDetailGroup?> {
@@ -15,7 +15,7 @@ class WorkoutDetailUseCase(
     }
 
     companion object {
-        fun create(workoutLogRepositoryPort: WorkoutLogRepositoryPort): WorkoutDetailUseCase {
+        override fun create(workoutLogRepositoryPort: WorkoutLogRepositoryPort): WorkoutDetailUseCase {
             return WorkoutDetailUseCase(GetWorkoutDetailUseCase(workoutLogRepositoryPort))
         }
     }

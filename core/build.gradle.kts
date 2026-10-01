@@ -18,6 +18,7 @@ tasks.register("testDebugUnitTest") {
 }
 
 dependencies {
+    api(project(":interfaces"))
     implementation(project(":util"))
 
     implementation(libs.kotlinx.coroutines.core)

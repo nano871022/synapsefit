@@ -9,40 +9,40 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 data class MeasurementDataPoint(
-    val timestamp: Long,
-    val value: Float,
+    override val timestamp: Long,
+    override val value: Float,
 )
 
 data class DimensionalMetricTrend(
-    val dataPoints: List<MeasurementDataPoint>,
-    val averageValue: Double,
+    override val dataPoints: List<MeasurementDataPoint>,
+    override val averageValue: Double,
 )
 
-class DimensionalMetricTrackingUseCase(
+class DimensionalMetricTrackingUseCase( : IDimensionalMetricTrackingUseCase
     private val bodyMeasurementRepositoryPort: BodyMeasurementRepositoryPort,
     private val saveBodyMeasurementUseCase: SaveBodyMeasurementUseCase? = null,
-) {
-    fun getMeasurementHistory(): Flow<List<BodyMeasurement>> {
+), IDimensionalMetricTrackingUseCase : IDimensionalMetricTrackingUseCase {
+    override fun getMeasurementHistory(): Flow<List<BodyMeasurement>> {
         return bodyMeasurementRepositoryPort.getMeasurementsHistory()
     }
 
-    fun getMetricTrend(
+    override fun getMetricTrend(
         metric: AnatomicalZone,
         timeRangeDays: Int,
     ): Flow<DimensionalMetricTrend> {
-        val millisPerDay = 24L * 60L * 60L * 1000L
+        override val millisPerDay = 24L * 60L * 60L * 1000L
         return bodyMeasurementRepositoryPort.getMeasurementsHistory().map { measurements ->
-            val now = System.currentTimeMillis()
-            val startTime = if (timeRangeDays > 0) now - (timeRangeDays.toLong() * millisPerDay) else 0L
+            override val now = System.currentTimeMillis()
+            override val startTime = if (timeRangeDays > 0) now - (timeRangeDays.toLong() * millisPerDay) else 0L
 
-            val filtered =
+            override val filtered =
                 measurements
                     .filter { it.createdAt >= startTime }
                     .sortedBy { it.createdAt }
 
-            val points =
+            override val points =
                 filtered.mapNotNull { m ->
-                    val valForZone =
+                    override val valForZone =
                         when (metric) {
                             AnatomicalZone.WEIGHT -> m.weightKg
                             AnatomicalZone.CHEST -> m.chestCm
@@ -58,8 +58,8 @@ class DimensionalMetricTrackingUseCase(
                     }
                 }
 
-            val values = points.map { it.value.toDouble() }
-            val avg = if (values.isNotEmpty()) values.average() else 0.0
+            override val values = points.map { it.value.toDouble() }
+            override val avg = if (values.isNotEmpty()) values.average() else 0.0
 
             DimensionalMetricTrend(
                 dataPoints = points,
@@ -68,7 +68,7 @@ class DimensionalMetricTrackingUseCase(
         }
     }
 
-    suspend fun saveMeasurement(
+    override suspend override fun saveMeasurement(
         weightKg: Double,
         chestCm: Double? = null,
         waistCm: Double? = null,
@@ -92,8 +92,8 @@ class DimensionalMetricTrackingUseCase(
                 notes = notes,
             )
         } else {
-            val now = System.currentTimeMillis()
-            val measurement =
+            override val now = System.currentTimeMillis()
+            override val measurement =
                 BodyMeasurement(
                     id = java.util.UUID.randomUUID().toString(),
                     createdAt = now,

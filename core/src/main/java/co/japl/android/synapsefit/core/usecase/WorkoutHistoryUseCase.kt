@@ -11,23 +11,23 @@ import kotlinx.coroutines.flow.combine
 private const val DEFAULT_TOTAL_SESSIONS = 12
 
 data class WorkoutHistoryData(
-    val summaries: List<WorkoutSummaryItem>,
-    val activePlanTitle: String,
-    val activePlanTotalSessions: Int,
+    override val summaries: List<WorkoutSummaryItem>,
+    override val activePlanTitle: String,
+    override val activePlanTotalSessions: Int,
 )
 
-class WorkoutHistoryUseCase(
+class WorkoutHistoryUseCase( : IWorkoutHistoryUseCase
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort,
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort,
-) {
-    operator fun invoke(): Flow<WorkoutHistoryData> {
-        val summariesFlow = workoutLogRepositoryPort.getWorkoutSummaries()
-        val plansFlow = workoutPlanRepositoryPort.getAllPlans()
+), IWorkoutHistoryUseCase : IWorkoutHistoryUseCase {
+    override override operator override fun invoke(): Flow<WorkoutHistoryData> {
+        override val summariesFlow = workoutLogRepositoryPort.getWorkoutSummaries()
+        override val plansFlow = workoutPlanRepositoryPort.getAllPlans()
 
         return combine(summariesFlow, plansFlow) { summaries, plans ->
-            val activePlan = plans.firstOrNull { it.isActive } ?: plans.firstOrNull()
-            val activePlanTitle = activePlan?.title ?: ""
-            val activePlanTotalSessions = activePlan?.totalSessions ?: DEFAULT_TOTAL_SESSIONS
+            override val activePlan = plans.firstOrNull { it.isActive } ?: plans.firstOrNull()
+            override val activePlanTitle = activePlan?.title ?: ""
+            override val activePlanTotalSessions = activePlan?.totalSessions ?: DEFAULT_TOTAL_SESSIONS
 
             WorkoutHistoryData(
                 summaries = summaries,

@@ -14,26 +14,26 @@ import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import kotlinx.coroutines.flow.Flow
 
-class ActiveWorkoutUseCase(
+class ActiveWorkoutUseCase( : IActiveWorkoutUseCase
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort,
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort,
     private val activeSessionRepositoryPort: ActiveSessionRepositoryPort? = null,
     private val wearStateMirrorPort: WearStateMirrorPort? = null,
     private val getExerciseMediaUseCase: GetExerciseMediaUseCase? = null,
-) {
-    fun getPlanWithExercisesForDay(
+), IActiveWorkoutUseCase : IActiveWorkoutUseCase {
+    override fun getPlanWithExercisesForDay(
         planId: String,
         day: Int,
     ): Flow<Pair<WorkoutPlan, List<Exercise>>?> {
         return workoutPlanRepositoryPort.getPlanWithExercisesForDay(planId, day)
     }
 
-    fun getActiveSessionState(): Flow<ActiveWorkoutSessionState> {
+    override fun getActiveSessionState(): Flow<ActiveWorkoutSessionState> {
         return activeSessionRepositoryPort?.getActiveSessionState()
             ?: kotlinx.coroutines.flow.flowOf(ActiveWorkoutSessionState())
     }
 
-    suspend fun recordWorkoutLog(
+    override suspend override fun recordWorkoutLog(
         planId: String,
         day: Int,
         exerciseId: String,
@@ -42,8 +42,8 @@ class ActiveWorkoutUseCase(
         durationSeconds: Long,
         heartRateBpm: Int? = null,
     ): Result<Unit> {
-        val now = System.currentTimeMillis()
-        val log =
+        override val now = System.currentTimeMillis()
+        override val log =
             WorkoutLog(
                 id = java.util.UUID.randomUUID().toString(),
                 exerciseId = exerciseId,
@@ -64,7 +64,7 @@ class ActiveWorkoutUseCase(
         }
     }
 
-    suspend fun resolveExerciseMedia(
+    override suspend override fun resolveExerciseMedia(
         exerciseId: String,
         exerciseName: String,
         guideVideoUrl: String,
@@ -74,7 +74,7 @@ class ActiveWorkoutUseCase(
             ?: Pair(guideVideoUrl, guideImageUrl)
     }
 
-    suspend fun sendLiveSyncEvent(event: LiveSyncEvent) {
+    override suspend override fun sendLiveSyncEvent(event: LiveSyncEvent) {
         wearStateMirrorPort?.sendEvent(event)
     }
 }

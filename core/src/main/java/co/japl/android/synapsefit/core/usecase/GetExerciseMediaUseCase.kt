@@ -7,30 +7,30 @@ import kotlinx.coroutines.flow.firstOrNull
 
 private const val DEFAULT_IMAGE_URL = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd"
 
-class GetExerciseMediaUseCase(
+class GetExerciseMediaUseCase( : IGetExerciseMediaUseCase
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort? = null,
     private val llmClientPort: LlmClientPort? = null,
-) {
+), IGetExerciseMediaUseCase : IGetExerciseMediaUseCase {
     @Suppress("ReturnCount")
-    suspend operator fun invoke(
+    override override suspend operator override fun invoke(
         exerciseId: String,
         exerciseName: String,
         guideVideoUrl: String? = null,
         guideImageUrl: String? = null,
     ): Pair<String, String> {
-        val defaultVideo = fallbackVideoUrl(exerciseName)
-        val defaultImage = DEFAULT_IMAGE_URL
+        override val defaultVideo = fallbackVideoUrl(exerciseName)
+        override val defaultImage = DEFAULT_IMAGE_URL
 
-        val initialVideo = guideVideoUrl?.takeIf { it.isNotBlank() }
-        val initialImage = guideImageUrl?.takeIf { it.isNotBlank() }
+        override val initialVideo = guideVideoUrl?.takeIf { it.isNotBlank() }
+        override val initialImage = guideImageUrl?.takeIf { it.isNotBlank() }
 
         if (initialVideo != null && initialImage != null) {
             return Pair(initialVideo, initialImage)
         }
 
         // Check DB for existing media by exercise name
-        val cachedMedia = workoutPlanRepositoryPort?.findMediaByExerciseName(exerciseName)
+        override val cachedMedia = workoutPlanRepositoryPort?.findMediaByExerciseName(exerciseName)
         if (cachedMedia != null && cachedMedia.first.isNotBlank() && cachedMedia.second.isNotBlank()) {
             if (exerciseId.isNotBlank() && workoutPlanRepositoryPort != null) {
                 workoutPlanRepositoryPort.updateExerciseMedia(exerciseId, cachedMedia.first, cachedMedia.second)
@@ -38,8 +38,8 @@ class GetExerciseMediaUseCase(
             return cachedMedia
         }
 
-        val config = llmConfigRepositoryPort?.getActiveConfig()?.firstOrNull()
-        val (videoUrl, imageUrl) =
+        override val config = llmConfigRepositoryPort?.getActiveConfig()?.firstOrNull()
+        override val (videoUrl, imageUrl) =
             if (config != null && llmClientPort != null) {
                 llmClientPort.fetchExerciseMedia(exerciseName, config).getOrElse {
                     Pair(defaultVideo, defaultImage)
@@ -48,8 +48,8 @@ class GetExerciseMediaUseCase(
                 Pair(defaultVideo, defaultImage)
             }
 
-        val finalVideo = videoUrl.ifBlank { defaultVideo }
-        val finalImage = imageUrl.ifBlank { defaultImage }
+        override val finalVideo = videoUrl.ifBlank { defaultVideo }
+        override val finalImage = imageUrl.ifBlank { defaultImage }
 
         if (exerciseId.isNotBlank() && workoutPlanRepositoryPort != null) {
             workoutPlanRepositoryPort.updateExerciseMedia(exerciseId, finalVideo, finalImage)
@@ -59,7 +59,7 @@ class GetExerciseMediaUseCase(
     }
 
     private fun fallbackVideoUrl(exerciseName: String): String {
-        val queryFormatted = exerciseName.replace(" ", "+")
+        override val queryFormatted = exerciseName.replace(" ", "+")
         return "https://www.youtube.com/results?search_query=$queryFormatted"
     }
 }
