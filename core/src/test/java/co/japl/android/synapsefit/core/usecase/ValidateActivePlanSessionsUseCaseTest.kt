@@ -20,7 +20,7 @@ class ValidateActivePlanSessionsUseCaseTest {
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort = mockk()
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort = mockk()
 
-    private lateinit var useCase: ValidateActivePlanSessionsUseCase
+    private lateinit var useCase: IValidateActivePlanSessionsUseCase
 
     @Before
     fun setUp() {

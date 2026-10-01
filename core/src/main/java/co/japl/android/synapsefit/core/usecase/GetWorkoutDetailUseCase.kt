@@ -8,10 +8,10 @@ import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class GetWorkoutDetailUseCase( : IGetWorkoutDetailUseCase
+class GetWorkoutDetailUseCase(
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort,
-), IGetWorkoutDetailUseCase : IGetWorkoutDetailUseCase {
-    override override operator override fun invoke(
+) : IGetWorkoutDetailUseCase {
+    override operator fun invoke(
         date: String,
         day: Int,
     ): Flow<WorkoutDetailGroup?> {
@@ -27,13 +27,13 @@ class GetWorkoutDetailUseCase( : IGetWorkoutDetailUseCase
     ): WorkoutDetailGroup? {
         if (records.isEmpty()) return null
 
-        override val first = records.first()
-        override val exerciseGroups = records.groupBy { it.exerciseId }
+        val first = records.first()
+        val exerciseGroups = records.groupBy { it.exerciseId }
 
-        override val exerciseHistories =
+        val exerciseHistories =
             exerciseGroups.map { (exId, exRecords) ->
-                override val sortedRecords = exRecords.sortedBy { it.timestamp }
-                override val sets =
+                val sortedRecords = exRecords.sortedBy { it.timestamp }
+                val sets =
                     sortedRecords.mapIndexed { index, rec ->
                         ExerciseSetHistory(
                             setIndex = index + 1,
@@ -45,8 +45,8 @@ class GetWorkoutDetailUseCase( : IGetWorkoutDetailUseCase
                         )
                     }
 
-                override val avgReps = if (sets.isNotEmpty()) sets.map { it.repsCompleted }.average() else 0.0
-                override val avgWeight = if (sets.isNotEmpty()) sets.map { it.weightLiftedKg }.average() else 0.0
+                val avgReps = if (sets.isNotEmpty()) sets.map { it.repsCompleted }.average() else 0.0
+                val avgWeight = if (sets.isNotEmpty()) sets.map { it.weightLiftedKg }.average() else 0.0
 
                 ExerciseDetailHistory(
                     exerciseId = exId,
@@ -59,8 +59,8 @@ class GetWorkoutDetailUseCase( : IGetWorkoutDetailUseCase
                 )
             }
 
-        override val totalVolume = records.sumOf { it.repsCompleted * it.weightLiftedKg }
-        override val totalDuration = records.sumOf { it.durationSeconds }
+        val totalVolume = records.sumOf { it.repsCompleted * it.weightLiftedKg }
+        val totalDuration = records.sumOf { it.durationSeconds }
 
         return WorkoutDetailGroup(
             sessionId = "${first.planId}_${day}_$date",

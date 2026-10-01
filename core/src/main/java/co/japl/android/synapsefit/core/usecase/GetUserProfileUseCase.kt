@@ -4,10 +4,10 @@ import co.japl.android.synapsefit.core.domain.model.UserProfile
 import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
 import kotlinx.coroutines.flow.Flow
 
-class GetUserProfileUseCase( : IGetUserProfileUseCase
+class GetUserProfileUseCase(
     private val userProfileRepositoryPort: UserProfileRepositoryPort,
-), IGetUserProfileUseCase : IGetUserProfileUseCase {
-    override override operator override fun invoke(): Flow<UserProfile?> {
+) : IGetUserProfileUseCase {
+    override operator fun invoke(): Flow<UserProfile?> {
         return userProfileRepositoryPort.getUserProfile()
     }
 }

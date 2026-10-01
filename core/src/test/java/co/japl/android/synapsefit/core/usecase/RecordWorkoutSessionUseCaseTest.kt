@@ -13,7 +13,7 @@ import org.junit.Test
 
 class RecordWorkoutSessionUseCaseTest {
     private val repositoryPort: WorkoutLogRepositoryPort = mockk(relaxed = true)
-    private lateinit var useCase: RecordWorkoutSessionUseCase
+    private lateinit var useCase: IRecordWorkoutSessionUseCase
 
     @Before
     fun setUp() {

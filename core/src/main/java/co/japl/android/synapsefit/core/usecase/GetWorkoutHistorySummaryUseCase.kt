@@ -4,10 +4,10 @@ import co.japl.android.synapsefit.core.domain.model.history.WorkoutSummaryItem
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import kotlinx.coroutines.flow.Flow
 
-class GetWorkoutHistorySummaryUseCase( : IGetWorkoutHistorySummaryUseCase
+class GetWorkoutHistorySummaryUseCase(
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort,
-), IGetWorkoutHistorySummaryUseCase : IGetWorkoutHistorySummaryUseCase {
-    override override operator override fun invoke(): Flow<List<WorkoutSummaryItem>> {
+) : IGetWorkoutHistorySummaryUseCase {
+    override operator fun invoke(): Flow<List<WorkoutSummaryItem>> {
         return workoutLogRepositoryPort.getWorkoutSummaries()
     }
 }

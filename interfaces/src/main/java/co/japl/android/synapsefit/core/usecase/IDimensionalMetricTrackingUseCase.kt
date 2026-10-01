@@ -4,18 +4,14 @@ import co.japl.android.synapsefit.core.domain.model.AnatomicalZone
 import co.japl.android.synapsefit.core.domain.model.BodyMeasurement
 import kotlinx.coroutines.flow.Flow
 
-data class MetricPoint(
+data class MeasurementDataPoint(
     val timestamp: Long,
-    val value: Double,
+    val value: Float,
 )
 
 data class DimensionalMetricTrend(
-    val zone: AnatomicalZone,
-    val timeRangeDays: Int,
-    val currentValue: Double,
+    val dataPoints: List<MeasurementDataPoint>,
     val averageValue: Double,
-    val deltaPercentage: Double,
-    val points: List<MetricPoint>,
 )
 
 interface IDimensionalMetricTrackingUseCase {
@@ -37,6 +33,5 @@ interface IDimensionalMetricTrackingUseCase {
         thighLeftCm: Double? = null,
         thighRightCm: Double? = null,
         notes: String? = null,
-        id: String? = null,
     ): Result<Unit>
 }
