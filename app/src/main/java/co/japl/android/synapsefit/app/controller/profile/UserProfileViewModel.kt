@@ -1,4 +1,4 @@
-@file:Suppress("MaxLineLength", "LongParameterList")
+@file:Suppress("MaxLineLength", "LongParameterList", "TooManyFunctions", "LongMethod")
 
 package co.japl.android.synapsefit.app.controller.profile
 

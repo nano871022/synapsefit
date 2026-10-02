@@ -36,48 +36,55 @@ class AICoachGeneratorViewModelTest {
     }
 
     @Test
-    fun `checkLlmState updates state flow with result`() = runTest {
-        val errorState = LlmConfigState.Error(
-            LlmErrorPayload("501", "NOT_IMPLEMENTED", "Error test")
-        )
-        coEvery { useCase.checkLlmState() } returns errorState
+    fun `checkLlmState updates state flow with result`() =
+        runTest {
+            val errorState =
+                LlmConfigState.Error(
+                    LlmErrorPayload("501", "NOT_IMPLEMENTED", "Error test"),
+                )
+            coEvery { useCase.checkLlmState() } returns errorState
 
-        val viewModel = AICoachGeneratorViewModel(
-            aiCoachGeneratorUseCase = useCase,
-            appNavigator = appNavigator,
-        )
+            val viewModel =
+                AICoachGeneratorViewModel(
+                    aiCoachGeneratorUseCase = useCase,
+                    appNavigator = appNavigator,
+                )
 
-        viewModel.checkLlmState()
+            viewModel.checkLlmState()
 
-        assertEquals(errorState, viewModel.uiState.value.llmConfigState)
-    }
-
-    @Test
-    fun `generatePlan checks LLM state first and halts if not Ready`() = runTest {
-        val missingState = LlmConfigState.MissingConfig
-        coEvery { useCase.checkLlmState() } returns missingState
-
-        val viewModel = AICoachGeneratorViewModel(
-            aiCoachGeneratorUseCase = useCase,
-            appNavigator = appNavigator,
-        )
-
-        viewModel.generatePlan()
-
-        assertEquals(missingState, viewModel.uiState.value.llmConfigState)
-        coVerify(exactly = 0) { useCase.generatePlan(any(), any(), any(), any(), any()) }
-    }
+            assertEquals(errorState, viewModel.uiState.value.llmConfigState)
+        }
 
     @Test
-    fun `navigateToLlmSettings resets dialog and routes to settings`() = runTest {
-        val viewModel = AICoachGeneratorViewModel(
-            aiCoachGeneratorUseCase = useCase,
-            appNavigator = appNavigator,
-        )
+    fun `generatePlan checks LLM state first and halts if not Ready`() =
+        runTest {
+            val missingState = LlmConfigState.MissingConfig
+            coEvery { useCase.checkLlmState() } returns missingState
 
-        viewModel.navigateToLlmSettings()
+            val viewModel =
+                AICoachGeneratorViewModel(
+                    aiCoachGeneratorUseCase = useCase,
+                    appNavigator = appNavigator,
+                )
 
-        assertEquals(LlmConfigState.Ready, viewModel.uiState.value.llmConfigState)
-        coVerify { appNavigator.navigateTo("settings/llm?openForm=true") }
-    }
+            viewModel.generatePlan()
+
+            assertEquals(missingState, viewModel.uiState.value.llmConfigState)
+            coVerify(exactly = 0) { useCase.generatePlan(any(), any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `navigateToLlmSettings resets dialog and routes to settings`() =
+        runTest {
+            val viewModel =
+                AICoachGeneratorViewModel(
+                    aiCoachGeneratorUseCase = useCase,
+                    appNavigator = appNavigator,
+                )
+
+            viewModel.navigateToLlmSettings()
+
+            assertEquals(LlmConfigState.Ready, viewModel.uiState.value.llmConfigState)
+            coVerify { appNavigator.navigateTo("settings/llm?openForm=true") }
+        }
 }

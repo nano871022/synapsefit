@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming", "LongMethod", "CyclomaticComplexMethod", "MaxLineLength", "UnusedPrivateMember")
+@file:Suppress("FunctionNaming", "LongMethod", "CyclomaticComplexMethod", "MaxLineLength", "UnusedPrivateMember", "LongParameterList")
 
 package co.japl.android.synapsefit.app.ui.profile
 
@@ -19,13 +19,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MedicalServices
-import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -59,12 +56,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import co.com.japl.ui.theme.MaterialThemeComposeUI
 import co.com.japl.ui.theme.spacing
-import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.profile.UserProfileUiState
 import co.japl.android.synapsefit.ui.components.LlmStateDialog
 import co.japl.android.synapsefit.ui.components.NeonButton
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 

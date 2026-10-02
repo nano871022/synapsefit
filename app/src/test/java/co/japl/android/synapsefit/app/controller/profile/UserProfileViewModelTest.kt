@@ -38,35 +38,39 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `saveProfile triggers LLM check when medical conditions present and halts if not Ready`() = runTest {
-        val missingState = LlmConfigState.MissingConfig
-        coEvery { useCase.checkLlmState() } returns missingState
+    fun `saveProfile triggers LLM check when medical conditions present and halts if not Ready`() =
+        runTest {
+            val missingState = LlmConfigState.MissingConfig
+            coEvery { useCase.checkLlmState() } returns missingState
 
-        val viewModel = UserProfileViewModel(
-            userProfileUseCase = useCase,
-            appNavigator = appNavigator,
-        )
+            val viewModel =
+                UserProfileViewModel(
+                    userProfileUseCase = useCase,
+                    appNavigator = appNavigator,
+                )
 
-        viewModel.onFullNameChange("Atleta Test")
-        viewModel.onHeightCmChange("180")
-        viewModel.onMedicalConditionsChange("Hipertensión")
+            viewModel.onFullNameChange("Atleta Test")
+            viewModel.onHeightCmChange("180")
+            viewModel.onMedicalConditionsChange("Hipertensión")
 
-        viewModel.saveProfile()
+            viewModel.saveProfile()
 
-        assertEquals(missingState, viewModel.uiState.value.llmConfigState)
-        coVerify(exactly = 0) { useCase.evaluateMedicalConditions(any(), any(), any(), any()) }
-    }
+            assertEquals(missingState, viewModel.uiState.value.llmConfigState)
+            coVerify(exactly = 0) { useCase.evaluateMedicalConditions(any(), any(), any(), any()) }
+        }
 
     @Test
-    fun `navigateToLlmSettings resets dialog and routes to settings`() = runTest {
-        val viewModel = UserProfileViewModel(
-            userProfileUseCase = useCase,
-            appNavigator = appNavigator,
-        )
+    fun `navigateToLlmSettings resets dialog and routes to settings`() =
+        runTest {
+            val viewModel =
+                UserProfileViewModel(
+                    userProfileUseCase = useCase,
+                    appNavigator = appNavigator,
+                )
 
-        viewModel.navigateToLlmSettings()
+            viewModel.navigateToLlmSettings()
 
-        assertEquals(LlmConfigState.Ready, viewModel.uiState.value.llmConfigState)
-        coVerify { appNavigator.navigateTo("settings/llm?openForm=true") }
-    }
+            assertEquals(LlmConfigState.Ready, viewModel.uiState.value.llmConfigState)
+            coVerify { appNavigator.navigateTo("settings/llm?openForm=true") }
+        }
 }

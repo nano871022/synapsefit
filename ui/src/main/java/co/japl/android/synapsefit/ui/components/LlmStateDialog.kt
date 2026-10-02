@@ -51,14 +51,16 @@ fun LlmStateDialog(
         Card(
             modifier = modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            ),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(MaterialTheme.spacing.medium),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(MaterialTheme.spacing.medium),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
             ) {
                 when (state) {
@@ -149,29 +151,32 @@ private fun MultiModelDialogContent(
     )
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .selectableGroup(),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .selectableGroup(),
     ) {
         configs.forEach { config ->
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .selectable(
-                        selected = (config.id == selectedId),
-                        onClick = { selectedId = config.id },
-                        role = Role.RadioButton,
-                    )
-                    .padding(horizontal = MaterialTheme.spacing.small),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .selectable(
+                            selected = (config.id == selectedId),
+                            onClick = { selectedId = config.id },
+                            role = Role.RadioButton,
+                        )
+                        .padding(horizontal = MaterialTheme.spacing.small),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 RadioButton(
                     selected = (config.id == selectedId),
                     onClick = null,
-                    colors = RadioButtonDefaults.colors(
-                        selectedColor = MaterialTheme.colorScheme.primary,
-                    ),
+                    colors =
+                        RadioButtonDefaults.colors(
+                            selectedColor = MaterialTheme.colorScheme.primary,
+                        ),
                 )
                 Text(
                     text = "${config.provider.name} (${config.modelName})",
@@ -195,9 +200,7 @@ private fun MultiModelDialogContent(
 }
 
 @Composable
-private fun MissingConfigDialogContent(
-    onConfigureRedirect: () -> Unit,
-) {
+private fun MissingConfigDialogContent(onConfigureRedirect: () -> Unit) {
     Text(
         text = "Configuración Requerida",
         style = MaterialTheme.typography.titleLarge,
@@ -229,13 +232,14 @@ private fun MissingConfigDialogContent(
 private fun LlmStateDialogErrorPreview() {
     MaterialThemeComposeUI {
         LlmStateDialog(
-            state = LlmConfigState.Error(
-                LlmErrorPayload(
-                    code = "501",
-                    status = "NOT_IMPLEMENTED",
-                    message = "El método o servicio de IA no está implementado para la solicitud indicada.",
+            state =
+                LlmConfigState.Error(
+                    LlmErrorPayload(
+                        code = "501",
+                        status = "NOT_IMPLEMENTED",
+                        message = "El método o servicio de IA no está implementado para la solicitud indicada.",
+                    ),
                 ),
-            ),
             onDismissRequest = {},
             onSelectConfig = {},
             onConfigureRedirect = {},
@@ -248,28 +252,30 @@ private fun LlmStateDialogErrorPreview() {
 private fun LlmStateDialogMultiModelPreview() {
     MaterialThemeComposeUI {
         LlmStateDialog(
-            state = LlmConfigState.MultiModelSelection(
-                activeConfigs = listOf(
-                    LlmConfig(
-                        id = "1",
-                        provider = LlmProvider.GEMINI,
-                        apiKeyEncrypted = "key1",
-                        modelName = "gemini-1.5-pro",
-                        isActive = true,
-                        createdAt = 0L,
-                        updatedAt = 0L,
-                    ),
-                    LlmConfig(
-                        id = "2",
-                        provider = LlmProvider.OPENAI,
-                        apiKeyEncrypted = "key2",
-                        modelName = "gpt-4o",
-                        isActive = true,
-                        createdAt = 0L,
-                        updatedAt = 0L,
-                    ),
+            state =
+                LlmConfigState.MultiModelSelection(
+                    activeConfigs =
+                        listOf(
+                            LlmConfig(
+                                id = "1",
+                                provider = LlmProvider.GEMINI,
+                                apiKeyEncrypted = "key1",
+                                modelName = "gemini-1.5-pro",
+                                isActive = true,
+                                createdAt = 0L,
+                                updatedAt = 0L,
+                            ),
+                            LlmConfig(
+                                id = "2",
+                                provider = LlmProvider.OPENAI,
+                                apiKeyEncrypted = "key2",
+                                modelName = "gpt-4o",
+                                isActive = true,
+                                createdAt = 0L,
+                                updatedAt = 0L,
+                            ),
+                        ),
                 ),
-            ),
             onDismissRequest = {},
             onSelectConfig = {},
             onConfigureRedirect = {},

@@ -1,4 +1,4 @@
-@file:Suppress("MaxLineLength", "LongParameterList")
+@file:Suppress("MaxLineLength", "LongParameterList", "TooManyFunctions", "LongMethod")
 
 package co.japl.android.synapsefit.app.controller.workout
 
@@ -146,9 +146,10 @@ class AICoachGeneratorViewModel(
 
             if (aiCoachGeneratorUseCase != null) {
                 val daysInt = state.daysPerWeek.toIntOrNull()
+                val defaultPrompt = "Plan de entrenamiento general de hipertrofia y fuerza"
                 val result =
                     aiCoachGeneratorUseCase.generatePlan(
-                        promptContext = state.promptContext.ifBlank { "Plan de entrenamiento general de hipertrofia y fuerza" },
+                        promptContext = state.promptContext.ifBlank { defaultPrompt },
                         location = state.selectedLocation,
                         equipment = state.selectedEquipment,
                         gymChainQuery =

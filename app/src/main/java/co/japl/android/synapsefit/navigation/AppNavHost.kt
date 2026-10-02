@@ -305,8 +305,7 @@ fun AppNavHost(
                         object : ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                return WorkoutPlanDetailViewModel(
-                                ) as T
+                                return WorkoutPlanDetailViewModel() as T
                             }
                         },
                 )

@@ -20,32 +20,35 @@ class UserProfileUseCaseTest {
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort = mockk()
     private val llmClientPort: LlmClientPort = mockk()
 
-    private val useCase = UserProfileUseCase(
-        getUserProfileUseCase = getUserProfileUseCase,
-        saveUserProfileUseCase = saveUserProfileUseCase,
-        evaluateMedicalConditionsUseCase = evaluateMedicalConditionsUseCase,
-        getMedicalRecommendationsUseCase = getMedicalRecommendationsUseCase,
-        llmConfigRepositoryPort = llmConfigRepositoryPort,
-        llmClientPort = llmClientPort,
-    )
+    private val useCase =
+        UserProfileUseCase(
+            getUserProfileUseCase = getUserProfileUseCase,
+            saveUserProfileUseCase = saveUserProfileUseCase,
+            evaluateMedicalConditionsUseCase = evaluateMedicalConditionsUseCase,
+            getMedicalRecommendationsUseCase = getMedicalRecommendationsUseCase,
+            llmConfigRepositoryPort = llmConfigRepositoryPort,
+            llmClientPort = llmClientPort,
+        )
 
     @Test
-    fun `checkLlmState returns MissingConfig when no active config`() = runTest {
-        coEvery { llmConfigRepositoryPort.getAllConfigs() } returns flowOf(emptyList())
+    fun `checkLlmState returns MissingConfig when no active config`() =
+        runTest {
+            coEvery { llmConfigRepositoryPort.getAllConfigs() } returns flowOf(emptyList())
 
-        val state = useCase.checkLlmState()
+            val state = useCase.checkLlmState()
 
-        assertEquals(LlmConfigState.MissingConfig, state)
-    }
+            assertEquals(LlmConfigState.MissingConfig, state)
+        }
 
     @Test
-    fun `checkLlmState returns Ready when single active config succeeds`() = runTest {
-        val config = LlmConfig("1", LlmProvider.GEMINI, "key1", "m1", isActive = true, 0L, 0L)
-        coEvery { llmConfigRepositoryPort.getAllConfigs() } returns flowOf(listOf(config))
-        coEvery { llmClientPort.testApiConnection(config) } returns Result.success(true)
+    fun `checkLlmState returns Ready when single active config succeeds`() =
+        runTest {
+            val config = LlmConfig("1", LlmProvider.GEMINI, "key1", "m1", isActive = true, 0L, 0L)
+            coEvery { llmConfigRepositoryPort.getAllConfigs() } returns flowOf(listOf(config))
+            coEvery { llmClientPort.testApiConnection(config) } returns Result.success(true)
 
-        val state = useCase.checkLlmState()
+            val state = useCase.checkLlmState()
 
-        assertEquals(LlmConfigState.Ready, state)
-    }
+            assertEquals(LlmConfigState.Ready, state)
+        }
 }
