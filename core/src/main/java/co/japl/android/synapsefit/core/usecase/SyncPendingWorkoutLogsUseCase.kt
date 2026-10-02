@@ -3,9 +3,9 @@ package co.japl.android.synapsefit.core.usecase
 import co.japl.android.synapsefit.core.port.secondary.WearSyncPort
 import kotlinx.coroutines.flow.StateFlow
 
-class SyncPendingWorkoutLogsUseCase( : ISyncPendingWorkoutLogsUseCase
+class SyncPendingWorkoutLogsUseCase(
     private val wearSyncPort: WearSyncPort,
-), ISyncPendingWorkoutLogsUseCase : ISyncPendingWorkoutLogsUseCase {
+) : ISyncPendingWorkoutLogsUseCase {
     override val isPhoneConnected: StateFlow<Boolean>
         get() = wearSyncPort.isPhoneConnected
 

@@ -3,11 +3,11 @@ package co.japl.android.synapsefit.core.usecase
 import co.japl.android.synapsefit.core.domain.model.BodyMeasurement
 import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryPort
 
-class SaveBodyMeasurementUseCase( : ISaveBodyMeasurementUseCase
+class SaveBodyMeasurementUseCase(
     private val repositoryPort: BodyMeasurementRepositoryPort,
-), ISaveBodyMeasurementUseCase : ISaveBodyMeasurementUseCase {
+) : ISaveBodyMeasurementUseCase {
     @Suppress("LongParameterList", "CyclomaticComplexMethod", "TooGenericExceptionCaught", "ReturnCount")
-    override override suspend operator override fun invoke(
+    override suspend operator fun invoke(
         id: String?,
         weightKg: Double,
         chestCm: Double?,
@@ -44,8 +44,8 @@ class SaveBodyMeasurementUseCase( : ISaveBodyMeasurementUseCase
             return Result.failure(IllegalArgumentException("Right thigh measurement must be greater than 0"))
         }
 
-        override val now = System.currentTimeMillis()
-        override val measurement =
+        val now = System.currentTimeMillis()
+        val measurement =
             BodyMeasurement(
                 id = id ?: java.util.UUID.randomUUID().toString(),
                 weightKg = weightKg,

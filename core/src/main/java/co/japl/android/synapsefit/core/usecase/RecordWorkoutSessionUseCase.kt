@@ -4,18 +4,18 @@ import co.japl.android.synapsefit.core.domain.model.SourceDevice
 import co.japl.android.synapsefit.core.domain.model.WorkoutLog
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 
-class RecordWorkoutSessionUseCase( : IRecordWorkoutSessionUseCase
+class RecordWorkoutSessionUseCase(
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort,
-), IRecordWorkoutSessionUseCase : IRecordWorkoutSessionUseCase {
+) : IRecordWorkoutSessionUseCase {
     @Suppress("LongParameterList", "TooGenericExceptionCaught", "ReturnCount")
-    override override suspend operator override fun invoke(
+    override suspend operator fun invoke(
         exerciseId: String,
         repsCompleted: Int,
         weightLiftedKg: Double,
-        heartRateBpm: Int? = null,
-        sourceDevice: SourceDevice = SourceDevice.MOBILE,
-        durationSeconds: Long = 0L,
-        timestamp: Long = System.currentTimeMillis(),
+        heartRateBpm: Int?,
+        sourceDevice: SourceDevice,
+        durationSeconds: Long,
+        timestamp: Long,
     ): Result<WorkoutLog> {
         if (exerciseId.trim().isEmpty()) {
             return Result.failure(IllegalArgumentException("Exercise ID cannot be empty"))
@@ -30,8 +30,8 @@ class RecordWorkoutSessionUseCase( : IRecordWorkoutSessionUseCase
             return Result.failure(IllegalArgumentException("Heart rate BPM must be greater than 0"))
         }
 
-        override val now = System.currentTimeMillis()
-        override val log =
+        val now = System.currentTimeMillis()
+        val log =
             WorkoutLog(
                 id = java.util.UUID.randomUUID().toString(),
                 exerciseId = exerciseId,

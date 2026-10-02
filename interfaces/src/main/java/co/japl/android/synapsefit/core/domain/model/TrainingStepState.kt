@@ -23,7 +23,7 @@ sealed interface TrainingStepState {
     companion object {
         fun calculateRemainingMillis(
             targetTimestamp: Long,
-            currentTimestamp: Long,
+            currentTimestamp: Long = System.currentTimeMillis(),
         ): Long {
             return maxOf(0L, targetTimestamp - currentTimestamp)
         }

@@ -10,5 +10,5 @@ data class PlanSessionValidationResult(
 )
 
 interface IValidateActivePlanSessionsUseCase {
-    suspend operator fun invoke(planId: String?): PlanSessionValidationResult?
+    suspend operator fun invoke(planId: String? = null): PlanSessionValidationResult?
 }

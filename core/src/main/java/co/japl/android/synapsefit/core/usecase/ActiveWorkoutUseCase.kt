@@ -14,13 +14,13 @@ import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import kotlinx.coroutines.flow.Flow
 
-class ActiveWorkoutUseCase( : IActiveWorkoutUseCase
+class ActiveWorkoutUseCase(
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort,
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort,
     private val activeSessionRepositoryPort: ActiveSessionRepositoryPort? = null,
     private val wearStateMirrorPort: WearStateMirrorPort? = null,
     private val getExerciseMediaUseCase: GetExerciseMediaUseCase? = null,
-), IActiveWorkoutUseCase : IActiveWorkoutUseCase {
+) : IActiveWorkoutUseCase {
     override fun getPlanWithExercisesForDay(
         planId: String,
         day: Int,
@@ -33,17 +33,18 @@ class ActiveWorkoutUseCase( : IActiveWorkoutUseCase
             ?: kotlinx.coroutines.flow.flowOf(ActiveWorkoutSessionState())
     }
 
-    override suspend override fun recordWorkoutLog(
+    @Suppress("LongParameterList", "UnusedParameter", "TooGenericExceptionCaught")
+    override suspend fun recordWorkoutLog(
         planId: String,
         day: Int,
         exerciseId: String,
         reps: Int,
         weightKg: Double,
         durationSeconds: Long,
-        heartRateBpm: Int? = null,
+        heartRateBpm: Int?,
     ): Result<Unit> {
-        override val now = System.currentTimeMillis()
-        override val log =
+        val now = System.currentTimeMillis()
+        val log =
             WorkoutLog(
                 id = java.util.UUID.randomUUID().toString(),
                 exerciseId = exerciseId,
@@ -64,7 +65,7 @@ class ActiveWorkoutUseCase( : IActiveWorkoutUseCase
         }
     }
 
-    override suspend override fun resolveExerciseMedia(
+    override suspend fun resolveExerciseMedia(
         exerciseId: String,
         exerciseName: String,
         guideVideoUrl: String,
@@ -74,7 +75,7 @@ class ActiveWorkoutUseCase( : IActiveWorkoutUseCase
             ?: Pair(guideVideoUrl, guideImageUrl)
     }
 
-    override suspend override fun sendLiveSyncEvent(event: LiveSyncEvent) {
+    override suspend fun sendLiveSyncEvent(event: LiveSyncEvent) {
         wearStateMirrorPort?.sendEvent(event)
     }
 }

@@ -11,12 +11,12 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-class GetGroupedWorkoutHistoryUseCase( : IGetGroupedWorkoutHistoryUseCase
+class GetGroupedWorkoutHistoryUseCase(
     private val workoutLogRepository: WorkoutLogRepositoryPort,
-), IGetGroupedWorkoutHistoryUseCase : IGetGroupedWorkoutHistoryUseCase {
+) : IGetGroupedWorkoutHistoryUseCase {
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault())
 
-    override override operator override fun invoke(): Flow<List<WorkoutHistoryGroup>> {
+    override operator fun invoke(): Flow<List<WorkoutHistoryGroup>> {
         return workoutLogRepository.getHistoryRecords().map { records ->
             groupRecords(records)
         }
@@ -26,16 +26,16 @@ class GetGroupedWorkoutHistoryUseCase( : IGetGroupedWorkoutHistoryUseCase
         if (records.isEmpty()) return emptyList()
 
         // 1. Sort by timestamp descending
-        override val sortedRecords = records.sortedByDescending { it.timestamp }
+        val sortedRecords = records.sortedByDescending { it.timestamp }
 
         // 2. Cluster into sessions by (Date + PlanId + Day)
-        override val sessionClusters = mutableListOf<MutableList<WorkoutHistoryRecord>>()
-        override var currentCluster: MutableList<WorkoutHistoryRecord>? = null
-        override var lastClusterKey: String? = null
+        val sessionClusters = mutableListOf<MutableList<WorkoutHistoryRecord>>()
+        var currentCluster: MutableList<WorkoutHistoryRecord>? = null
+        var lastClusterKey: String? = null
 
         for (record in sortedRecords) {
-            override val date = dateFormatter.format(Instant.ofEpochMilli(record.timestamp))
-            override val clusterKey = "${date}_${record.planId}_${record.day}"
+            val date = dateFormatter.format(Instant.ofEpochMilli(record.timestamp))
+            val clusterKey = "${date}_${record.planId}_${record.day}"
 
             if (currentCluster == null || clusterKey != lastClusterKey) {
                 currentCluster = mutableListOf()
@@ -47,16 +47,16 @@ class GetGroupedWorkoutHistoryUseCase( : IGetGroupedWorkoutHistoryUseCase
 
         // 3. Map each cluster to a WorkoutHistoryGroup
         return sessionClusters.map { clusterRecords ->
-            override val first = clusterRecords.first()
+            val first = clusterRecords.first()
 
             // Group by exercise within the session
-            override val exerciseGroups = clusterRecords.groupBy { it.exerciseId }
+            val exerciseGroups = clusterRecords.groupBy { it.exerciseId }
 
-            override val exerciseHistories =
+            val exerciseHistories =
                 exerciseGroups.map { (exId, exRecords) ->
                     // Sort sets by timestamp ascending
-                    override val sortedSets = exRecords.sortedBy { it.timestamp }
-                    override val sets =
+                    val sortedSets = exRecords.sortedBy { it.timestamp }
+                    val sets =
                         sortedSets.mapIndexed { index, rec ->
                             ExerciseSetHistory(
                                 setIndex = index + 1,
@@ -78,9 +78,9 @@ class GetGroupedWorkoutHistoryUseCase( : IGetGroupedWorkoutHistoryUseCase
                     )
                 }
 
-            override val totalVolume = clusterRecords.sumOf { it.repsCompleted * it.weightLiftedKg }
-            override val totalDuration = clusterRecords.sumOf { it.durationSeconds }
-            override val muscleGroups = clusterRecords.map { it.muscleGroup }.filter { it.isNotBlank() }.distinct()
+            val totalVolume = clusterRecords.sumOf { it.repsCompleted * it.weightLiftedKg }
+            val totalDuration = clusterRecords.sumOf { it.durationSeconds }
+            val muscleGroups = clusterRecords.map { it.muscleGroup }.filter { it.isNotBlank() }.distinct()
 
             WorkoutHistoryGroup(
                 sessionId = "${first.planId}_${first.day}_${first.timestamp}",

@@ -8,20 +8,16 @@ import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryP
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-data class MeasurementDataPoint(
-    override val timestamp: Long,
-    override val value: Float,
-)
+private const val HOURS_PER_DAY = 24L
+private const val MINUTES_PER_HOUR = 60L
+private const val SECONDS_PER_MINUTE = 60L
+private const val MILLIS_PER_SECOND = 1000L
+private const val MILLIS_PER_DAY = HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLIS_PER_SECOND
 
-data class DimensionalMetricTrend(
-    override val dataPoints: List<MeasurementDataPoint>,
-    override val averageValue: Double,
-)
-
-class DimensionalMetricTrackingUseCase( : IDimensionalMetricTrackingUseCase
+class DimensionalMetricTrackingUseCase(
     private val bodyMeasurementRepositoryPort: BodyMeasurementRepositoryPort,
     private val saveBodyMeasurementUseCase: SaveBodyMeasurementUseCase? = null,
-), IDimensionalMetricTrackingUseCase : IDimensionalMetricTrackingUseCase {
+) : IDimensionalMetricTrackingUseCase {
     override fun getMeasurementHistory(): Flow<List<BodyMeasurement>> {
         return bodyMeasurementRepositoryPort.getMeasurementsHistory()
     }
@@ -30,19 +26,18 @@ class DimensionalMetricTrackingUseCase( : IDimensionalMetricTrackingUseCase
         metric: AnatomicalZone,
         timeRangeDays: Int,
     ): Flow<DimensionalMetricTrend> {
-        override val millisPerDay = 24L * 60L * 60L * 1000L
         return bodyMeasurementRepositoryPort.getMeasurementsHistory().map { measurements ->
-            override val now = System.currentTimeMillis()
-            override val startTime = if (timeRangeDays > 0) now - (timeRangeDays.toLong() * millisPerDay) else 0L
+            val now = System.currentTimeMillis()
+            val startTime = if (timeRangeDays > 0) now - (timeRangeDays.toLong() * MILLIS_PER_DAY) else 0L
 
-            override val filtered =
+            val filtered =
                 measurements
                     .filter { it.createdAt >= startTime }
                     .sortedBy { it.createdAt }
 
-            override val points =
+            val points =
                 filtered.mapNotNull { m ->
-                    override val valForZone =
+                    val valForZone =
                         when (metric) {
                             AnatomicalZone.WEIGHT -> m.weightKg
                             AnatomicalZone.CHEST -> m.chestCm
@@ -58,8 +53,8 @@ class DimensionalMetricTrackingUseCase( : IDimensionalMetricTrackingUseCase
                     }
                 }
 
-            override val values = points.map { it.value.toDouble() }
-            override val avg = if (values.isNotEmpty()) values.average() else 0.0
+            val values = points.map { it.value.toDouble() }
+            val avg = if (values.isNotEmpty()) values.average() else 0.0
 
             DimensionalMetricTrend(
                 dataPoints = points,
@@ -68,19 +63,21 @@ class DimensionalMetricTrackingUseCase( : IDimensionalMetricTrackingUseCase
         }
     }
 
-    override suspend override fun saveMeasurement(
+    @Suppress("LongParameterList", "TooGenericExceptionCaught")
+    override suspend fun saveMeasurement(
         weightKg: Double,
-        chestCm: Double? = null,
-        waistCm: Double? = null,
-        hipCm: Double? = null,
-        bicepLeftCm: Double? = null,
-        bicepRightCm: Double? = null,
-        thighLeftCm: Double? = null,
-        thighRightCm: Double? = null,
-        notes: String? = null,
+        chestCm: Double?,
+        waistCm: Double?,
+        hipCm: Double?,
+        bicepLeftCm: Double?,
+        bicepRightCm: Double?,
+        thighLeftCm: Double?,
+        thighRightCm: Double?,
+        notes: String?,
     ): Result<Unit> {
         return if (saveBodyMeasurementUseCase != null) {
             saveBodyMeasurementUseCase(
+                id = null,
                 weightKg = weightKg,
                 chestCm = chestCm,
                 waistCm = waistCm,
@@ -92,12 +89,10 @@ class DimensionalMetricTrackingUseCase( : IDimensionalMetricTrackingUseCase
                 notes = notes,
             )
         } else {
-            override val now = System.currentTimeMillis()
-            override val measurement =
+            val now = System.currentTimeMillis()
+            val measurement =
                 BodyMeasurement(
                     id = java.util.UUID.randomUUID().toString(),
-                    createdAt = now,
-                    updatedAt = now,
                     weightKg = weightKg,
                     chestCm = chestCm,
                     waistCm = waistCm,
@@ -107,6 +102,8 @@ class DimensionalMetricTrackingUseCase( : IDimensionalMetricTrackingUseCase
                     thighLeftCm = thighLeftCm,
                     thighRightCm = thighRightCm,
                     notes = notes,
+                    createdAt = now,
+                    updatedAt = now,
                 )
             try {
                 bodyMeasurementRepositoryPort.saveMeasurement(measurement)

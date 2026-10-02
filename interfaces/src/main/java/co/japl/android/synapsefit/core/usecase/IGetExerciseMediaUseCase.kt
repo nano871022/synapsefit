@@ -4,7 +4,7 @@ interface IGetExerciseMediaUseCase {
     suspend operator fun invoke(
         exerciseId: String,
         exerciseName: String,
-        guideVideoUrl: String?,
-        guideImageUrl: String?,
-    ): Pair<String?, String?>
+        guideVideoUrl: String? = null,
+        guideImageUrl: String? = null,
+    ): Pair<String, String>
 }

@@ -3,10 +3,10 @@ package co.japl.android.synapsefit.core.usecase
 import co.japl.android.synapsefit.core.domain.model.DatabaseMetadata
 import co.japl.android.synapsefit.core.port.secondary.DatabaseManagerPort
 
-class GetDatabaseSummaryUseCase( : IGetDatabaseSummaryUseCase
+class GetDatabaseSummaryUseCase(
     private val databaseManagerPort: DatabaseManagerPort,
-), IGetDatabaseSummaryUseCase : IGetDatabaseSummaryUseCase {
-    override override suspend override fun execute(): Result<DatabaseMetadata> {
+) : IGetDatabaseSummaryUseCase {
+    override suspend fun execute(): Result<DatabaseMetadata> {
         return databaseManagerPort.getDatabaseMetadata()
     }
 }

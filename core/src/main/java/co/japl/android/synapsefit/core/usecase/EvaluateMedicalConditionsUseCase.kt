@@ -7,13 +7,13 @@ import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
 import kotlinx.coroutines.flow.firstOrNull
 import java.util.UUID
 
-class EvaluateMedicalConditionsUseCase( : IEvaluateMedicalConditionsUseCase
+class EvaluateMedicalConditionsUseCase(
     private val userProfileRepositoryPort: UserProfileRepositoryPort,
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort,
     private val llmClientPort: LlmClientPort,
-), IEvaluateMedicalConditionsUseCase : IEvaluateMedicalConditionsUseCase {
+) : IEvaluateMedicalConditionsUseCase {
     @Suppress("ReturnCount")
-    override override suspend operator override fun invoke(
+    override suspend operator fun invoke(
         gender: String,
         heightCm: Double,
         bloodType: String,
@@ -21,11 +21,11 @@ class EvaluateMedicalConditionsUseCase( : IEvaluateMedicalConditionsUseCase
     ): Result<MedicalRecommendation?> {
         if (medicalConditions.isBlank()) return Result.success(null)
 
-        override val activeConfig =
+        val activeConfig =
             llmConfigRepositoryPort.getActiveConfig().firstOrNull()
                 ?: return Result.failure(IllegalStateException("No hay un proveedor LLM activo configurado"))
 
-        override val medicalResult =
+        val medicalResult =
             llmClientPort.generateMedicalRecommendation(
                 gender = gender,
                 heightCm = heightCm,
@@ -36,7 +36,7 @@ class EvaluateMedicalConditionsUseCase( : IEvaluateMedicalConditionsUseCase
 
         return medicalResult.map { text ->
             if (text.isNotBlank()) {
-                override val recommendation =
+                val recommendation =
                     MedicalRecommendation(
                         id = UUID.randomUUID().toString(),
                         profileCode = "PRIMARY_USER",
