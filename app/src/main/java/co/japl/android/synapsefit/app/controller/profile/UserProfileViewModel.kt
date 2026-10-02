@@ -1,16 +1,16 @@
-@file:Suppress("MaxLineLength", "LongMethod", "TooManyFunctions", "LongParameterList")
+@file:Suppress("MaxLineLength", "LongParameterList", "TooManyFunctions", "LongMethod")
 
 package co.japl.android.synapsefit.app.controller.profile
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.japl.android.synapsefit.core.domain.model.LlmConfigState
+import co.japl.android.synapsefit.core.domain.model.MedicalRecommendation
 import co.japl.android.synapsefit.core.domain.model.UserProfile
-import co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase
-import co.japl.android.synapsefit.core.usecase.GetMedicalRecommendationsUseCase
-import co.japl.android.synapsefit.core.usecase.GetUserProfileUseCase
-import co.japl.android.synapsefit.core.usecase.SaveUserProfileUseCase
+import co.japl.android.synapsefit.core.usecase.IUserProfileUseCase
 import co.japl.android.synapsefit.navigation.AppNavigator
+import co.japl.android.synapsefit.navigation.Routes
 import co.japl.android.synapsefit.service.SynapseFitForegroundService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,27 +21,25 @@ import kotlinx.coroutines.launch
 data class UserProfileUiState(
     val fullName: String = "",
     val birthDate: String = "",
-    val gender: String = "HOMBRE",
+    val gender: String = "MALE",
     val heightCm: String = "",
     val bloodType: String = "",
     val medicalConditions: String = "",
     val isLoading: Boolean = false,
-    val isEvaluatingMedical: Boolean = false,
     val showMedicalDialog: Boolean = false,
+    val isEvaluatingMedical: Boolean = false,
     val medicalEvaluationFailed: Boolean = false,
     val medicalEvaluationError: String? = null,
     val isSavedSuccess: Boolean = false,
     val errorMessage: String? = null,
     val needsMedicalEvaluation: Boolean = false,
     val latestRecommendation: String? = null,
-    val allRecommendations: List<co.japl.android.synapsefit.core.domain.model.MedicalRecommendation> = emptyList(),
+    val allRecommendations: List<MedicalRecommendation> = emptyList(),
+    val llmConfigState: LlmConfigState = LlmConfigState.Ready,
 )
 
 class UserProfileViewModel(
-    private val getUserProfileUseCase: GetUserProfileUseCase? = null,
-    private val saveUserProfileUseCase: SaveUserProfileUseCase? = null,
-    private val evaluateMedicalConditionsUseCase: EvaluateMedicalConditionsUseCase? = null,
-    private val getMedicalRecommendationsUseCase: GetMedicalRecommendationsUseCase? = null,
+    private val userProfileUseCase: IUserProfileUseCase? = null,
     private val appNavigator: AppNavigator? = null,
     private val context: Context? = null,
 ) : ViewModel() {
@@ -52,11 +50,38 @@ class UserProfileViewModel(
         loadProfile()
     }
 
+    fun checkLlmState() {
+        viewModelScope.launch {
+            if (userProfileUseCase != null) {
+                val state = userProfileUseCase.checkLlmState()
+                _uiState.update { it.copy(llmConfigState = state) }
+            }
+        }
+    }
+
+    fun dismissLlmDialog() {
+        _uiState.update { it.copy(llmConfigState = LlmConfigState.Ready) }
+    }
+
+    fun selectActiveLlmConfig(configId: String) {
+        viewModelScope.launch {
+            userProfileUseCase?.selectActiveConfig(configId)
+            checkLlmState()
+        }
+    }
+
+    fun navigateToLlmSettings() {
+        dismissLlmDialog()
+        viewModelScope.launch {
+            appNavigator?.navigateTo(Routes.settingsLlm(openForm = true))
+        }
+    }
+
     fun loadProfile() {
-        if (getUserProfileUseCase == null) return
+        if (userProfileUseCase == null) return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            getUserProfileUseCase().collect { profile ->
+            userProfileUseCase.getUserProfile().collect { profile ->
                 if (profile != null) {
                     _uiState.update {
                         it.copy(
@@ -76,15 +101,13 @@ class UserProfileViewModel(
             }
         }
 
-        getMedicalRecommendationsUseCase?.let { useCase ->
-            viewModelScope.launch {
-                useCase().collect { list ->
-                    _uiState.update {
-                        it.copy(
-                            allRecommendations = list,
-                            latestRecommendation = list.firstOrNull()?.result,
-                        )
-                    }
+        viewModelScope.launch {
+            userProfileUseCase.getMedicalRecommendations().collect { list ->
+                _uiState.update {
+                    it.copy(
+                        allRecommendations = list,
+                        latestRecommendation = list.firstOrNull()?.result,
+                    )
                 }
             }
         }
@@ -134,7 +157,14 @@ class UserProfileViewModel(
             val hasMedicalConditions = state.medicalConditions.trim().isNotBlank()
             appNavigator?.setLoading(true)
 
-            if (hasMedicalConditions && evaluateMedicalConditionsUseCase != null) {
+            if (hasMedicalConditions && userProfileUseCase != null) {
+                val llmStatus = userProfileUseCase.checkLlmState()
+                if (llmStatus !is LlmConfigState.Ready) {
+                    _uiState.update { it.copy(llmConfigState = llmStatus) }
+                    appNavigator?.setLoading(false)
+                    return@launch
+                }
+
                 _uiState.update {
                     it.copy(
                         isLoading = true,
@@ -147,7 +177,7 @@ class UserProfileViewModel(
                 context?.let { SynapseFitForegroundService.startLlmService(it, "Evaluando perfil médico") }
 
                 val evalResult =
-                    evaluateMedicalConditionsUseCase(
+                    userProfileUseCase.evaluateMedicalConditions(
                         gender = state.gender,
                         heightCm = height,
                         bloodType = state.bloodType.trim(),
@@ -176,7 +206,6 @@ class UserProfileViewModel(
                             isEvaluatingMedical = false,
                             showMedicalDialog = false,
                             medicalEvaluationFailed = false,
-                            needsMedicalEvaluation = false,
                         )
                     }
                 }
@@ -194,6 +223,12 @@ class UserProfileViewModel(
         if (state.medicalConditions.trim().isBlank() || height <= 0 || name.isEmpty()) return
 
         viewModelScope.launch {
+            val llmStatus = userProfileUseCase?.checkLlmState() ?: LlmConfigState.Ready
+            if (llmStatus !is LlmConfigState.Ready) {
+                _uiState.update { it.copy(llmConfigState = llmStatus) }
+                return@launch
+            }
+
             _uiState.update {
                 it.copy(
                     isLoading = true,
@@ -206,7 +241,7 @@ class UserProfileViewModel(
             context?.let { SynapseFitForegroundService.startLlmService(it, "Evaluando perfil médico") }
 
             val evalResult =
-                evaluateMedicalConditionsUseCase?.invoke(
+                userProfileUseCase?.evaluateMedicalConditions(
                     gender = state.gender,
                     heightCm = height,
                     bloodType = state.bloodType.trim(),
@@ -273,7 +308,7 @@ class UserProfileViewModel(
                 updatedAt = System.currentTimeMillis(),
             )
 
-        val result = saveUserProfileUseCase?.invoke(profile)
+        val result = userProfileUseCase?.saveUserProfile(profile)
         if (result == null || result.isSuccess) {
             _uiState.update {
                 it.copy(

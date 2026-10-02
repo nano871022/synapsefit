@@ -1,4 +1,4 @@
-@file:Suppress("MaxLineLength", "LongParameterList")
+@file:Suppress("MaxLineLength", "LongParameterList", "TooManyFunctions", "LongMethod")
 
 package co.japl.android.synapsefit.app.controller.workout
 
@@ -7,12 +7,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.core.domain.model.EquipmentPreference
 import co.japl.android.synapsefit.core.domain.model.Exercise
+import co.japl.android.synapsefit.core.domain.model.LlmConfigState
 import co.japl.android.synapsefit.core.domain.model.TrainingLocation
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
-import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
-import co.japl.android.synapsefit.core.usecase.GenerateWorkoutPlanUseCase
-import co.japl.android.synapsefit.core.usecase.GetExerciseMediaUseCase
-import co.japl.android.synapsefit.core.usecase.OptimizeWorkoutPromptUseCase
+import co.japl.android.synapsefit.core.usecase.IAICoachGeneratorUseCase
 import co.japl.android.synapsefit.navigation.AppNavigator
 import co.japl.android.synapsefit.navigation.Routes
 import co.japl.android.synapsefit.service.SynapseFitForegroundService
@@ -36,18 +34,43 @@ data class AICoachGeneratorUiState(
     val isFetchingMedia: Boolean = false,
     val mediaProgress: Float = 0f,
     val isLoading: Boolean = false,
+    val llmConfigState: LlmConfigState = LlmConfigState.Ready,
 )
 
 class AICoachGeneratorViewModel(
-    private val generateWorkoutPlanUseCase: GenerateWorkoutPlanUseCase? = null,
-    private val optimizeWorkoutPromptUseCase: OptimizeWorkoutPromptUseCase? = null,
-    private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
-    private val getExerciseMediaUseCase: GetExerciseMediaUseCase? = null,
+    private val aiCoachGeneratorUseCase: IAICoachGeneratorUseCase? = null,
     private val appNavigator: AppNavigator? = null,
     private val context: Context? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AICoachGeneratorUiState())
     val uiState: StateFlow<AICoachGeneratorUiState> = _uiState.asStateFlow()
+
+    fun checkLlmState() {
+        viewModelScope.launch {
+            if (aiCoachGeneratorUseCase != null) {
+                val state = aiCoachGeneratorUseCase.checkLlmState()
+                _uiState.update { it.copy(llmConfigState = state) }
+            }
+        }
+    }
+
+    fun dismissLlmDialog() {
+        _uiState.update { it.copy(llmConfigState = LlmConfigState.Ready) }
+    }
+
+    fun selectActiveLlmConfig(configId: String) {
+        viewModelScope.launch {
+            aiCoachGeneratorUseCase?.selectActiveConfig(configId)
+            checkLlmState()
+        }
+    }
+
+    fun navigateToLlmSettings() {
+        dismissLlmDialog()
+        viewModelScope.launch {
+            appNavigator?.navigateTo(Routes.settingsLlm(openForm = true))
+        }
+    }
 
     fun onGymChainQueryChange(query: String) {
         _uiState.update { it.copy(gymChainQuery = query) }
@@ -66,11 +89,17 @@ class AICoachGeneratorViewModel(
         if (state.promptContext.isBlank()) return
 
         viewModelScope.launch {
+            val llmStatus = aiCoachGeneratorUseCase?.checkLlmState() ?: LlmConfigState.Ready
+            if (llmStatus !is LlmConfigState.Ready) {
+                _uiState.update { it.copy(llmConfigState = llmStatus) }
+                return@launch
+            }
+
             _uiState.update { it.copy(isOptimizing = true, generationError = null) }
             context?.let { SynapseFitForegroundService.startLlmService(it, "Optimizando solicitud") }
 
             val result =
-                optimizeWorkoutPromptUseCase?.invoke(
+                aiCoachGeneratorUseCase?.optimizePrompt(
                     userPrompt = state.promptContext,
                     location = state.selectedLocation,
                     equipment = state.selectedEquipment,
@@ -105,19 +134,26 @@ class AICoachGeneratorViewModel(
     fun generatePlan() {
         val state = _uiState.value
         viewModelScope.launch {
+            val llmStatus = aiCoachGeneratorUseCase?.checkLlmState() ?: LlmConfigState.Ready
+            if (llmStatus !is LlmConfigState.Ready) {
+                _uiState.update { it.copy(llmConfigState = llmStatus) }
+                return@launch
+            }
+
             _uiState.update { it.copy(isGenerating = true, generationError = null) }
             appNavigator?.setLoading(true)
             context?.let { SynapseFitForegroundService.startLlmService(it, "Generando plan de entrenamiento con IA") }
 
-            if (generateWorkoutPlanUseCase != null) {
+            if (aiCoachGeneratorUseCase != null) {
                 val daysInt = state.daysPerWeek.toIntOrNull()
+                val defaultPrompt = "Plan de entrenamiento general de hipertrofia y fuerza"
                 val result =
-                    generateWorkoutPlanUseCase(
-                        promptContext = state.promptContext.ifBlank { "Plan de entrenamiento general de hipertrofia y fuerza" },
+                    aiCoachGeneratorUseCase.generatePlan(
+                        promptContext = state.promptContext.ifBlank { defaultPrompt },
                         location = state.selectedLocation,
                         equipment = state.selectedEquipment,
                         gymChainQuery =
-                            if (state.selectedLocation == co.japl.android.synapsefit.core.domain.model.TrainingLocation.GYM) {
+                            if (state.selectedLocation == TrainingLocation.GYM) {
                                 state.gymChainQuery
                             } else {
                                 null
@@ -166,12 +202,12 @@ class AICoachGeneratorViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isFetchingMedia = true, mediaProgress = 0f) }
             context?.let { SynapseFitForegroundService.startLlmService(it, "Obteniendo recursos multimedia") }
-            workoutPlanRepositoryPort?.setActivePlan(planId)
+            aiCoachGeneratorUseCase?.setActivePlan(planId)
 
-            if (getExerciseMediaUseCase != null && exercises.isNotEmpty()) {
+            if (aiCoachGeneratorUseCase != null && exercises.isNotEmpty()) {
                 exercises.forEachIndexed { index, ex ->
                     runCatching {
-                        getExerciseMediaUseCase(
+                        aiCoachGeneratorUseCase.fetchExerciseMedia(
                             exerciseId = ex.id,
                             exerciseName = ex.name,
                             guideVideoUrl = ex.guideVideoUrl,
@@ -193,7 +229,7 @@ class AICoachGeneratorViewModel(
         val planId = _uiState.value.generatedPlan?.id ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            workoutPlanRepositoryPort?.deletePlan(planId)
+            aiCoachGeneratorUseCase?.deletePlan(planId)
             _uiState.update {
                 it.copy(
                     generatedPlan = null,
