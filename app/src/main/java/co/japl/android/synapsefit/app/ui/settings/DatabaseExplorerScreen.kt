@@ -289,3 +289,25 @@ fun DatabaseExplorerScreenPreview() {
         )
     }
 }
+
+@Preview(showBackground = true, name = "Database Explorer - Loading State")
+@Composable
+fun DatabaseExplorerScreenLoadingPreview() {
+    MaterialThemeComposeUI {
+        DatabaseExplorerScreen(
+            state = DatabaseExplorerUiState.Loading,
+            onRefreshClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Database Explorer - Error State")
+@Composable
+fun DatabaseExplorerScreenErrorPreview() {
+    MaterialThemeComposeUI {
+        DatabaseExplorerScreen(
+            state = DatabaseExplorerUiState.Error("Error al leer la base de datos de la aplicación."),
+            onRefreshClick = {},
+        )
+    }
+}
