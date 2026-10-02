@@ -1,4 +1,15 @@
-@file:Suppress("TooManyFunctions")
+@file:Suppress(
+    "FunctionNaming",
+    "LongMethod",
+    "MaxLineLength",
+    "UnusedParameter",
+    "UnusedPrivateMember",
+    "MagicNumber",
+    "LongParameterList",
+    "CyclomaticComplexMethod",
+    "TooGenericExceptionCaught",
+    "TooManyFunctions",
+)
 
 package co.japl.android.synapsefit.ui.view
 
@@ -747,6 +758,33 @@ internal fun WearActiveWorkoutScreenPreview3() {
             onIncrementWgt = {},
             onDecrementWgt = { },
             modifier = Modifier,
+            onCompleteSet = {},
+            onStartNextExercise = {},
+            onTogglePause = {},
+            onNextExercise = {},
+            onPreviousExercise = {},
+        )
+    }
+}
+
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true, name = "Wear Active Workout - Numeric Keypad Dialog")
+@Composable
+internal fun WearActiveWorkoutScreenKeypadDialogPreview() {
+    val uiState =
+        WearActiveWorkoutUiState(
+            exerciseName = "Press de Banca",
+            currentReps = 10,
+            currentWeight = 60,
+            isNumericKeypadOpen = true,
+        )
+
+    MaterialThemeComposeUI {
+        WearActiveWorkoutScreen(
+            uiState = uiState,
+            onIncrementReps = {},
+            onDecrementReps = {},
+            onIncrementWgt = {},
+            onDecrementWgt = {},
             onCompleteSet = {},
             onStartNextExercise = {},
             onTogglePause = {},
