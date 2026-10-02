@@ -16,6 +16,7 @@ Every pull request or code modification must pass the following core architectur
 | **ARCH-03** | `:app` / `:wear` | **Decoupled Navigation:** Composables must not accept `NavController` directly. Must use `AppNavigator`. | Inspection |
 | **ARCH-04** | `:services` | **Domain Isolation:** Room `@Entity` and REST DTO classes must never leak to `:app` or `:core`. Mappers are mandatory. | Package inspection |
 | **ARCH-05** | All | **Audit Enforcement:** Every primary entity in SQLite must populate non-null `created_at` and `updated_at` epoch timestamps. | Room DAO / Unit tests |
+| **ARCH-06** | `:app` / `:wear` | **Preview State Coverage:** Every `*Screen` interface MUST provide `@Preview` methods for every conditional state and option displayed without app deployment. | Code review / Android Studio Preview |
 
 ---
 
@@ -62,7 +63,8 @@ Before submitting a Pull Request or completing a task, verify the code against t
 
 ### 2. Jetpack Compose & UI
 * [ ] Composables accept an immutable `UiState` and emit user interaction lambdas (State Hoisting).
-* [ ] `@Preview` annotations are included with default mock data wrapped in `SynapseFitTheme`.
+* [ ] `@Preview` methods are included for every `*Screen` interface to visualize UI without app deployment.
+* [ ] A dedicated `@Preview` function is provided for EACH conditional state or UI option (Loading, Error, Empty, Success/Loaded data, Active Modals/Dialogs) wrapped in `SynapseFitTheme` / `MaterialThemeComposeUI`.
 * [ ] UI elements support adaptive reflow for Foldables (`WindowSizeClass`) and Dark Mode palette (`#101416`).
 
 ### 3. Data & Security
@@ -93,5 +95,4 @@ Run these commands locally to ensure quality compliance before committing:
 
 # 4. Execute all unit and architecture tests
 ./gradlew testDebugUnitTest
-
-
+```
