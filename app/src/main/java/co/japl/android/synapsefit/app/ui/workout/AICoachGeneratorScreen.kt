@@ -43,6 +43,7 @@ import co.japl.android.synapsefit.core.domain.model.EquipmentPreference
 import co.japl.android.synapsefit.core.domain.model.Exercise
 import co.japl.android.synapsefit.core.domain.model.TrainingLocation
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
+import co.japl.android.synapsefit.ui.components.LlmStateDialog
 import co.japl.android.synapsefit.ui.components.NeonButton
 
 @Composable
@@ -57,8 +58,18 @@ fun AICoachGeneratorScreen(
     onGenerateClick: () -> Unit,
     onAcceptClick: () -> Unit,
     onDiscardClick: () -> Unit,
+    onDismissLlmDialog: () -> Unit = {},
+    onSelectLlmConfig: (String) -> Unit = {},
+    onConfigureLlmRedirect: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    LlmStateDialog(
+        state = state.llmConfigState,
+        onDismissRequest = onDismissLlmDialog,
+        onSelectConfig = onSelectLlmConfig,
+        onConfigureRedirect = onConfigureLlmRedirect,
+    )
+
     if (state.isFetchingMedia) {
         Dialog(
             onDismissRequest = {},
@@ -88,105 +99,123 @@ fun AICoachGeneratorScreen(
                     LinearProgressIndicator(
                         progress = { state.mediaProgress },
                         modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     )
                 }
             }
         }
     }
 
+    val scrollState = rememberScrollState()
+
     Column(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(MaterialTheme.spacing.marginEdge)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(scrollState)
+                .padding(MaterialTheme.spacing.medium),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
     ) {
         Text(
-            text = stringResource(R.string.ai_coach_generator),
+            text = "Entrenador Inteligente IA",
             style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-
-        state.generationError?.let { err ->
-            Text(
-                text = err,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-            )
-        }
-
-        Text(
-            text = stringResource(R.string.training_location),
-            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
         )
 
+        Text(
+            text = "Ubicación de Entrenamiento",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         LocationSelector(
             selectedLocation = state.selectedLocation,
             onLocationSelected = onLocationSelected,
         )
 
-        Text(
-            text = stringResource(R.string.equipment_preference),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
-
-        EquipmentSelector(
-            selectedEquipment = state.selectedEquipment,
-            onEquipmentSelected = onEquipmentSelected,
-        )
-
         if (state.selectedLocation == TrainingLocation.GYM) {
+            Text(
+                text = stringResource(R.string.gym_chain_label),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             GymChainSearchInput(
                 query = state.gymChainQuery,
                 onQueryChange = onGymChainQueryChange,
             )
         }
 
+        Text(
+            text = "Equipamiento Disponible",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        EquipmentSelector(
+            selectedEquipment = state.selectedEquipment,
+            onEquipmentSelected = onEquipmentSelected,
+        )
+
+        Text(
+            text = "Días de entrenamiento por semana",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         OutlinedTextField(
             value = state.daysPerWeek,
-            onValueChange = onDaysPerWeekChange,
-            label = { Text(stringResource(R.string.training_days_per_week)) },
+            onValueChange = { days ->
+                val filtered = days.filter { it.isDigit() }
+                if (filtered.isEmpty() || (filtered.toIntOrNull() ?: 0) in 1..7) {
+                    onDaysPerWeekChange(filtered)
+                }
+            },
+            label = { Text("Días por semana (1 - 7)") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         )
 
         Text(
-            text = stringResource(R.string.goal_and_context),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
+            text = "Objetivo y Enfoque Personalizado",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
-        Box(modifier = Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = state.promptContext,
-                onValueChange = onPromptContextChange,
-                label = { Text(stringResource(R.string.goal_prompt_placeholder)) },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                minLines = 3,
-            )
-            androidx.compose.material3.TextButton(
+        OutlinedTextField(
+            value = state.promptContext,
+            onValueChange = onPromptContextChange,
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3,
+            maxLines = 5,
+            placeholder = { Text("Ej: Quiero ganar masa muscular en piernas y torso, enfocándome en ejercicios compuestos...") },
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+        ) {
+            NeonButton(
+                text = if (state.isOptimizing) "Optimizando..." else "Optimizar Prompt",
                 onClick = onOptimizeClick,
-                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp, top = 24.dp),
-                enabled = state.promptContext.isNotBlank() && !state.isOptimizing,
-            ) {
-                if (state.isOptimizing) {
-                    androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                } else {
-                    Text(stringResource(R.string.optimize_prompt), style = MaterialTheme.typography.labelMedium)
-                }
-            }
+                enabled = !state.isGenerating && !state.isOptimizing && state.promptContext.isNotBlank(),
+                modifier = Modifier.weight(1f),
+            )
+            NeonButton(
+                text = if (state.isGenerating) "Generando..." else "Generar Rutina con IA",
+                onClick = onGenerateClick,
+                enabled = !state.isGenerating && !state.isOptimizing,
+                modifier = Modifier.weight(1f),
+            )
         }
 
-        NeonButton(
-            text = if (state.generatedPlan == null) stringResource(R.string.generate_plan_ai) else "Generar Otra",
-            onClick = onGenerateClick,
-            isLoading = state.isGenerating,
-            enabled = !state.isGenerating && !state.isOptimizing,
-        )
+        if (state.generationError != null) {
+            Text(
+                text = state.generationError,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(vertical = MaterialTheme.spacing.extraSmall),
+            )
+        }
 
         if (state.generatedPlan != null) {
             PlanPreview(
@@ -198,8 +227,10 @@ fun AICoachGeneratorScreen(
             )
         } else {
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .size(120.dp),
                 colors =
                     CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,

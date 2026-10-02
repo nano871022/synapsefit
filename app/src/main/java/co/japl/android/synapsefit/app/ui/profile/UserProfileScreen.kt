@@ -1,16 +1,10 @@
-@file:Suppress(
-    "FunctionNaming",
-    "LongMethod",
-    "CyclomaticComplexMethod",
-    "LongParameterList",
-    "UnusedPrivateMember",
-    "MagicNumber",
-)
+@file:Suppress("FunctionNaming", "LongMethod", "CyclomaticComplexMethod", "MaxLineLength", "UnusedPrivateMember")
 
 package co.japl.android.synapsefit.app.ui.profile
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,30 +12,33 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MedicalServices
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -56,21 +53,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import co.com.japl.ui.theme.MaterialThemeComposeUI
 import co.com.japl.ui.theme.spacing
 import co.japl.android.synapsefit.R
 import co.japl.android.synapsefit.app.controller.profile.UserProfileUiState
-import co.japl.android.synapsefit.ui.components.AnatomicalInputField
+import co.japl.android.synapsefit.ui.components.LlmStateDialog
 import co.japl.android.synapsefit.ui.components.NeonButton
-import co.japl.android.synapsefit.util.DateTimeUtils
-import java.util.Calendar
-import java.util.Locale
-import java.util.TimeZone
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserProfileScreen(
     state: UserProfileUiState,
@@ -84,6 +81,9 @@ fun UserProfileScreen(
     onRecalculateMedicalEvaluation: () -> Unit = {},
     onRetryMedicalConditions: () -> Unit = {},
     onDismissMedicalDialog: () -> Unit = {},
+    onDismissLlmDialog: () -> Unit = {},
+    onSelectLlmConfig: (String) -> Unit = {},
+    onConfigureLlmRedirect: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var bloodTypeExpanded by remember { mutableStateOf(false) }
@@ -98,6 +98,13 @@ fun UserProfileScreen(
     var showDatePickerDialog by remember { mutableStateOf(false) }
     var showAllRecommendationsDialog by remember { mutableStateOf(false) }
 
+    LlmStateDialog(
+        state = state.llmConfigState,
+        onDismissRequest = onDismissLlmDialog,
+        onSelectConfig = onSelectLlmConfig,
+        onConfigureRedirect = onConfigureLlmRedirect,
+    )
+
     LaunchedEffect(state.isLoading, state.isSavedSuccess) {
         if (!state.isLoading && state.errorMessage == null) {
             isFullNameEditable = state.fullName.isBlank()
@@ -109,280 +116,24 @@ fun UserProfileScreen(
         }
     }
 
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .padding(MaterialTheme.spacing.marginEdge)
-                .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
-    ) {
-        Text(
-            text = stringResource(R.string.user_profile),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
+    if (state.showMedicalDialog) {
+        MedicalEvaluationProgressDialog(
+            isEvaluating = state.isEvaluatingMedical,
+            evaluationFailed = state.medicalEvaluationFailed,
+            errorMessage = state.medicalEvaluationError,
+            onDismiss = onDismissMedicalDialog,
+            onRetry = onRetryMedicalConditions,
         )
+    }
 
-        if (state.errorMessage != null) {
-            Text(
-                text = state.errorMessage,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-
-        if (state.isSavedSuccess) {
-            Text(
-                text = stringResource(R.string.profile_saved),
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            OutlinedTextField(
-                value = state.fullName,
-                onValueChange = onFullNameChange,
-                enabled = isFullNameEditable,
-                label = { Text(stringResource(R.string.user_full_name)) },
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-            )
-            IconButton(onClick = { isFullNameEditable = !isFullNameEditable }) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit Full Name")
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            OutlinedTextField(
-                value = state.birthDate,
-                onValueChange = { },
-                readOnly = true,
-                enabled = isBirthDateEditable,
-                label = { Text(stringResource(R.string.birth_date)) },
-                trailingIcon = {
-                    IconButton(
-                        onClick = {
-                            if (isBirthDateEditable) {
-                                showDatePickerDialog = true
-                            }
-                        },
-                        enabled = isBirthDateEditable,
-                    ) {
-                        Icon(Icons.Default.DateRange, contentDescription = "Select Birth Date")
-                    }
-                },
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .clickable(enabled = isBirthDateEditable) {
-                            showDatePickerDialog = true
-                        },
-                singleLine = true,
-            )
-            IconButton(onClick = { isBirthDateEditable = !isBirthDateEditable }) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit Birth Date")
-            }
-        }
-
-        if (showDatePickerDialog && isBirthDateEditable) {
-            val initialMillis =
-                remember(state.birthDate) {
-                    val epoch = DateTimeUtils.parseIsoDateToEpoch(state.birthDate)
-                    if (epoch > 0L) epoch else System.currentTimeMillis()
-                }
-            val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
-
-            DatePickerDialog(
-                onDismissRequest = { showDatePickerDialog = false },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            val selectedMillis = datePickerState.selectedDateMillis
-                            if (selectedMillis != null) {
-                                val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-                                cal.timeInMillis = selectedMillis
-                                val formatted =
-                                    String.format(
-                                        Locale.US,
-                                        "%04d-%02d-%02d",
-                                        cal.get(Calendar.YEAR),
-                                        cal.get(Calendar.MONTH) + 1,
-                                        cal.get(Calendar.DAY_OF_MONTH),
-                                    )
-                                onBirthDateChange(formatted)
-                            }
-                            showDatePickerDialog = false
-                        },
-                    ) {
-                        Text(stringResource(R.string.save_profile))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDatePickerDialog = false }) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                },
-            ) {
-                DatePicker(state = datePickerState)
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.gender),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            IconButton(onClick = { isGenderEditable = !isGenderEditable }) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit Gender")
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            val genderOptions =
-                listOf(
-                    "HOMBRE" to stringResource(R.string.gender_male),
-                    "MUJER" to stringResource(R.string.gender_female),
-                    "OTRO" to stringResource(R.string.gender_other),
-                )
-
-            genderOptions.forEach { (key, label) ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(end = 8.dp),
-                ) {
-                    RadioButton(
-                        selected = state.gender == key,
-                        enabled = isGenderEditable,
-                        onClick = { if (isGenderEditable) onGenderChange(key) },
-                    )
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                    )
-                }
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AnatomicalInputField(
-                value = state.heightCm,
-                onValueChange = onHeightCmChange,
-                label = stringResource(R.string.height_cm),
-                unitLabel = stringResource(R.string.cm_unit),
-                enabled = isHeightCmEditable,
-                modifier = Modifier.weight(1f),
-            )
-            IconButton(onClick = { isHeightCmEditable = !isHeightCmEditable }) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit Height")
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            ExposedDropdownMenuBox(
-                expanded = bloodTypeExpanded && isBloodTypeEditable,
-                onExpandedChange = { if (isBloodTypeEditable) bloodTypeExpanded = !bloodTypeExpanded },
-                modifier = Modifier.weight(1f),
-            ) {
-                OutlinedTextField(
-                    value = state.bloodType,
-                    onValueChange = onBloodTypeChange,
-                    enabled = isBloodTypeEditable,
-                    label = { Text(stringResource(R.string.blood_type)) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = bloodTypeExpanded) },
-                    modifier =
-                        Modifier
-                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = isBloodTypeEditable)
-                            .fillMaxWidth(),
-                )
-                ExposedDropdownMenu(
-                    expanded = bloodTypeExpanded && isBloodTypeEditable,
-                    onDismissRequest = { bloodTypeExpanded = false },
-                ) {
-                    bloodTypes.forEach { type ->
-                        DropdownMenuItem(
-                            text = { Text(type) },
-                            onClick = {
-                                onBloodTypeChange(type)
-                                bloodTypeExpanded = false
-                            },
-                        )
-                    }
-                }
-            }
-            IconButton(onClick = { isBloodTypeEditable = !isBloodTypeEditable }) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit Blood Type")
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            OutlinedTextField(
-                value = state.medicalConditions,
-                onValueChange = onMedicalConditionsChange,
-                enabled = isMedicalConditionsEditable,
-                label = { Text(stringResource(R.string.medical_conditions)) },
-                modifier = Modifier.weight(1f),
-                minLines = 3,
-                maxLines = 5,
-            )
-            IconButton(onClick = { isMedicalConditionsEditable = !isMedicalConditionsEditable }) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit Medical Conditions")
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-        ) {
-            NeonButton(
-                text = stringResource(R.string.save_profile),
-                onClick = onSaveClick,
-                isLoading = state.isLoading && !state.showMedicalDialog,
-                modifier = Modifier.weight(1f),
-            )
-
-            if (state.needsMedicalEvaluation) {
-                NeonButton(
-                    text = stringResource(R.string.recalculate_medical_recommendations),
-                    onClick = onRecalculateMedicalEvaluation,
-                    isLoading = state.isLoading && !state.showMedicalDialog,
-                    icon = { Icon(Icons.Default.Refresh, contentDescription = null) },
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
-
-        if (state.latestRecommendation != null) {
-            RecommendationSection(
-                latestRecommendation = state.latestRecommendation,
-                onViewAllClick = { showAllRecommendationsDialog = true },
-            )
-        }
+    if (showDatePickerDialog) {
+        ProfileDatePickerDialog(
+            onDateSelected = { selectedDate ->
+                onBirthDateChange(selectedDate)
+                showDatePickerDialog = false
+            },
+            onDismiss = { showDatePickerDialog = false },
+        )
     }
 
     if (showAllRecommendationsDialog) {
@@ -392,73 +143,366 @@ fun UserProfileScreen(
         )
     }
 
-    if (state.showMedicalDialog) {
-        androidx.compose.ui.window.Dialog(onDismissRequest = onDismissMedicalDialog) {
-            androidx.compose.material3.Surface(
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surface,
-                modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.small),
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(MaterialTheme.spacing.medium),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
+    ) {
+        Text(
+            text = "Perfil de Usuario",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+        )
+
+        OutlinedTextField(
+            value = state.fullName,
+            onValueChange = onFullNameChange,
+            label = { Text("Nombre Completo") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            enabled = isFullNameEditable,
+            trailingIcon = {
+                IconButton(onClick = { isFullNameEditable = !isFullNameEditable }) {
+                    Icon(
+                        imageVector = if (isFullNameEditable) Icons.Default.Lock else Icons.Default.Edit,
+                        contentDescription = "Editar nombre",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            },
+        )
+
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = state.birthDate,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Fecha de Nacimiento") },
+                placeholder = { Text("AAAA-MM-DD") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                enabled = isBirthDateEditable,
+                trailingIcon = {
+                    Row {
+                        if (isBirthDateEditable) {
+                            IconButton(onClick = { showDatePickerDialog = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.CalendarToday,
+                                    contentDescription = "Seleccionar fecha",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                        IconButton(onClick = { isBirthDateEditable = !isBirthDateEditable }) {
+                            Icon(
+                                imageVector = if (isBirthDateEditable) Icons.Default.Lock else Icons.Default.Edit,
+                                contentDescription = "Editar fecha nacimiento",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                },
+            )
+        }
+
+        OutlinedTextField(
+            value = state.gender,
+            onValueChange = onGenderChange,
+            label = { Text("Género") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            enabled = isGenderEditable,
+            trailingIcon = {
+                IconButton(onClick = { isGenderEditable = !isGenderEditable }) {
+                    Icon(
+                        imageVector = if (isGenderEditable) Icons.Default.Lock else Icons.Default.Edit,
+                        contentDescription = "Editar género",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            },
+        )
+
+        OutlinedTextField(
+            value = state.heightCm,
+            onValueChange = onHeightCmChange,
+            label = { Text("Estatura (cm)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            enabled = isHeightCmEditable,
+            trailingIcon = {
+                IconButton(onClick = { isHeightCmEditable = !isHeightCmEditable }) {
+                    Icon(
+                        imageVector = if (isHeightCmEditable) Icons.Default.Lock else Icons.Default.Edit,
+                        contentDescription = "Editar estatura",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            },
+        )
+
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = state.bloodType,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Tipo de Sangre") },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = isBloodTypeEditable,
+                trailingIcon = {
+                    Row {
+                        IconButton(onClick = { isBloodTypeEditable = !isBloodTypeEditable }) {
+                            Icon(
+                                imageVector = if (isBloodTypeEditable) Icons.Default.Lock else Icons.Default.Edit,
+                                contentDescription = "Editar tipo de sangre",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                },
+            )
+            if (isBloodTypeEditable) {
+                Box(
+                    modifier =
+                        Modifier
+                            .matchParentSize()
+                            .clickable { bloodTypeExpanded = true },
+                )
+            }
+            DropdownMenu(
+                expanded = bloodTypeExpanded,
+                onDismissRequest = { bloodTypeExpanded = false },
+            ) {
+                bloodTypes.forEach { type ->
+                    DropdownMenuItem(
+                        text = { Text(type) },
+                        onClick = {
+                            onBloodTypeChange(type)
+                            bloodTypeExpanded = false
+                        },
+                    )
+                }
+            }
+        }
+
+        OutlinedTextField(
+            value = state.medicalConditions,
+            onValueChange = onMedicalConditionsChange,
+            label = { Text("Condiciones / Enfermedades Médicas") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3,
+            enabled = isMedicalConditionsEditable,
+            trailingIcon = {
+                IconButton(onClick = { isMedicalConditionsEditable = !isMedicalConditionsEditable }) {
+                    Icon(
+                        imageVector = if (isMedicalConditionsEditable) Icons.Default.Lock else Icons.Default.Edit,
+                        contentDescription = "Editar condiciones médicas",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            },
+        )
+
+        if (state.needsMedicalEvaluation) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                    ),
+            ) {
+                Row(
+                    modifier = Modifier.padding(MaterialTheme.spacing.medium),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Evaluación Médica Pendiente",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                        Text(
+                            text = "Sus condiciones médicas no han sido evaluadas por la IA deportiva.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                    }
+                    NeonButton(
+                        text = "Reevaluar",
+                        onClick = onRecalculateMedicalEvaluation,
+                    )
+                }
+            }
+        }
+
+        if (!state.latestRecommendation.isNullOrBlank()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ),
             ) {
                 Column(
                     modifier = Modifier.padding(MaterialTheme.spacing.medium),
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
                 ) {
-                    Text(
-                        text = stringResource(R.string.processing_medical_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MedicalServices,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                            Text(
+                                text = "Recomendaciones Deportivas IA",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        if (state.allRecommendations.size > 1) {
+                            IconButton(onClick = { showAllRecommendationsDialog = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = "Ver historial",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                    }
 
                     Text(
-                        text = stringResource(R.string.processing_medical_message),
+                        text = state.latestRecommendation,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
+        }
+
+        if (state.errorMessage != null) {
+            Text(
+                text = state.errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+
+        if (state.isSavedSuccess) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = "Perfil guardado con éxito",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+
+        NeonButton(
+            text = if (state.isLoading) "Guardando..." else "Guardar Perfil",
+            onClick = onSaveClick,
+            enabled = !state.isLoading,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+fun MedicalEvaluationProgressDialog(
+    isEvaluating: Boolean,
+    evaluationFailed: Boolean,
+    errorMessage: String?,
+    onDismiss: () -> Unit,
+    onRetry: () -> Unit,
+) {
+    val parsedError = if (evaluationFailed) parseHttpError(errorMessage) else null
+
+    Dialog(
+        onDismissRequest = { if (!isEvaluating) onDismiss() },
+        properties = DialogProperties(dismissOnBackPress = !isEvaluating, dismissOnClickOutside = !isEvaluating),
+    ) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.medium),
+        ) {
+            Column(
+                modifier = Modifier.padding(MaterialTheme.spacing.medium),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                if (isEvaluating) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        text = "Evaluando perfil médico...",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "Procesando condiciones de salud con la IA deportiva",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else if (evaluationFailed) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(48.dp),
+                    )
+                    Text(
+                        text = parsedError?.let { "${it.code} - ${stringResource(it.titleRes)}" } ?: "Error en la Evaluación Médica",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                    Text(
+                        text = parsedError?.originalMessage ?: errorMessage ?: "Ocurrió un error al procesar las restricciones médicas.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
 
-                    if (state.isEvaluatingMedical) {
-                        androidx.compose.material3.LinearProgressIndicator(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-
-                    if (state.medicalEvaluationFailed) {
-                        val errorData = parseHttpError(state.medicalEvaluationError)
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            Text(
-                                text = errorData.code,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                text = stringResource(errorData.titleRes),
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                            )
-                            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = errorData.originalMessage,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodySmall,
-                                textAlign = TextAlign.Center,
-                            )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                    ) {
+                        TextButton(onClick = onDismiss) {
+                            Text("Continuar sin evaluar")
                         }
-
                         NeonButton(
-                            text = stringResource(R.string.retry_medical_recommendations),
-                            onClick = onRetryMedicalConditions,
-                            isLoading = state.isEvaluatingMedical,
+                            text = "Reintentar",
+                            onClick = onRetry,
                         )
-                    }
-
-                    TextButton(onClick = onDismissMedicalDialog) {
-                        Text(stringResource(R.string.cancel))
                     }
                 }
             }
@@ -466,46 +510,36 @@ fun UserProfileScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecommendationSection(
-    latestRecommendation: String,
-    onViewAllClick: () -> Unit,
-    modifier: Modifier = Modifier,
+fun ProfileDatePickerDialog(
+    onDateSelected: (String) -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth().padding(top = MaterialTheme.spacing.medium),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+    val datePickerState = rememberDatePickerState()
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val localDate = Instant.ofEpochMilli(millis).atZone(ZoneId.of("UTC")).toLocalDate()
+                        val formattedDate = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                        onDateSelected(formattedDate)
+                    }
+                },
+            ) {
+                Text("Confirmar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        },
     ) {
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-        Text(
-            text = stringResource(R.string.latest_medical_recommendation),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                ),
-            shape = RoundedCornerShape(12.dp),
-        ) {
-            Text(
-                text = latestRecommendation,
-                modifier = Modifier.padding(MaterialTheme.spacing.medium),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        TextButton(
-            onClick = onViewAllClick,
-            modifier = Modifier.align(Alignment.End),
-        ) {
-            Text(stringResource(R.string.view_all_recommendations))
-        }
+        DatePicker(state = datePickerState)
     }
 }
 
@@ -514,55 +548,57 @@ fun AllRecommendationsDialog(
     recommendations: List<co.japl.android.synapsefit.core.domain.model.MedicalRecommendation>,
     onDismiss: () -> Unit,
 ) {
-    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+    Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.fillMaxWidth().fillMaxSize(0.8f),
+            modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.medium),
         ) {
             Column(
-                modifier = Modifier.padding(MaterialTheme.spacing.medium),
+                modifier =
+                    Modifier
+                        .padding(MaterialTheme.spacing.medium)
+                        .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
             ) {
                 Text(
-                    text = stringResource(R.string.all_recommendations_title),
-                    style = MaterialTheme.typography.titleLarge,
+                    text = "Historial de Recomendaciones Médicas",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                 )
 
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-                ) {
-                    items(recommendations) { rec ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors =
-                                CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                ),
-                        ) {
-                            Column(modifier = Modifier.padding(MaterialTheme.spacing.medium)) {
-                                Text(
-                                    text = DateTimeUtils.formatEpoch(rec.createdAt),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                                Spacer(modifier = Modifier.padding(top = 4.dp))
-                                Text(
-                                    text = rec.result,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                )
-                            }
+                recommendations.forEachIndexed { index, rec ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors =
+                            CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            ),
+                    ) {
+                        Column(modifier = Modifier.padding(MaterialTheme.spacing.small)) {
+                            Text(
+                                text = "Evaluación #${recommendations.size - index}",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.secondary,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = rec.result,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
                         }
                     }
                 }
 
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.align(Alignment.End),
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
                 ) {
-                    Text(stringResource(R.string.close))
+                    TextButton(onClick = onDismiss) {
+                        Text("Cerrar")
+                    }
                 }
             }
         }
