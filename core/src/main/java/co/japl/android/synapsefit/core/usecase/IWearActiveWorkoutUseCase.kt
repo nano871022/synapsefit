@@ -16,19 +16,9 @@ class WearActiveWorkoutUseCase(
     private val workoutPlanRepository: WorkoutPlanRepositoryPort,
     private val workoutLogRepository: WorkoutLogRepositoryPort,
 ) : IWearActiveWorkoutUseCase {
-    private val recordWorkoutSessionUseCase = RecordWorkoutSessionUseCase(workoutLogRepository)
-
     override fun getActivePlan(): Flow<WorkoutPlan?> = workoutPlanRepository.getActivePlan()
 
     override suspend fun saveWorkoutLog(log: WorkoutLog) {
-        recordWorkoutSessionUseCase(
-            planId = "",
-            day = 1,
-            exerciseId = log.exerciseId,
-            repsCompleted = log.repsCompleted,
-            weightLiftedKg = log.weightLiftedKg,
-            durationSeconds = log.durationSeconds,
-            heartRateBpm = log.heartRateBpm,
-        )
+        workoutLogRepository.saveLog(log)
     }
 }

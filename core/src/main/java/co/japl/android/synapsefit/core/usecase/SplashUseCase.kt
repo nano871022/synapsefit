@@ -21,6 +21,6 @@ class SplashUseCase(
         )
 
     override suspend fun checkAndRestoreBackup() {
-        checkAndRestoreBackupUseCase()
+        checkAndRestoreBackupUseCase.execute()
     }
 }
