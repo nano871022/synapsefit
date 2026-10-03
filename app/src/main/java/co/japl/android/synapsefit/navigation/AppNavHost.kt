@@ -74,6 +74,7 @@ fun AppNavHost(
                                 return SplashViewModel(
                                     userProfileRepositoryPort = dependencyContainer.userProfileRepository,
                                     bodyMeasurementRepositoryPort = dependencyContainer.bodyMeasurementRepository,
+                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
                                     llmConfigRepositoryPort = dependencyContainer.llmConfigRepository,
                                 ) as T
                             }
@@ -128,7 +129,10 @@ fun AppNavHost(
                             @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return UserProfileViewModel(
-                                    userProfileUseCase = dependencyContainer.userProfileUseCase,
+                                    getUserProfileUseCase = dependencyContainer.getUserProfileUseCase,
+                                    saveUserProfileUseCase = dependencyContainer.saveUserProfileUseCase,
+                                    evaluateMedicalConditionsUseCase = dependencyContainer.evaluateMedicalConditionsUseCase,
+                                    getMedicalRecommendationsUseCase = dependencyContainer.getMedicalRecommendationsUseCase,
                                     appNavigator = appNavigator,
                                     context = appContext,
                                 ) as T
@@ -243,6 +247,7 @@ fun AppNavHost(
                             @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return WorkoutPlansViewModel(
+                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
                                     appNavigator = appNavigator,
                                 ) as T
                             }
@@ -269,7 +274,10 @@ fun AppNavHost(
                             @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return AICoachGeneratorViewModel(
-                                    aiCoachGeneratorUseCase = dependencyContainer.aiCoachGeneratorUseCase,
+                                    generateWorkoutPlanUseCase = dependencyContainer.generateWorkoutPlanUseCase,
+                                    optimizeWorkoutPromptUseCase = dependencyContainer.optimizeWorkoutPromptUseCase,
+                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
+                                    getExerciseMediaUseCase = dependencyContainer.getExerciseMediaUseCase,
                                     appNavigator = appNavigator,
                                     context = appContext,
                                 ) as T
@@ -303,7 +311,9 @@ fun AppNavHost(
                         object : ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                return WorkoutPlanDetailViewModel() as T
+                                return WorkoutPlanDetailViewModel(
+                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
+                                ) as T
                             }
                         },
                 )
@@ -338,8 +348,10 @@ fun AppNavHost(
                             @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return ActiveWorkoutSessionViewModel(
+                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
                                     recordWorkoutSessionUseCase = dependencyContainer.recordWorkoutSessionUseCase,
                                     workoutLogRepositoryPort = dependencyContainer.workoutLogRepository,
+                                    getExerciseMediaUseCase = dependencyContainer.getExerciseMediaUseCase,
                                     context = appContext,
                                 ) as T
                             }
@@ -373,6 +385,7 @@ fun AppNavHost(
                             @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return WorkoutHistoryViewModel(
+                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
                                     getWorkoutHistorySummaryUseCase = dependencyContainer.getWorkoutHistorySummaryUseCase,
                                 ) as T
                             }
