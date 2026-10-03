@@ -100,10 +100,7 @@ fun AppNavHost(
                             @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return DashboardViewModel(
-                                    bodyMeasurementRepositoryPort = dependencyContainer.bodyMeasurementRepository,
-                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
-                                    workoutLogRepositoryPort = dependencyContainer.workoutLogRepository,
-                                    validateActivePlanSessionsUseCase = dependencyContainer.validateActivePlanSessionsUseCase,
+                                    dashboardUseCase = dependencyContainer.dashboardUseCase,
                                 ) as T
                             }
                         },

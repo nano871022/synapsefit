@@ -55,3 +55,5 @@ The repository contains technical skill guides under `.github/skills/`:
 
 :util (Pure Kotlin module — zero android.* dependencies)
  └── pure Kotlin standalone leaf module
+
+7. **1:1 ViewModel to UseCase Orchestration & DI Refactoring:** Every ViewModel must rely on a single, dedicated UseCase interface for all data operations. This orchestrating UseCase must handle all data aggregation and service orchestration. The UseCase name must strictly match the UI screen name, removing 'Screen' and appending 'UseCase' (e.g., `ActiveWorkoutScreen` -> `IActiveWorkoutUseCase` / `ActiveWorkoutUseCase`).

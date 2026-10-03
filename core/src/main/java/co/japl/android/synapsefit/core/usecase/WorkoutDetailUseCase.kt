@@ -5,18 +5,9 @@ import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import kotlinx.coroutines.flow.Flow
 
 class WorkoutDetailUseCase(
-    private val getWorkoutDetailUseCase: GetWorkoutDetailUseCase,
+    private val workoutLogRepository: WorkoutLogRepositoryPort,
 ) : IWorkoutDetailUseCase {
-    override operator fun invoke(
-        date: String,
-        day: Int,
-    ): Flow<WorkoutDetailGroup?> {
-        return getWorkoutDetailUseCase(date, day)
-    }
+    private val getWorkoutDetailUseCase = GetWorkoutDetailUseCase(workoutLogRepository)
 
-    companion object {
-        fun create(workoutLogRepositoryPort: WorkoutLogRepositoryPort): WorkoutDetailUseCase {
-            return WorkoutDetailUseCase(GetWorkoutDetailUseCase(workoutLogRepositoryPort))
-        }
-    }
+    override fun invoke(date: String, day: Int): Flow<WorkoutDetailGroup?> = getWorkoutDetailUseCase(date, day)
 }
