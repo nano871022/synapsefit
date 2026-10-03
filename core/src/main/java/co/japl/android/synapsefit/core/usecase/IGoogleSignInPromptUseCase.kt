@@ -5,5 +5,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface IGoogleSignInPromptUseCase {
     val authState: StateFlow<AuthState>
+
     suspend fun signIn(context: Any)
 }

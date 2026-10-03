@@ -15,7 +15,6 @@ import org.junit.Before
 import org.junit.Test
 
 class UserProfileUseCaseTest {
-
     private val userProfileRepositoryPort: UserProfileRepositoryPort = mockk(relaxed = true)
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort = mockk(relaxed = true)
     private val llmClientPort: LlmClientPort = mockk(relaxed = true)
@@ -24,49 +23,54 @@ class UserProfileUseCaseTest {
 
     @Before
     fun setUp() {
-        useCase = UserProfileUseCase(
-            userProfileRepository = userProfileRepositoryPort,
-            llmConfigRepository = llmConfigRepositoryPort,
-            llmClient = llmClientPort,
-        )
+        useCase =
+            UserProfileUseCase(
+                userProfileRepository = userProfileRepositoryPort,
+                llmConfigRepository = llmConfigRepositoryPort,
+                llmClient = llmClientPort,
+            )
     }
 
     @Test
-    fun `getUserProfile returns profile from repository`() = runTest {
-        val now = System.currentTimeMillis()
-        val profile = UserProfile(
-            id = "1",
-            fullName = "John Doe",
-            gender = "M",
-            birthDate = "1990-01-01",
-            heightCm = 180.0,
-            bloodType = "O+",
-            createdAt = now,
-            updatedAt = now,
-        )
-        every { userProfileRepositoryPort.getUserProfile() } returns flowOf(profile)
+    fun getUserProfileReturnsProfileFromRepository() =
+        runTest {
+            val now = System.currentTimeMillis()
+            val profile =
+                UserProfile(
+                    id = "1",
+                    fullName = "John Doe",
+                    gender = "M",
+                    birthDate = "1990-01-01",
+                    heightCm = 180.0,
+                    bloodType = "O+",
+                    createdAt = now,
+                    updatedAt = now,
+                )
+            every { userProfileRepositoryPort.getUserProfile() } returns flowOf(profile)
 
-        val result = useCase.getUserProfile().first()
+            val result = useCase.getUserProfile().first()
 
-        assertEquals(profile, result)
-    }
+            assertEquals(profile, result)
+        }
 
     @Test
-    fun `saveUserProfile delegates to repository`() = runTest {
-        val now = System.currentTimeMillis()
-        val profile = UserProfile(
-            id = "1",
-            fullName = "John Doe",
-            gender = "M",
-            birthDate = "1990-01-01",
-            heightCm = 180.0,
-            bloodType = "O+",
-            createdAt = now,
-            updatedAt = now,
-        )
+    fun saveUserProfileDelegatesToRepository() =
+        runTest {
+            val now = System.currentTimeMillis()
+            val profile =
+                UserProfile(
+                    id = "1",
+                    fullName = "John Doe",
+                    gender = "M",
+                    birthDate = "1990-01-01",
+                    heightCm = 180.0,
+                    bloodType = "O+",
+                    createdAt = now,
+                    updatedAt = now,
+                )
 
-        useCase.saveUserProfile(profile)
+            useCase.saveUserProfile(profile)
 
-        coVerify { userProfileRepositoryPort.saveUserProfile(any()) }
-    }
+            coVerify { userProfileRepositoryPort.saveUserProfile(any()) }
+        }
 }

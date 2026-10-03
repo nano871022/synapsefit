@@ -10,8 +10,11 @@ class ActiveWorkoutSessionUseCase(
     private val workoutLogRepository: WorkoutLogRepositoryPort,
     private val workoutPlanRepository: WorkoutPlanRepositoryPort,
 ) : IActiveWorkoutSessionUseCase {
+    private val saveWorkoutLogUseCase = SaveWorkoutLogUseCase(workoutLogRepository)
+
     override suspend fun saveWorkoutLog(log: WorkoutLog) {
-        workoutLogRepository.saveLog(log)
+        saveWorkoutLogUseCase(log)
     }
+
     override fun getActivePlan(): Flow<WorkoutPlan?> = workoutPlanRepository.getActivePlan()
 }

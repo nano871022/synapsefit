@@ -5,5 +5,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface IBodyMeasurementsUseCase {
     fun getLatestMeasurement(): Flow<BodyMeasurement?>
+
     suspend fun saveMeasurement(measurement: BodyMeasurement)
 }

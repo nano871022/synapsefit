@@ -10,6 +10,7 @@ class GoogleSignInPromptUseCase(
     private val googleAccountLoginUseCase = GoogleAccountLoginUseCase(googleAuthRepository)
 
     override val authState: StateFlow<AuthState> get() = googleAccountLoginUseCase.authState
+
     override suspend fun signIn(context: Any) {
         googleAccountLoginUseCase.signIn(context)
     }

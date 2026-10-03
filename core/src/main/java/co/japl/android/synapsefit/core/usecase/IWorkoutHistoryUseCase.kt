@@ -6,5 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface IWorkoutHistoryUseCase {
     fun getGroupedHistory(): Flow<List<WorkoutHistoryGroup>>
+
     fun getHistorySummary(): Flow<List<WorkoutSummaryItem>>
 }

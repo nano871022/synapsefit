@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package co.japl.android.synapsefit.core.usecase
 
 import co.japl.android.synapsefit.core.domain.model.AuthState
@@ -18,16 +20,19 @@ class GoogleAccountUseCase(
     private val uploadDatabaseBackupUseCase = UploadDatabaseBackupUseCase(databaseManagerPort, driveSyncPort)
     private val downloadAndRestoreDatabaseUseCase = DownloadAndRestoreDatabaseUseCase(driveSyncPort, databaseManagerPort)
 
-    override val authState: StateFlow<AuthState> get() = googleAuthRepository.authState
+    override val authState: StateFlow<AuthState> get() = googleAccountLoginUseCase.authState
     override val syncState: StateFlow<SyncState> get() = MutableStateFlow(SyncState.Idle)
     override val lastBackupMetadata: StateFlow<BackupMetadata?> get() = MutableStateFlow(null)
 
     override suspend fun signIn(context: Any) {
         googleAccountLoginUseCase.signIn(context)
     }
+
     override suspend fun signOut() {
         googleAccountLoginUseCase.signOut()
     }
+
     override suspend fun uploadBackup(): Boolean = uploadDatabaseBackupUseCase.execute().isSuccess
+
     override suspend fun downloadAndRestoreBackup(): Boolean = downloadAndRestoreDatabaseUseCase.execute().isSuccess
 }

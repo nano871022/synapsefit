@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package co.japl.android.synapsefit.core.usecase
 
 import co.japl.android.synapsefit.core.domain.model.BodyMeasurement

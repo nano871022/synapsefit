@@ -9,8 +9,12 @@ interface IGoogleAccountUseCase {
     val authState: StateFlow<AuthState>
     val syncState: StateFlow<SyncState>
     val lastBackupMetadata: StateFlow<BackupMetadata?>
+
     suspend fun signIn(context: Any)
+
     suspend fun signOut()
+
     suspend fun uploadBackup(): Boolean
+
     suspend fun downloadAndRestoreBackup(): Boolean
 }

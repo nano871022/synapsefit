@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package co.japl.android.synapsefit.core.usecase
 
 import co.japl.android.synapsefit.core.domain.model.LlmConfig
@@ -17,7 +19,6 @@ import org.junit.Before
 import org.junit.Test
 
 class AICoachGeneratorUseCaseTest {
-
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort = mockk()
     private val llmClientPort: LlmClientPort = mockk()
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort = mockk()
@@ -27,42 +28,46 @@ class AICoachGeneratorUseCaseTest {
 
     @Before
     fun setUp() {
-        useCase = AICoachGeneratorUseCase(
-            llmConfigRepository = llmConfigRepositoryPort,
-            llmClient = llmClientPort,
-            workoutPlanRepository = workoutPlanRepositoryPort,
-            userProfileRepository = userProfileRepositoryPort,
-        )
+        useCase =
+            AICoachGeneratorUseCase(
+                llmConfigRepository = llmConfigRepositoryPort,
+                llmClient = llmClientPort,
+                workoutPlanRepository = workoutPlanRepositoryPort,
+                userProfileRepository = userProfileRepositoryPort,
+            )
     }
 
     @Test
-    fun `generatePlan fails when no active LLM config`() = runTest {
-        every { llmConfigRepositoryPort.getActiveConfig() } returns flowOf(null)
+    fun generatePlanFailsWhenNoActiveLlmConfig() =
+        runTest {
+            every { llmConfigRepositoryPort.getActiveConfig() } returns flowOf(null)
 
-        val result = useCase.generatePlan("Build muscle")
+            val result = useCase.generatePlan("Build muscle")
 
-        assertTrue(result.isFailure)
-    }
+            assertTrue(result.isFailure)
+        }
 
     @Test
-    fun `optimizePrompt returns success when LLM config active`() = runTest {
-        val now = System.currentTimeMillis()
-        val config = LlmConfig(
-            id = "1",
-            provider = LlmProvider.GEMINI,
-            modelName = "gemini-pro",
-            apiKeyEncrypted = "key",
-            isActive = true,
-            createdAt = now,
-            updatedAt = now,
-        )
-        every { llmConfigRepositoryPort.getActiveConfig() } returns flowOf(config)
-        coEvery { llmClientPort.testApiConnection(config) } returns Result.success(true)
-        coEvery { llmClientPort.optimizePrompt(any(), any(), any(), any()) } returns Result.success("Optimized Prompt")
+    fun optimizePromptReturnsSuccessWhenLlmConfigActive() =
+        runTest {
+            val now = System.currentTimeMillis()
+            val config =
+                LlmConfig(
+                    id = "1",
+                    provider = LlmProvider.GEMINI,
+                    modelName = "gemini-pro",
+                    apiKeyEncrypted = "key",
+                    isActive = true,
+                    createdAt = now,
+                    updatedAt = now,
+                )
+            every { llmConfigRepositoryPort.getActiveConfig() } returns flowOf(config)
+            coEvery { llmClientPort.testApiConnection(config) } returns Result.success(true)
+            coEvery { llmClientPort.optimizePrompt(any(), any(), any(), any()) } returns Result.success("Optimized Prompt")
 
-        val result = useCase.optimizePrompt("Build muscle")
+            val result = useCase.optimizePrompt("Build muscle")
 
-        assertTrue(result.isSuccess)
-        assertEquals("Optimized Prompt", result.getOrNull())
-    }
+            assertTrue(result.isSuccess)
+            assertEquals("Optimized Prompt", result.getOrNull())
+        }
 }

@@ -9,5 +9,8 @@ class WorkoutDetailUseCase(
 ) : IWorkoutDetailUseCase {
     private val getWorkoutDetailUseCase = GetWorkoutDetailUseCase(workoutLogRepository)
 
-    override fun invoke(date: String, day: Int): Flow<WorkoutDetailGroup?> = getWorkoutDetailUseCase(date, day)
+    override fun invoke(
+        date: String,
+        day: Int,
+    ): Flow<WorkoutDetailGroup?> = getWorkoutDetailUseCase(date, day)
 }

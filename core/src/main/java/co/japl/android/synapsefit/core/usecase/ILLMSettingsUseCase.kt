@@ -5,7 +5,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface ILLMSettingsUseCase {
     fun getAllConfigs(): Flow<List<LlmConfig>>
+
     suspend fun saveConfig(config: LlmConfig)
+
     suspend fun setActiveConfig(id: String)
+
     suspend fun deleteConfig(id: String)
 }

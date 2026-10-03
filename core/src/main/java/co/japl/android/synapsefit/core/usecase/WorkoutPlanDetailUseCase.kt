@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package co.japl.android.synapsefit.core.usecase
 
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
@@ -8,6 +10,5 @@ import kotlinx.coroutines.flow.map
 class WorkoutPlanDetailUseCase(
     private val workoutPlanRepository: WorkoutPlanRepositoryPort,
 ) : IWorkoutPlanDetailUseCase {
-    override fun getPlanDetail(planId: String): Flow<WorkoutPlan?> =
-        workoutPlanRepository.getPlanWithExercises(planId).map { it?.first }
+    override fun getPlanDetail(planId: String): Flow<WorkoutPlan?> = workoutPlanRepository.getPlanWithExercises(planId).map { it?.first }
 }

@@ -12,5 +12,6 @@ class WorkoutHistoryUseCase(
     private val getWorkoutHistorySummaryUseCase = GetWorkoutHistorySummaryUseCase(workoutLogRepository)
 
     override fun getGroupedHistory(): Flow<List<WorkoutHistoryGroup>> = getGroupedWorkoutHistoryUseCase()
+
     override fun getHistorySummary(): Flow<List<WorkoutSummaryItem>> = getWorkoutHistorySummaryUseCase()
 }

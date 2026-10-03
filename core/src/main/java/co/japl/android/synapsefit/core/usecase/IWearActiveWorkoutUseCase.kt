@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface IWearActiveWorkoutUseCase {
     fun getActivePlan(): Flow<WorkoutPlan?>
+
     suspend fun saveWorkoutLog(log: WorkoutLog)
 }
 
@@ -15,8 +16,19 @@ class WearActiveWorkoutUseCase(
     private val workoutPlanRepository: WorkoutPlanRepositoryPort,
     private val workoutLogRepository: WorkoutLogRepositoryPort,
 ) : IWearActiveWorkoutUseCase {
+    private val recordWorkoutSessionUseCase = RecordWorkoutSessionUseCase(workoutLogRepository)
+
     override fun getActivePlan(): Flow<WorkoutPlan?> = workoutPlanRepository.getActivePlan()
+
     override suspend fun saveWorkoutLog(log: WorkoutLog) {
-        workoutLogRepository.saveLog(log)
+        recordWorkoutSessionUseCase(
+            planId = "",
+            day = 1,
+            exerciseId = log.exerciseId,
+            repsCompleted = log.repsCompleted,
+            weightLiftedKg = log.weightLiftedKg,
+            durationSeconds = log.durationSeconds,
+            heartRateBpm = log.heartRateBpm,
+        )
     }
 }

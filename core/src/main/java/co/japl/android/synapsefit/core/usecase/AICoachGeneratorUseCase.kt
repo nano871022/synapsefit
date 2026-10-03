@@ -14,12 +14,13 @@ class AICoachGeneratorUseCase(
     private val workoutPlanRepository: WorkoutPlanRepositoryPort,
     private val userProfileRepository: UserProfileRepositoryPort,
 ) : IAICoachGeneratorUseCase {
-    private val generateWorkoutPlanUseCase = GenerateWorkoutPlanUseCase(
-        llmConfigRepositoryPort = llmConfigRepository,
-        llmClientPort = llmClient,
-        workoutPlanRepositoryPort = workoutPlanRepository,
-        userProfileRepositoryPort = userProfileRepository,
-    )
+    private val generateWorkoutPlanUseCase =
+        GenerateWorkoutPlanUseCase(
+            llmConfigRepositoryPort = llmConfigRepository,
+            llmClientPort = llmClient,
+            workoutPlanRepositoryPort = workoutPlanRepository,
+            userProfileRepositoryPort = userProfileRepository,
+        )
     private val optimizeWorkoutPromptUseCase = OptimizeWorkoutPromptUseCase(llmConfigRepository, llmClient)
 
     override suspend fun generatePlan(prompt: String): Result<WorkoutPlan> =

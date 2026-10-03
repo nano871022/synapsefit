@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package co.japl.android.synapsefit.core.usecase
 
 import co.japl.android.synapsefit.core.port.secondary.DatabaseManagerPort
@@ -10,9 +12,15 @@ class SplashUseCase(
     private val databaseManagerPort: DatabaseManagerPort,
 ) : ISplashUseCase {
     private val downloadAndRestoreDatabaseUseCase = DownloadAndRestoreDatabaseUseCase(driveSyncPort, databaseManagerPort)
-    private val checkAndRestoreBackupUseCase = CheckAndRestoreBackupUseCase(googleAuthRepository, driveSyncPort, downloadAndRestoreDatabaseUseCase, databaseManagerPort)
+    private val checkAndRestoreBackupUseCase =
+        CheckAndRestoreBackupUseCase(
+            googleAuthRepository = googleAuthRepository,
+            driveSyncPort = driveSyncPort,
+            downloadAndRestoreDatabaseUseCase = downloadAndRestoreDatabaseUseCase,
+            databaseManagerPort = databaseManagerPort,
+        )
 
     override suspend fun checkAndRestoreBackup() {
-        checkAndRestoreBackupUseCase.execute()
+        checkAndRestoreBackupUseCase()
     }
 }

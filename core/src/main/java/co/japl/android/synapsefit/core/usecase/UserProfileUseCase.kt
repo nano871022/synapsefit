@@ -14,13 +14,16 @@ class UserProfileUseCase(
 ) : IUserProfileUseCase {
     private val getUserProfileUseCase = GetUserProfileUseCase(userProfileRepository)
     private val saveUserProfileUseCase = SaveUserProfileUseCase(userProfileRepository)
-    private val evaluateMedicalConditionsUseCase = EvaluateMedicalConditionsUseCase(userProfileRepository, llmConfigRepository, llmClient)
+    private val evaluateMedicalConditionsUseCase =
+        EvaluateMedicalConditionsUseCase(userProfileRepository, llmConfigRepository, llmClient)
     private val getMedicalRecommendationsUseCase = GetMedicalRecommendationsUseCase(userProfileRepository)
 
     override fun getUserProfile(): Flow<UserProfile?> = getUserProfileUseCase()
+
     override suspend fun saveUserProfile(profile: UserProfile) {
         saveUserProfileUseCase(profile)
     }
+
     override suspend fun evaluateMedicalConditions(profile: UserProfile): Result<MedicalRecommendation?> =
         evaluateMedicalConditionsUseCase(
             gender = profile.gender,
@@ -28,5 +31,6 @@ class UserProfileUseCase(
             bloodType = profile.bloodType,
             medicalConditions = profile.medicalConditions ?: "",
         )
+
     override fun getMedicalRecommendations(): Flow<List<MedicalRecommendation>> = getMedicalRecommendationsUseCase()
 }

@@ -10,6 +10,7 @@ class BodyMeasurementsUseCase(
     private val saveUseCase = SaveBodyMeasurementUseCase(bodyMeasurementRepository)
 
     override fun getLatestMeasurement(): Flow<BodyMeasurement?> = bodyMeasurementRepository.getLatestMeasurement()
+
     override suspend fun saveMeasurement(measurement: BodyMeasurement) {
         saveUseCase(
             weightKg = measurement.weightKg,

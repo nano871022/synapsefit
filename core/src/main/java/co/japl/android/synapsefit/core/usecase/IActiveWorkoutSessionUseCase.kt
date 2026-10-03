@@ -6,5 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface IActiveWorkoutSessionUseCase {
     suspend fun saveWorkoutLog(log: WorkoutLog)
+
     fun getActivePlan(): Flow<WorkoutPlan?>
 }

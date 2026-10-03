@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package co.japl.android.synapsefit.core.usecase
 
 import co.japl.android.synapsefit.core.domain.model.BodyMeasurement
@@ -14,22 +16,19 @@ class DashboardUseCase(
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort,
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort,
 ) : IDashboardUseCase {
-    private val validateActivePlanSessionsUseCase = ValidateActivePlanSessionsUseCase(workoutPlanRepositoryPort, workoutLogRepositoryPort)
+    private val validateActivePlanSessionsUseCase =
+        ValidateActivePlanSessionsUseCase(workoutPlanRepositoryPort, workoutLogRepositoryPort)
 
-    override fun getMeasurementsHistory(): Flow<List<BodyMeasurement>> =
-        bodyMeasurementRepositoryPort.getMeasurementsHistory()
+    override fun getMeasurementsHistory(): Flow<List<BodyMeasurement>> = bodyMeasurementRepositoryPort.getMeasurementsHistory()
 
-    override fun getActivePlan(): Flow<WorkoutPlan?> =
-        workoutPlanRepositoryPort.getActivePlan()
+    override fun getActivePlan(): Flow<WorkoutPlan?> = workoutPlanRepositoryPort.getActivePlan()
 
-    override fun getAllPlans(): Flow<List<WorkoutPlan>> =
-        workoutPlanRepositoryPort.getAllPlans()
+    override fun getAllPlans(): Flow<List<WorkoutPlan>> = workoutPlanRepositoryPort.getAllPlans()
 
     override fun getPlanWithExercises(planId: String): Flow<Pair<WorkoutPlan, List<Exercise>>?> =
         workoutPlanRepositoryPort.getPlanWithExercises(planId)
 
-    override fun getLatestLogsForPlan(planId: String): Flow<List<WorkoutLog>> =
-        workoutLogRepositoryPort.getLatestLogsForPlan(planId)
+    override fun getLatestLogsForPlan(planId: String): Flow<List<WorkoutLog>> = workoutLogRepositoryPort.getLatestLogsForPlan(planId)
 
     override suspend fun validateActivePlanSessions(planId: String?): PlanSessionValidationResult? =
         validateActivePlanSessionsUseCase(planId)

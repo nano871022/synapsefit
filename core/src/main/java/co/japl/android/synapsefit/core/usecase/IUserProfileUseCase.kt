@@ -6,7 +6,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface IUserProfileUseCase {
     fun getUserProfile(): Flow<UserProfile?>
+
     suspend fun saveUserProfile(profile: UserProfile)
+
     suspend fun evaluateMedicalConditions(profile: UserProfile): Result<MedicalRecommendation?>
+
     fun getMedicalRecommendations(): Flow<List<MedicalRecommendation>>
 }
