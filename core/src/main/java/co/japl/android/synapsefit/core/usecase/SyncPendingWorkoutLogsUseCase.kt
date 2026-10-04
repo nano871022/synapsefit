@@ -5,14 +5,14 @@ import kotlinx.coroutines.flow.StateFlow
 
 class SyncPendingWorkoutLogsUseCase(
     private val wearSyncPort: WearSyncPort,
-) {
-    val isPhoneConnected: StateFlow<Boolean>
+) : ISyncPendingWorkoutLogsUseCase {
+    override val isPhoneConnected: StateFlow<Boolean>
         get() = wearSyncPort.isPhoneConnected
 
-    val pendingSyncDataCount: StateFlow<Int>
+    override val pendingSyncDataCount: StateFlow<Int>
         get() = wearSyncPort.pendingSyncDataCount
 
-    fun queueDataForDeferredSync(
+    override fun queueDataForDeferredSync(
         exerciseId: String,
         reps: Int,
         heartRateBpm: Int,
@@ -20,7 +20,7 @@ class SyncPendingWorkoutLogsUseCase(
         wearSyncPort.queueDataForDeferredSync(exerciseId, reps, heartRateBpm)
     }
 
-    fun flushSyncQueue() {
+    override fun flushSyncQueue() {
         wearSyncPort.flushSyncQueue()
     }
 }

@@ -6,12 +6,12 @@ import kotlinx.coroutines.flow.Flow
 
 class GetMedicalRecommendationsUseCase(
     private val repository: UserProfileRepositoryPort,
-) {
-    fun getLatest(): Flow<MedicalRecommendation?> {
+) : IGetMedicalRecommendationsUseCase {
+    override fun getLatest(): Flow<MedicalRecommendation?> {
         return repository.getLatestMedicalRecommendation()
     }
 
-    operator fun invoke(): Flow<List<MedicalRecommendation>> {
+    override operator fun invoke(): Flow<List<MedicalRecommendation>> {
         return repository.getAllMedicalRecommendations()
     }
 }

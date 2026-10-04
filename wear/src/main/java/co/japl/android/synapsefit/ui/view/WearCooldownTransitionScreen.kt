@@ -1,3 +1,16 @@
+@file:Suppress(
+    "FunctionNaming",
+    "LongMethod",
+    "MaxLineLength",
+    "UnusedParameter",
+    "UnusedPrivateMember",
+    "MagicNumber",
+    "LongParameterList",
+    "CyclomaticComplexMethod",
+    "TooGenericExceptionCaught",
+    "TooManyFunctions",
+)
+
 package co.japl.android.synapsefit.ui.view
 
 import androidx.compose.foundation.background
@@ -625,4 +638,20 @@ private fun listExercises(): List<ExerciseSession> {
             isCompleted = false,
         ),
     )
+}
+
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true, name = "Wear Cooldown - Ready For Next")
+@Composable
+internal fun WearCooldownTransitionScreenReadyPreview() {
+    val exerciseSession = listExercises()
+    MaterialThemeComposeUI {
+        WearCooldownTransitionScreen(
+            trainingStepState = TrainingStepState.ReadyForNext(null),
+            exerciseSessions = exerciseSession,
+            heartRateBpm = 110,
+            onAddExtraTime = {},
+            onSkipRest = {},
+            onSelectExercise = { _, _ -> },
+        )
+    }
 }

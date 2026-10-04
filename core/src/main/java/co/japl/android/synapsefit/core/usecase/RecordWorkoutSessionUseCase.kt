@@ -6,16 +6,16 @@ import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 
 class RecordWorkoutSessionUseCase(
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort,
-) {
+) : IRecordWorkoutSessionUseCase {
     @Suppress("LongParameterList", "TooGenericExceptionCaught", "ReturnCount")
-    suspend operator fun invoke(
+    override suspend operator fun invoke(
         exerciseId: String,
         repsCompleted: Int,
         weightLiftedKg: Double,
-        heartRateBpm: Int? = null,
-        sourceDevice: SourceDevice = SourceDevice.MOBILE,
-        durationSeconds: Long = 0L,
-        timestamp: Long = System.currentTimeMillis(),
+        heartRateBpm: Int?,
+        sourceDevice: SourceDevice,
+        durationSeconds: Long,
+        timestamp: Long,
     ): Result<WorkoutLog> {
         if (exerciseId.trim().isEmpty()) {
             return Result.failure(IllegalArgumentException("Exercise ID cannot be empty"))

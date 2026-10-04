@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 class GetUserProfileUseCase(
     private val userProfileRepositoryPort: UserProfileRepositoryPort,
-) {
-    operator fun invoke(): Flow<UserProfile?> {
+) : IGetUserProfileUseCase {
+    override operator fun invoke(): Flow<UserProfile?> {
         return userProfileRepositoryPort.getUserProfile()
     }
 }

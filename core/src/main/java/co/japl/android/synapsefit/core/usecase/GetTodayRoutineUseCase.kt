@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.firstOrNull
 class GetTodayRoutineUseCase(
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort,
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort,
-) {
-    operator fun invoke(): Flow<List<WorkoutSessionItem>> =
+) : IGetTodayRoutineUseCase {
+    override operator fun invoke(): Flow<List<WorkoutSessionItem>> =
         combine(
             workoutPlanRepositoryPort.getActivePlan(),
             workoutPlanRepositoryPort.getAllPlans(),

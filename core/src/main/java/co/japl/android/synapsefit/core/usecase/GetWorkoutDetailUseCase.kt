@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.map
 
 class GetWorkoutDetailUseCase(
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort,
-) {
-    operator fun invoke(
+) : IGetWorkoutDetailUseCase {
+    override operator fun invoke(
         date: String,
         day: Int,
     ): Flow<WorkoutDetailGroup?> {

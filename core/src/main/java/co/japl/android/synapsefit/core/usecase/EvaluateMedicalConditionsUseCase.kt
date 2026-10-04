@@ -11,9 +11,9 @@ class EvaluateMedicalConditionsUseCase(
     private val userProfileRepositoryPort: UserProfileRepositoryPort,
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort,
     private val llmClientPort: LlmClientPort,
-) {
+) : IEvaluateMedicalConditionsUseCase {
     @Suppress("ReturnCount")
-    suspend operator fun invoke(
+    override suspend operator fun invoke(
         gender: String,
         heightCm: Double,
         bloodType: String,

@@ -5,9 +5,9 @@ import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
 
 class SaveUserProfileUseCase(
     private val userProfileRepositoryPort: UserProfileRepositoryPort,
-) {
+) : ISaveUserProfileUseCase {
     @Suppress("ReturnCount", "TooGenericExceptionCaught")
-    suspend operator fun invoke(profile: UserProfile): Result<Unit> {
+    override suspend operator fun invoke(profile: UserProfile): Result<Unit> {
         if (profile.fullName.trim().isEmpty()) {
             return Result.failure(IllegalArgumentException("Full name cannot be empty"))
         }

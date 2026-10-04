@@ -25,6 +25,7 @@ if (localPropertiesFile.exists()) {
 fun getLocalProperty(key: String): String? = localProperties.getProperty(key)
 
 include(":app")
+include(":interfaces")
 include(":core")
 include(":services")
 include(":services:feature")

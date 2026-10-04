@@ -13,10 +13,10 @@ import java.time.format.DateTimeFormatter
 
 class GetGroupedWorkoutHistoryUseCase(
     private val workoutLogRepository: WorkoutLogRepositoryPort,
-) {
+) : IGetGroupedWorkoutHistoryUseCase {
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault())
 
-    operator fun invoke(): Flow<List<WorkoutHistoryGroup>> {
+    override operator fun invoke(): Flow<List<WorkoutHistoryGroup>> {
         return workoutLogRepository.getHistoryRecords().map { records ->
             groupRecords(records)
         }

@@ -5,8 +5,8 @@ import co.japl.android.synapsefit.core.port.secondary.DatabaseManagerPort
 
 class GetDatabaseSummaryUseCase(
     private val databaseManagerPort: DatabaseManagerPort,
-) {
-    suspend fun execute(): Result<DatabaseMetadata> {
+) : IGetDatabaseSummaryUseCase {
+    override suspend fun execute(): Result<DatabaseMetadata> {
         return databaseManagerPort.getDatabaseMetadata()
     }
 }

@@ -8,8 +8,8 @@ import java.io.File
 class DownloadAndRestoreDatabaseUseCase(
     private val driveSyncPort: DriveSyncPort,
     private val databaseManagerPort: DatabaseManagerPort,
-) {
-    suspend fun execute(): Result<Boolean> {
+) : IDownloadAndRestoreDatabaseUseCase {
+    override suspend fun execute(): Result<Boolean> {
         val tempFile = File.createTempFile("drive_restore_", ".db")
         return try {
             driveSyncPort.downloadBackupFile(tempFile).getOrThrow()

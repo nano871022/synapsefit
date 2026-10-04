@@ -23,6 +23,7 @@ import co.japl.android.synapsefit.app.controller.history.WorkoutHistoryViewModel
 import co.japl.android.synapsefit.app.controller.measurements.BodyMeasurementsViewModel
 import co.japl.android.synapsefit.app.controller.measurements.MeasurementProgressViewModel
 import co.japl.android.synapsefit.app.controller.profile.UserProfileViewModel
+import co.japl.android.synapsefit.app.controller.settings.AboutDeveloperViewModel
 import co.japl.android.synapsefit.app.controller.settings.BackupSyncViewModel
 import co.japl.android.synapsefit.app.controller.settings.DatabaseExplorerViewModel
 import co.japl.android.synapsefit.app.controller.settings.LlmSettingsViewModel
@@ -37,6 +38,7 @@ import co.japl.android.synapsefit.app.ui.history.WorkoutHistoryScreen
 import co.japl.android.synapsefit.app.ui.measurements.BodyMeasurementsScreen
 import co.japl.android.synapsefit.app.ui.measurements.MeasurementProgressGraphScreen
 import co.japl.android.synapsefit.app.ui.profile.UserProfileScreen
+import co.japl.android.synapsefit.app.ui.settings.AboutDeveloperScreen
 import co.japl.android.synapsefit.app.ui.settings.DatabaseExplorerScreen
 import co.japl.android.synapsefit.app.ui.settings.GoogleAccountScreen
 import co.japl.android.synapsefit.app.ui.settings.LLMSettingsScreen
@@ -98,10 +100,7 @@ fun AppNavHost(
                             @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 return DashboardViewModel(
-                                    bodyMeasurementRepositoryPort = dependencyContainer.bodyMeasurementRepository,
-                                    workoutPlanRepositoryPort = dependencyContainer.workoutPlanRepository,
-                                    workoutLogRepositoryPort = dependencyContainer.workoutLogRepository,
-                                    validateActivePlanSessionsUseCase = dependencyContainer.validateActivePlanSessionsUseCase,
+                                    dashboardUseCase = dependencyContainer.dashboardUseCase,
                                 ) as T
                             }
                         },
@@ -525,12 +524,9 @@ fun AppNavHost(
 
         // V11: About Developer
         composable(Routes.SETTINGS_ABOUT) {
-            val appContext = LocalContext.current
-            val packageInfo = appContext.packageManager.getPackageInfo(appContext.packageName, 0)
-            co.com.japl.homeconnect.about.ui.About(
-                versionDetail = packageInfo.versionName.orEmpty(),
-                applicationId = appContext.packageName,
-            )
+            val viewModel: AboutDeveloperViewModel = viewModel()
+            val state by viewModel.uiState.collectAsState()
+            AboutDeveloperScreen(state = state)
         }
     }
 }

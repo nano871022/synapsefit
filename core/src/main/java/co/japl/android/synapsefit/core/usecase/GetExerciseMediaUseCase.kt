@@ -11,13 +11,13 @@ class GetExerciseMediaUseCase(
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort? = null,
     private val llmClientPort: LlmClientPort? = null,
-) {
+) : IGetExerciseMediaUseCase {
     @Suppress("ReturnCount")
-    suspend operator fun invoke(
+    override suspend operator fun invoke(
         exerciseId: String,
         exerciseName: String,
-        guideVideoUrl: String? = null,
-        guideImageUrl: String? = null,
+        guideVideoUrl: String?,
+        guideImageUrl: String?,
     ): Pair<String, String> {
         val defaultVideo = fallbackVideoUrl(exerciseName)
         val defaultImage = DEFAULT_IMAGE_URL

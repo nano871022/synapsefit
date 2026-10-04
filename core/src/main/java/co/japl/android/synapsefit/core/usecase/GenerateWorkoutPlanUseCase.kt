@@ -22,14 +22,14 @@ class GenerateWorkoutPlanUseCase(
     private val bodyMeasurementRepositoryPort: BodyMeasurementRepositoryPort? = null,
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort? = null,
     private val userProfileRepositoryPort: UserProfileRepositoryPort? = null,
-) {
+) : IGenerateWorkoutPlanUseCase {
     @Suppress("ReturnCount")
-    suspend operator fun invoke(
+    override suspend operator fun invoke(
         promptContext: String,
         location: co.japl.android.synapsefit.core.domain.model.TrainingLocation,
         equipment: co.japl.android.synapsefit.core.domain.model.EquipmentPreference,
-        gymChainQuery: String? = null,
-        daysPerWeek: Int? = null,
+        gymChainQuery: String?,
+        daysPerWeek: Int?,
     ): Result<Pair<WorkoutPlan, List<Exercise>>> {
         val activeConfig =
             llmConfigRepositoryPort.getActiveConfig().firstOrNull()

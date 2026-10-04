@@ -9,8 +9,8 @@ import co.japl.android.synapsefit.util.CryptoUtils
 class UploadDatabaseBackupUseCase(
     private val databaseManagerPort: DatabaseManagerPort,
     private val driveSyncPort: DriveSyncPort,
-) {
-    suspend fun execute(): Result<BackupMetadata> {
+) : IUploadDatabaseBackupUseCase {
+    override suspend fun execute(): Result<BackupMetadata> {
         return try {
             databaseManagerPort.checkpoint().getOrThrow()
             val backupFile = databaseManagerPort.createBackupFile().getOrThrow()

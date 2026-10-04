@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 class GetWorkoutHistorySummaryUseCase(
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort,
-) {
-    operator fun invoke(): Flow<List<WorkoutSummaryItem>> {
+) : IGetWorkoutHistorySummaryUseCase {
+    override operator fun invoke(): Flow<List<WorkoutSummaryItem>> {
         return workoutLogRepositoryPort.getWorkoutSummaries()
     }
 }

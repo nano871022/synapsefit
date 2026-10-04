@@ -175,4 +175,93 @@ class DependencyContainer(context: Context) {
     val optimizeWorkoutPromptUseCase: co.japl.android.synapsefit.core.usecase.OptimizeWorkoutPromptUseCase by lazy {
         co.japl.android.synapsefit.core.usecase.OptimizeWorkoutPromptUseCase(llmConfigRepository, llmClient)
     }
+
+    // Refactored Screen-Dedicated 1:1 UseCases
+    val dashboardUseCase: co.japl.android.synapsefit.core.usecase.IDashboardUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.DashboardUseCase(
+            bodyMeasurementRepository,
+            workoutPlanRepository,
+            workoutLogRepository,
+        )
+    }
+
+    val userProfileUseCase: co.japl.android.synapsefit.core.usecase.IUserProfileUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.UserProfileUseCase(
+            userProfileRepository,
+            llmConfigRepository,
+            llmClient,
+        )
+    }
+
+    val bodyMeasurementsUseCase: co.japl.android.synapsefit.core.usecase.IBodyMeasurementsUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.BodyMeasurementsUseCase(bodyMeasurementRepository)
+    }
+
+    val measurementProgressGraphUseCase:
+        co.japl.android.synapsefit.core.usecase.IMeasurementProgressGraphUseCase by lazy {
+            co.japl.android.synapsefit.core.usecase.MeasurementProgressGraphUseCase(
+                bodyMeasurementRepository,
+            )
+        }
+
+    val workoutPlansUseCase: co.japl.android.synapsefit.core.usecase.IWorkoutPlansUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.WorkoutPlansUseCase(workoutPlanRepository)
+    }
+
+    val aiCoachGeneratorUseCase: co.japl.android.synapsefit.core.usecase.IAICoachGeneratorUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.AICoachGeneratorUseCase(
+            llmConfigRepository,
+            llmClient,
+            workoutPlanRepository,
+            userProfileRepository,
+        )
+    }
+
+    val workoutPlanDetailUseCase: co.japl.android.synapsefit.core.usecase.IWorkoutPlanDetailUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.WorkoutPlanDetailUseCase(workoutPlanRepository)
+    }
+
+    val activeWorkoutSessionUseCase: co.japl.android.synapsefit.core.usecase.IActiveWorkoutSessionUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.ActiveWorkoutSessionUseCase(workoutLogRepository, workoutPlanRepository)
+    }
+
+    val workoutHistoryUseCase: co.japl.android.synapsefit.core.usecase.IWorkoutHistoryUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.WorkoutHistoryUseCase(workoutLogRepository)
+    }
+
+    val workoutDetailUseCase: co.japl.android.synapsefit.core.usecase.IWorkoutDetailUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.WorkoutDetailUseCase(workoutLogRepository)
+    }
+
+    val googleAccountUseCase: co.japl.android.synapsefit.core.usecase.IGoogleAccountUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.GoogleAccountUseCase(
+            googleAuthRepository,
+            driveSyncPort,
+            databaseManagerPort,
+        )
+    }
+
+    val googleSignInPromptUseCase: co.japl.android.synapsefit.core.usecase.IGoogleSignInPromptUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.GoogleSignInPromptUseCase(googleAuthRepository)
+    }
+
+    val databaseExplorerUseCase: co.japl.android.synapsefit.core.usecase.IDatabaseExplorerUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.DatabaseExplorerUseCase(databaseManagerPort)
+    }
+
+    val llmSettingsUseCase: co.japl.android.synapsefit.core.usecase.ILLMSettingsUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.LLMSettingsUseCase(llmConfigRepository)
+    }
+
+    val aboutDeveloperUseCase: co.japl.android.synapsefit.core.usecase.IAboutDeveloperUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.AboutDeveloperUseCase()
+    }
+
+    val splashUseCase: co.japl.android.synapsefit.core.usecase.ISplashUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.SplashUseCase(
+            googleAuthRepository,
+            driveSyncPort,
+            databaseManagerPort,
+        )
+    }
 }

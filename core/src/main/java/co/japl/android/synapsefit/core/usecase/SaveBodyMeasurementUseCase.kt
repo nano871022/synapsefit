@@ -5,19 +5,19 @@ import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryP
 
 class SaveBodyMeasurementUseCase(
     private val repositoryPort: BodyMeasurementRepositoryPort,
-) {
+) : ISaveBodyMeasurementUseCase {
     @Suppress("LongParameterList", "CyclomaticComplexMethod", "TooGenericExceptionCaught", "ReturnCount")
-    suspend operator fun invoke(
+    override suspend operator fun invoke(
+        id: String?,
         weightKg: Double,
-        chestCm: Double? = null,
-        waistCm: Double? = null,
-        hipCm: Double? = null,
-        bicepLeftCm: Double? = null,
-        bicepRightCm: Double? = null,
-        thighLeftCm: Double? = null,
-        thighRightCm: Double? = null,
-        notes: String? = null,
-        id: String? = null,
+        chestCm: Double?,
+        waistCm: Double?,
+        hipCm: Double?,
+        bicepLeftCm: Double?,
+        bicepRightCm: Double?,
+        thighLeftCm: Double?,
+        thighRightCm: Double?,
+        notes: String?,
     ): Result<Unit> {
         if (weightKg <= 0) {
             return Result.failure(IllegalArgumentException("Weight must be greater than 0"))

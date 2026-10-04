@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.firstOrNull
 class OptimizeWorkoutPromptUseCase(
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort,
     private val llmClientPort: LlmClientPort,
-) {
-    suspend operator fun invoke(
+) : IOptimizeWorkoutPromptUseCase {
+    override suspend operator fun invoke(
         userPrompt: String,
         location: TrainingLocation,
         equipment: EquipmentPreference,

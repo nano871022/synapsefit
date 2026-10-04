@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 class GetActiveWorkoutSessionUseCase(
     private val activeSessionRepositoryPort: ActiveSessionRepositoryPort,
-) {
-    operator fun invoke(): Flow<ActiveWorkoutSessionState> = activeSessionRepositoryPort.getActiveSessionState()
+) : IGetActiveWorkoutSessionUseCase {
+    override operator fun invoke(): Flow<ActiveWorkoutSessionState> {
+        return activeSessionRepositoryPort.getActiveSessionState()
+    }
 }

@@ -26,7 +26,7 @@ class GenerateWorkoutPlanUseCaseTest {
     private val llmClientPort: LlmClientPort = mockk()
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort = mockk(relaxed = true)
 
-    private lateinit var useCase: GenerateWorkoutPlanUseCase
+    private lateinit var useCase: IGenerateWorkoutPlanUseCase
 
     @Before
     fun setUp() {

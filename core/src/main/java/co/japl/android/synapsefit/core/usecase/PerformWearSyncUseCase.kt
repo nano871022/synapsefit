@@ -19,9 +19,9 @@ class PerformWearSyncUseCase(
     private val workoutPlanRepository: WorkoutPlanRepositoryPort,
     private val workoutLogRepository: WorkoutLogRepositoryPort,
     private val activeSessionRepository: ActiveSessionRepositoryPort,
-) {
+) : IPerformWearSyncUseCase {
     @Suppress("MagicNumber", "LongMethod")
-    operator fun invoke(isPostWorkout: Boolean = false): Flow<SyncStepState> =
+    override operator fun invoke(isPostWorkout: Boolean): Flow<SyncStepState> =
         flow {
             val isConnected = wearSyncPort.checkConnectionStatus()
             if (!isConnected) {

@@ -5,11 +5,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 class ObserveWearConnectionUseCase(
     private val wearSyncPort: WearSyncPort,
-) {
-    val isPhoneConnected: StateFlow<Boolean>
+) : IObserveWearConnectionUseCase {
+    override val isPhoneConnected: StateFlow<Boolean>
         get() = wearSyncPort.isPhoneConnected
 
-    suspend fun checkConnection(): Boolean {
+    override suspend fun checkConnection(): Boolean {
         return wearSyncPort.checkConnectionStatus()
     }
 }

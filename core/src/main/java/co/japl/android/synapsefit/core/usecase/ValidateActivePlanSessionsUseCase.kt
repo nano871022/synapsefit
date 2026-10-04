@@ -1,6 +1,5 @@
 package co.japl.android.synapsefit.core.usecase
 
-import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import kotlinx.coroutines.flow.firstOrNull
@@ -8,20 +7,13 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-data class PlanSessionValidationResult(
-    val plan: WorkoutPlan,
-    val completedSessionsCount: Int,
-    val totalSessions: Int,
-    val isLimitReached: Boolean,
-)
-
 class ValidateActivePlanSessionsUseCase(
     private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort,
     private val workoutLogRepositoryPort: WorkoutLogRepositoryPort,
-) {
+) : IValidateActivePlanSessionsUseCase {
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault())
 
-    suspend operator fun invoke(planId: String? = null): PlanSessionValidationResult? {
+    override suspend operator fun invoke(planId: String?): PlanSessionValidationResult? {
         val activePlan =
             if (!planId.isNullOrBlank()) {
                 workoutPlanRepositoryPort.getPlanWithExercises(planId).firstOrNull()?.first

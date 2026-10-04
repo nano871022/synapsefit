@@ -11,8 +11,8 @@ class CheckAndRestoreBackupUseCase(
     private val driveSyncPort: DriveSyncPort,
     private val downloadAndRestoreDatabaseUseCase: DownloadAndRestoreDatabaseUseCase,
     private val databaseManagerPort: DatabaseManagerPort,
-) {
-    suspend fun execute(): Result<Boolean> {
+) : ICheckAndRestoreBackupUseCase {
+    override suspend fun execute(): Result<Boolean> {
         return try {
             val authState = googleAuthRepository.authState.value
             if (authState !is AuthState.Authenticated && authState !is AuthState.TokenActive) {

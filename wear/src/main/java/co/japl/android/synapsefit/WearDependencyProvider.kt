@@ -100,4 +100,20 @@ object WearDependencyProvider {
             }
         }
     }
+
+    val wearDaySelectionUseCase: co.japl.android.synapsefit.core.usecase.IWearDaySelectionUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.WearDaySelectionUseCase(workoutPlanRepository)
+    }
+
+    val wearActiveWorkoutUseCase: co.japl.android.synapsefit.core.usecase.IWearActiveWorkoutUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.WearActiveWorkoutUseCase(workoutPlanRepository, workoutLogRepository)
+    }
+
+    val wearPostWorkoutSummaryUseCase: co.japl.android.synapsefit.core.usecase.IWearPostWorkoutSummaryUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.WearPostWorkoutSummaryUseCase(workoutLogRepository)
+    }
+
+    val wearSyncUseCase: co.japl.android.synapsefit.core.usecase.IWearSyncUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.WearSyncUseCase(workoutLogRepository)
+    }
 }
