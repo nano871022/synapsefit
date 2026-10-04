@@ -1,69 +1,36 @@
 package co.japl.android.synapsefit.core.usecase
 
-import co.japl.android.synapsefit.core.domain.model.LlmConfigState
 import co.japl.android.synapsefit.core.domain.model.MedicalRecommendation
 import co.japl.android.synapsefit.core.domain.model.UserProfile
-import co.japl.android.synapsefit.core.domain.model.parseLlmErrorResponse
 import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
 import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
+import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 
 class UserProfileUseCase(
-    private val getUserProfileUseCase: IGetUserProfileUseCase,
-    private val saveUserProfileUseCase: ISaveUserProfileUseCase,
-    private val evaluateMedicalConditionsUseCase: IEvaluateMedicalConditionsUseCase,
-    private val getMedicalRecommendationsUseCase: IGetMedicalRecommendationsUseCase,
-    private val llmConfigRepositoryPort: LlmConfigRepositoryPort,
-    private val llmClientPort: LlmClientPort,
+    private val userProfileRepository: UserProfileRepositoryPort,
+    private val llmConfigRepository: LlmConfigRepositoryPort,
+    private val llmClient: LlmClientPort,
 ) : IUserProfileUseCase {
-    override fun getUserProfile(): Flow<UserProfile?> {
-        return getUserProfileUseCase()
+    private val getUserProfileUseCase = GetUserProfileUseCase(userProfileRepository)
+    private val saveUserProfileUseCase = SaveUserProfileUseCase(userProfileRepository)
+    private val evaluateMedicalConditionsUseCase =
+        EvaluateMedicalConditionsUseCase(userProfileRepository, llmConfigRepository, llmClient)
+    private val getMedicalRecommendationsUseCase = GetMedicalRecommendationsUseCase(userProfileRepository)
+
+    override fun getUserProfile(): Flow<UserProfile?> = getUserProfileUseCase()
+
+    override suspend fun saveUserProfile(profile: UserProfile) {
+        saveUserProfileUseCase(profile)
     }
 
-    override fun getMedicalRecommendations(): Flow<List<MedicalRecommendation>> {
-        return getMedicalRecommendationsUseCase()
-    }
-
-    override suspend fun saveUserProfile(profile: UserProfile): Result<Unit> {
-        return saveUserProfileUseCase(profile)
-    }
-
-    override suspend fun evaluateMedicalConditions(
-        gender: String,
-        heightCm: Double,
-        bloodType: String,
-        medicalConditions: String,
-    ): Result<MedicalRecommendation?> {
-        return evaluateMedicalConditionsUseCase(
-            gender = gender,
-            heightCm = heightCm,
-            bloodType = bloodType,
-            medicalConditions = medicalConditions,
+    override suspend fun evaluateMedicalConditions(profile: UserProfile): Result<MedicalRecommendation?> =
+        evaluateMedicalConditionsUseCase(
+            gender = profile.gender,
+            heightCm = profile.heightCm,
+            bloodType = profile.bloodType,
+            medicalConditions = profile.medicalConditions ?: "",
         )
-    }
 
-    override suspend fun checkLlmState(): LlmConfigState {
-        val allConfigs = llmConfigRepositoryPort.getAllConfigs().firstOrNull() ?: emptyList()
-        val activeConfigs = allConfigs.filter { it.isActive }
-
-        return when {
-            activeConfigs.isEmpty() -> LlmConfigState.MissingConfig
-            activeConfigs.size > 1 -> LlmConfigState.MultiModelSelection(activeConfigs)
-            else -> {
-                val activeConfig = activeConfigs.first()
-                val connectionResult = llmClientPort.testApiConnection(activeConfig)
-                if (connectionResult.isFailure) {
-                    val ex = connectionResult.exceptionOrNull()
-                    LlmConfigState.Error(parseLlmErrorResponse(ex?.message ?: ex?.toString()))
-                } else {
-                    LlmConfigState.Ready
-                }
-            }
-        }
-    }
-
-    override suspend fun selectActiveConfig(configId: String) {
-        llmConfigRepositoryPort.setActiveConfig(configId)
-    }
+    override fun getMedicalRecommendations(): Flow<List<MedicalRecommendation>> = getMedicalRecommendationsUseCase()
 }

@@ -3,101 +3,71 @@
 package co.japl.android.synapsefit.core.usecase
 
 import co.japl.android.synapsefit.core.domain.model.LlmConfig
-import co.japl.android.synapsefit.core.domain.model.LlmConfigState
 import co.japl.android.synapsefit.core.domain.model.LlmProvider
 import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
 import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
+import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import io.mockk.coEvery
-import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 class AICoachGeneratorUseCaseTest {
-    private val generateWorkoutPlanUseCase: IGenerateWorkoutPlanUseCase = mockk()
-    private val optimizeWorkoutPromptUseCase: IOptimizeWorkoutPromptUseCase = mockk()
-    private val getExerciseMediaUseCase: IGetExerciseMediaUseCase = mockk()
-    private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort = mockk()
     private val llmConfigRepositoryPort: LlmConfigRepositoryPort = mockk()
     private val llmClientPort: LlmClientPort = mockk()
+    private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort = mockk()
+    private val userProfileRepositoryPort: UserProfileRepositoryPort = mockk()
 
-    private val useCase =
-        AICoachGeneratorUseCase(
-            generateWorkoutPlanUseCase = generateWorkoutPlanUseCase,
-            optimizeWorkoutPromptUseCase = optimizeWorkoutPromptUseCase,
-            getExerciseMediaUseCase = getExerciseMediaUseCase,
-            workoutPlanRepositoryPort = workoutPlanRepositoryPort,
-            llmConfigRepositoryPort = llmConfigRepositoryPort,
-            llmClientPort = llmClientPort,
-        )
+    private lateinit var useCase: AICoachGeneratorUseCase
+
+    @Before
+    fun setUp() {
+        useCase =
+            AICoachGeneratorUseCase(
+                llmConfigRepository = llmConfigRepositoryPort,
+                llmClient = llmClientPort,
+                workoutPlanRepository = workoutPlanRepositoryPort,
+                userProfileRepository = userProfileRepositoryPort,
+            )
+    }
 
     @Test
-    fun `checkLlmState returns MissingConfig when no active config present`() =
+    fun generatePlanFailsWhenNoActiveLlmConfig() =
         runTest {
-            coEvery { llmConfigRepositoryPort.getAllConfigs() } returns flowOf(emptyList())
+            every { llmConfigRepositoryPort.getActiveConfig() } returns flowOf(null)
 
-            val state = useCase.checkLlmState()
+            val result = useCase.generatePlan("Build muscle")
 
-            assertEquals(LlmConfigState.MissingConfig, state)
+            assertTrue(result.isFailure)
         }
 
     @Test
-    fun `checkLlmState returns MultiModelSelection when more than 1 active config`() =
+    fun optimizePromptReturnsSuccessWhenLlmConfigActive() =
         runTest {
-            val configs =
-                listOf(
-                    LlmConfig("1", LlmProvider.GEMINI, "key1", "m1", isActive = true, 0L, 0L),
-                    LlmConfig("2", LlmProvider.OPENAI, "key2", "m2", isActive = true, 0L, 0L),
+            val now = System.currentTimeMillis()
+            val config =
+                LlmConfig(
+                    id = "1",
+                    provider = LlmProvider.GEMINI,
+                    modelName = "gemini-pro",
+                    apiKeyEncrypted = "key",
+                    isActive = true,
+                    createdAt = now,
+                    updatedAt = now,
                 )
-            coEvery { llmConfigRepositoryPort.getAllConfigs() } returns flowOf(configs)
-
-            val state = useCase.checkLlmState()
-
-            assertTrue(state is LlmConfigState.MultiModelSelection)
-            assertEquals(2, (state as LlmConfigState.MultiModelSelection).activeConfigs.size)
-        }
-
-    @Test
-    fun `checkLlmState returns Error when 1 active config fails testApiConnection`() =
-        runTest {
-            val config = LlmConfig("1", LlmProvider.GEMINI, "key1", "m1", isActive = true, 0L, 0L)
-            coEvery { llmConfigRepositoryPort.getAllConfigs() } returns flowOf(listOf(config))
-            coEvery { llmClientPort.testApiConnection(config) } returns
-                Result.failure(
-                    IllegalStateException("""{"code":501,"status":"NOT_IMPLEMENTED","message":"Provider unavailable"}"""),
-                )
-
-            val state = useCase.checkLlmState()
-
-            assertTrue(state is LlmConfigState.Error)
-            val err = (state as LlmConfigState.Error).payload
-            assertEquals("501", err.code)
-            assertEquals("NOT_IMPLEMENTED", err.status)
-        }
-
-    @Test
-    fun `checkLlmState returns Ready when single active config passes testApiConnection`() =
-        runTest {
-            val config = LlmConfig("1", LlmProvider.GEMINI, "key1", "m1", isActive = true, 0L, 0L)
-            coEvery { llmConfigRepositoryPort.getAllConfigs() } returns flowOf(listOf(config))
+            every { llmConfigRepositoryPort.getActiveConfig() } returns flowOf(config)
             coEvery { llmClientPort.testApiConnection(config) } returns Result.success(true)
+            coEvery { llmClientPort.optimizePrompt(any(), any(), any(), any()) } returns Result.success("Optimized Prompt")
 
-            val state = useCase.checkLlmState()
+            val result = useCase.optimizePrompt("Build muscle")
 
-            assertEquals(LlmConfigState.Ready, state)
-        }
-
-    @Test
-    fun `selectActiveConfig delegates to repo`() =
-        runTest {
-            coEvery { llmConfigRepositoryPort.setActiveConfig("cfg1") } returns Unit
-
-            useCase.selectActiveConfig("cfg1")
-
-            coVerify { llmConfigRepositoryPort.setActiveConfig("cfg1") }
+            assertTrue(result.isSuccess)
+            assertEquals("Optimized Prompt", result.getOrNull())
         }
 }

@@ -13,15 +13,12 @@ import co.japl.android.synapsefit.app.controller.workout.ActiveWorkoutSessionVie
 import co.japl.android.synapsefit.app.controller.workout.WorkoutPlanDetailViewModel
 import co.japl.android.synapsefit.app.controller.workout.WorkoutPlansViewModel
 import co.japl.android.synapsefit.core.domain.model.AnatomicalZone
-import co.japl.android.synapsefit.core.domain.model.LlmConfigState
 import co.japl.android.synapsefit.core.domain.model.TrainingLocation
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
 import co.japl.android.synapsefit.core.domain.model.history.WorkoutSummaryItem
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
 import co.japl.android.synapsefit.core.usecase.GetWorkoutHistorySummaryUseCase
-import co.japl.android.synapsefit.core.usecase.IUserProfileUseCase
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -175,17 +172,14 @@ class ViewModelsTest {
     @Test
     fun userProfileViewModel_evaluateMedicalConditions_showsDialogAndHandlesRetry() =
         runTest {
-            val mockUseCase = mockk<IUserProfileUseCase>(relaxed = true)
-            coEvery { mockUseCase.getUserProfile() } returns flowOf(null)
-            coEvery { mockUseCase.getMedicalRecommendations() } returns flowOf(emptyList())
-            coEvery { mockUseCase.checkLlmState() } returns LlmConfigState.Ready
-            coEvery {
-                mockUseCase.evaluateMedicalConditions(any(), any(), any(), any())
+            val mockEvalUseCase = mockk<co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase>()
+            io.mockk.coEvery {
+                mockEvalUseCase(any(), any(), any(), any())
             } returns Result.failure(RuntimeException("Error de conexión con LLM"))
 
             val viewModel =
                 UserProfileViewModel(
-                    userProfileUseCase = mockUseCase,
+                    evaluateMedicalConditionsUseCase = mockEvalUseCase,
                 )
 
             viewModel.onFullNameChange("Juan Perez")

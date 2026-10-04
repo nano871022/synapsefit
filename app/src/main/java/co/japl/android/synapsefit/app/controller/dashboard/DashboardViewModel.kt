@@ -11,10 +11,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.japl.android.synapsefit.app.controller.workout.WorkoutSessionStateManager
-import co.japl.android.synapsefit.core.port.secondary.BodyMeasurementRepositoryPort
-import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
-import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
-import co.japl.android.synapsefit.core.usecase.ValidateActivePlanSessionsUseCase
+import co.japl.android.synapsefit.core.usecase.IDashboardUseCase
 import co.japl.android.synapsefit.util.DateTimeUtils
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -48,10 +45,7 @@ data class DashboardUiState(
 )
 
 class DashboardViewModel(
-    private val bodyMeasurementRepositoryPort: BodyMeasurementRepositoryPort? = null,
-    private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort? = null,
-    private val workoutLogRepositoryPort: WorkoutLogRepositoryPort? = null,
-    private val validateActivePlanSessionsUseCase: ValidateActivePlanSessionsUseCase? = null,
+    private val dashboardUseCase: IDashboardUseCase? = null,
     private val context: Context? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -73,7 +67,7 @@ class DashboardViewModel(
                 _uiState.update { it.copy(isLoading = true) }
 
                 launch {
-                    bodyMeasurementRepositoryPort?.getMeasurementsHistory()?.collect { measurements ->
+                    dashboardUseCase?.getMeasurementsHistory()?.collect { measurements ->
                         val latestMeasurement = measurements.maxByOrNull { it.createdAt }
                         val sorted = measurements.sortedByDescending { it.createdAt }
                         val secondLatestMeasurement = sorted.getOrNull(1)
@@ -97,19 +91,19 @@ class DashboardViewModel(
                 }
 
                 launch {
-                    workoutPlanRepositoryPort?.getActivePlan()?.collect { activePlan ->
-                        val validation = validateActivePlanSessionsUseCase?.invoke(activePlan?.id)
+                    dashboardUseCase?.getActivePlan()?.collect { activePlan ->
+                        val validation = dashboardUseCase.validateActivePlanSessions(activePlan?.id)
                         val targetPlan =
                             validation?.plan
                                 ?: activePlan
-                                ?: workoutPlanRepositoryPort.getAllPlans().firstOrNull()?.maxByOrNull { it.updatedAt }
+                                ?: dashboardUseCase.getAllPlans().firstOrNull()?.maxByOrNull { it.updatedAt }
 
                         if (targetPlan != null) {
-                            val planPair = workoutPlanRepositoryPort.getPlanWithExercises(targetPlan.id).firstOrNull()
+                            val planPair = dashboardUseCase.getPlanWithExercises(targetPlan.id).firstOrNull()
                             val exercises = planPair?.second ?: emptyList()
                             val totalPlanDays = exercises.maxOfOrNull { it.day } ?: 1
 
-                            val latestLogs = workoutLogRepositoryPort?.getLatestLogsForPlan(targetPlan.id)?.firstOrNull() ?: emptyList()
+                            val latestLogs = dashboardUseCase.getLatestLogsForPlan(targetPlan.id).firstOrNull() ?: emptyList()
                             val lastLog = latestLogs.firstOrNull()
                             val lastEx = exercises.find { it.id == lastLog?.exerciseId }
                             val lastDay = lastEx?.day ?: 0

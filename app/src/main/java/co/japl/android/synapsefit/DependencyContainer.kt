@@ -12,7 +12,6 @@ import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WearStateMirrorPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutLogRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
-import co.japl.android.synapsefit.core.usecase.AICoachGeneratorUseCase
 import co.japl.android.synapsefit.core.usecase.CheckAndRestoreBackupUseCase
 import co.japl.android.synapsefit.core.usecase.DownloadAndRestoreDatabaseUseCase
 import co.japl.android.synapsefit.core.usecase.EvaluateMedicalConditionsUseCase
@@ -24,15 +23,11 @@ import co.japl.android.synapsefit.core.usecase.GetMedicalRecommendationsUseCase
 import co.japl.android.synapsefit.core.usecase.GetUserProfileUseCase
 import co.japl.android.synapsefit.core.usecase.GetWorkoutDetailUseCase
 import co.japl.android.synapsefit.core.usecase.GetWorkoutHistorySummaryUseCase
-import co.japl.android.synapsefit.core.usecase.IAICoachGeneratorUseCase
-import co.japl.android.synapsefit.core.usecase.IUserProfileUseCase
-import co.japl.android.synapsefit.core.usecase.OptimizeWorkoutPromptUseCase
 import co.japl.android.synapsefit.core.usecase.PerformDriveSyncUseCase
 import co.japl.android.synapsefit.core.usecase.RecordWorkoutSessionUseCase
 import co.japl.android.synapsefit.core.usecase.SaveBodyMeasurementUseCase
 import co.japl.android.synapsefit.core.usecase.SaveUserProfileUseCase
 import co.japl.android.synapsefit.core.usecase.UploadDatabaseBackupUseCase
-import co.japl.android.synapsefit.core.usecase.UserProfileUseCase
 import co.japl.android.synapsefit.core.usecase.ValidateActivePlanSessionsUseCase
 import co.japl.android.synapsefit.services.database.RoomDatabaseManagerAdapter
 import co.japl.android.synapsefit.services.database.SynapseFitDatabase
@@ -177,29 +172,96 @@ class DependencyContainer(context: Context) {
         GetWorkoutDetailUseCase(workoutLogRepository)
     }
 
-    val optimizeWorkoutPromptUseCase: OptimizeWorkoutPromptUseCase by lazy {
-        OptimizeWorkoutPromptUseCase(llmConfigRepository, llmClient)
+    val optimizeWorkoutPromptUseCase: co.japl.android.synapsefit.core.usecase.OptimizeWorkoutPromptUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.OptimizeWorkoutPromptUseCase(llmConfigRepository, llmClient)
     }
 
-    val aiCoachGeneratorUseCase: IAICoachGeneratorUseCase by lazy {
-        AICoachGeneratorUseCase(
-            generateWorkoutPlanUseCase = generateWorkoutPlanUseCase,
-            optimizeWorkoutPromptUseCase = optimizeWorkoutPromptUseCase,
-            getExerciseMediaUseCase = getExerciseMediaUseCase,
-            workoutPlanRepositoryPort = workoutPlanRepository,
-            llmConfigRepositoryPort = llmConfigRepository,
-            llmClientPort = llmClient,
+    // Refactored Screen-Dedicated 1:1 UseCases
+    val dashboardUseCase: co.japl.android.synapsefit.core.usecase.IDashboardUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.DashboardUseCase(
+            bodyMeasurementRepository,
+            workoutPlanRepository,
+            workoutLogRepository,
         )
     }
 
-    val userProfileUseCase: IUserProfileUseCase by lazy {
-        UserProfileUseCase(
-            getUserProfileUseCase = getUserProfileUseCase,
-            saveUserProfileUseCase = saveUserProfileUseCase,
-            evaluateMedicalConditionsUseCase = evaluateMedicalConditionsUseCase,
-            getMedicalRecommendationsUseCase = getMedicalRecommendationsUseCase,
-            llmConfigRepositoryPort = llmConfigRepository,
-            llmClientPort = llmClient,
+    val userProfileUseCase: co.japl.android.synapsefit.core.usecase.IUserProfileUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.UserProfileUseCase(
+            userProfileRepository,
+            llmConfigRepository,
+            llmClient,
+        )
+    }
+
+    val bodyMeasurementsUseCase: co.japl.android.synapsefit.core.usecase.IBodyMeasurementsUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.BodyMeasurementsUseCase(bodyMeasurementRepository)
+    }
+
+    val measurementProgressGraphUseCase:
+        co.japl.android.synapsefit.core.usecase.IMeasurementProgressGraphUseCase by lazy {
+            co.japl.android.synapsefit.core.usecase.MeasurementProgressGraphUseCase(
+                bodyMeasurementRepository,
+            )
+        }
+
+    val workoutPlansUseCase: co.japl.android.synapsefit.core.usecase.IWorkoutPlansUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.WorkoutPlansUseCase(workoutPlanRepository)
+    }
+
+    val aiCoachGeneratorUseCase: co.japl.android.synapsefit.core.usecase.IAICoachGeneratorUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.AICoachGeneratorUseCase(
+            llmConfigRepository,
+            llmClient,
+            workoutPlanRepository,
+            userProfileRepository,
+        )
+    }
+
+    val workoutPlanDetailUseCase: co.japl.android.synapsefit.core.usecase.IWorkoutPlanDetailUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.WorkoutPlanDetailUseCase(workoutPlanRepository)
+    }
+
+    val activeWorkoutSessionUseCase: co.japl.android.synapsefit.core.usecase.IActiveWorkoutSessionUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.ActiveWorkoutSessionUseCase(workoutLogRepository, workoutPlanRepository)
+    }
+
+    val workoutHistoryUseCase: co.japl.android.synapsefit.core.usecase.IWorkoutHistoryUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.WorkoutHistoryUseCase(workoutLogRepository)
+    }
+
+    val workoutDetailUseCase: co.japl.android.synapsefit.core.usecase.IWorkoutDetailUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.WorkoutDetailUseCase(workoutLogRepository)
+    }
+
+    val googleAccountUseCase: co.japl.android.synapsefit.core.usecase.IGoogleAccountUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.GoogleAccountUseCase(
+            googleAuthRepository,
+            driveSyncPort,
+            databaseManagerPort,
+        )
+    }
+
+    val googleSignInPromptUseCase: co.japl.android.synapsefit.core.usecase.IGoogleSignInPromptUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.GoogleSignInPromptUseCase(googleAuthRepository)
+    }
+
+    val databaseExplorerUseCase: co.japl.android.synapsefit.core.usecase.IDatabaseExplorerUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.DatabaseExplorerUseCase(databaseManagerPort)
+    }
+
+    val llmSettingsUseCase: co.japl.android.synapsefit.core.usecase.ILLMSettingsUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.LLMSettingsUseCase(llmConfigRepository)
+    }
+
+    val aboutDeveloperUseCase: co.japl.android.synapsefit.core.usecase.IAboutDeveloperUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.AboutDeveloperUseCase()
+    }
+
+    val splashUseCase: co.japl.android.synapsefit.core.usecase.ISplashUseCase by lazy {
+        co.japl.android.synapsefit.core.usecase.SplashUseCase(
+            googleAuthRepository,
+            driveSyncPort,
+            databaseManagerPort,
         )
     }
 }

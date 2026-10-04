@@ -1,95 +1,39 @@
 package co.japl.android.synapsefit.core.usecase
 
 import co.japl.android.synapsefit.core.domain.model.EquipmentPreference
-import co.japl.android.synapsefit.core.domain.model.Exercise
-import co.japl.android.synapsefit.core.domain.model.LlmConfigState
 import co.japl.android.synapsefit.core.domain.model.TrainingLocation
 import co.japl.android.synapsefit.core.domain.model.WorkoutPlan
-import co.japl.android.synapsefit.core.domain.model.parseLlmErrorResponse
 import co.japl.android.synapsefit.core.port.secondary.LlmClientPort
 import co.japl.android.synapsefit.core.port.secondary.LlmConfigRepositoryPort
+import co.japl.android.synapsefit.core.port.secondary.UserProfileRepositoryPort
 import co.japl.android.synapsefit.core.port.secondary.WorkoutPlanRepositoryPort
-import kotlinx.coroutines.flow.firstOrNull
 
 class AICoachGeneratorUseCase(
-    private val generateWorkoutPlanUseCase: IGenerateWorkoutPlanUseCase,
-    private val optimizeWorkoutPromptUseCase: IOptimizeWorkoutPromptUseCase,
-    private val getExerciseMediaUseCase: IGetExerciseMediaUseCase,
-    private val workoutPlanRepositoryPort: WorkoutPlanRepositoryPort,
-    private val llmConfigRepositoryPort: LlmConfigRepositoryPort,
-    private val llmClientPort: LlmClientPort,
+    private val llmConfigRepository: LlmConfigRepositoryPort,
+    private val llmClient: LlmClientPort,
+    private val workoutPlanRepository: WorkoutPlanRepositoryPort,
+    private val userProfileRepository: UserProfileRepositoryPort,
 ) : IAICoachGeneratorUseCase {
-    override suspend fun checkLlmState(): LlmConfigState {
-        val allConfigs = llmConfigRepositoryPort.getAllConfigs().firstOrNull() ?: emptyList()
-        val activeConfigs = allConfigs.filter { it.isActive }
-
-        return when {
-            activeConfigs.isEmpty() -> LlmConfigState.MissingConfig
-            activeConfigs.size > 1 -> LlmConfigState.MultiModelSelection(activeConfigs)
-            else -> {
-                val activeConfig = activeConfigs.first()
-                val connectionResult = llmClientPort.testApiConnection(activeConfig)
-                if (connectionResult.isFailure) {
-                    val ex = connectionResult.exceptionOrNull()
-                    LlmConfigState.Error(parseLlmErrorResponse(ex?.message ?: ex?.toString()))
-                } else {
-                    LlmConfigState.Ready
-                }
-            }
-        }
-    }
-
-    override suspend fun selectActiveConfig(configId: String) {
-        llmConfigRepositoryPort.setActiveConfig(configId)
-    }
-
-    override suspend fun generatePlan(
-        promptContext: String,
-        location: TrainingLocation,
-        equipment: EquipmentPreference,
-        gymChainQuery: String?,
-        daysPerWeek: Int?,
-    ): Result<Pair<WorkoutPlan, List<Exercise>>> {
-        return generateWorkoutPlanUseCase(
-            promptContext = promptContext,
-            location = location,
-            equipment = equipment,
-            gymChainQuery = gymChainQuery,
-            daysPerWeek = daysPerWeek,
+    private val generateWorkoutPlanUseCase =
+        GenerateWorkoutPlanUseCase(
+            llmConfigRepositoryPort = llmConfigRepository,
+            llmClientPort = llmClient,
+            workoutPlanRepositoryPort = workoutPlanRepository,
+            userProfileRepositoryPort = userProfileRepository,
         )
-    }
+    private val optimizeWorkoutPromptUseCase = OptimizeWorkoutPromptUseCase(llmConfigRepository, llmClient)
 
-    override suspend fun optimizePrompt(
-        userPrompt: String,
-        location: TrainingLocation,
-        equipment: EquipmentPreference,
-    ): Result<String> {
-        return optimizeWorkoutPromptUseCase(
+    override suspend fun generatePlan(prompt: String): Result<WorkoutPlan> =
+        generateWorkoutPlanUseCase(
+            promptContext = prompt,
+            location = TrainingLocation.GYM,
+            equipment = EquipmentPreference.DUMBBELLS,
+        ).map { it.first }
+
+    override suspend fun optimizePrompt(userPrompt: String): Result<String> =
+        optimizeWorkoutPromptUseCase(
             userPrompt = userPrompt,
-            location = location,
-            equipment = equipment,
+            location = TrainingLocation.GYM,
+            equipment = EquipmentPreference.DUMBBELLS,
         )
-    }
-
-    override suspend fun fetchExerciseMedia(
-        exerciseId: String,
-        exerciseName: String,
-        guideVideoUrl: String?,
-        guideImageUrl: String?,
-    ): Pair<String, String> {
-        return getExerciseMediaUseCase(
-            exerciseId = exerciseId,
-            exerciseName = exerciseName,
-            guideVideoUrl = guideVideoUrl,
-            guideImageUrl = guideImageUrl,
-        )
-    }
-
-    override suspend fun setActivePlan(planId: String) {
-        workoutPlanRepositoryPort.setActivePlan(planId)
-    }
-
-    override suspend fun deletePlan(planId: String) {
-        workoutPlanRepositoryPort.deletePlan(planId)
-    }
 }
